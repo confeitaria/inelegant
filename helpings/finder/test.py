@@ -1,3 +1,20 @@
+try:
+    import unittest2 as unittest
+except:
+    import unittest
+
+class TestUnitTestFinder(unittest.TestCase):
+
+    def test_is_test_suite(self):
+        """
+        The ``UnitTestFinder`` class should be a test suite.
+        """
+        from finder import UnitTestFinder
+
+        finder = UnitTestFinder()
+
+        self.assertTrue(isinstance(finder, unittest.TestSuite))
+
 import contextlib
 
 def create_module(name, code='', scope=None):
