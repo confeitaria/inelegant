@@ -1,3 +1,4 @@
+import contextlib
 
 def create_module(name, code='', scope=None):
     """
@@ -42,3 +43,29 @@ def create_module(name, code='', scope=None):
     sys.modules[name] = module
 
     return module
+
+@contextlib.contextmanager
+def installed_module(name, code='', scope=None):
+    """
+    This is a context manager to have a module created during a context::
+
+    >>> with installed_module('a', code='x=3', scope={'y': 4}) as m:
+    ...     import a
+    ...     m == a
+    ...     a.x
+    ...     a.y
+    True
+    3
+    4
+
+    On the context exit the module will be removed from ``sys.modules``::
+
+    >>> import a
+    Traceback (most recent call last):
+      ...
+    ImportError: No module named a
+    """
+    import sys
+
+    yield create_module(name, code, scope)
+    del sys.modules[name]
