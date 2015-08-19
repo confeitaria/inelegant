@@ -1,7 +1,4 @@
-try:
-    import unittest2 as unittest
-except:
-    import unittest
+import unittest
 
 class TestUnitTestFinder(unittest.TestCase):
 
@@ -20,13 +17,13 @@ class TestUnitTestFinder(unittest.TestCase):
         The ``UnitTestFinder`` test suite should find test cases classes from
         the given modules.
         """
-        class M1TestCase(unittest.TestCase):
+        class TestCase1(unittest.TestCase):
             def test_pass(self):
                 pass
             def test_fail(self):
                 self.fail()
 
-        class M2TestCase(unittest.TestCase):
+        class TestCase2(unittest.TestCase):
             def test_pass(self):
                 pass
             def test_error(self):
@@ -34,8 +31,8 @@ class TestUnitTestFinder(unittest.TestCase):
 
         from finder import UnitTestFinder
 
-        with installed_module('m1', scope={'M1TestCase': M1TestCase}) as m1, \
-                installed_module('m2', scope={'M2TestCase': M2TestCase}) as m2:
+        with installed_module('m1', scope={'TestCase1': TestCase1}) as m1, \
+                installed_module('m2', scope={'TestCase2': TestCase2}) as m2:
             result = unittest.TestResult()
             finder = UnitTestFinder(m1, m2)
             finder.run(result)
