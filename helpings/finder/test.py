@@ -15,6 +15,35 @@ class TestUnitTestFinder(unittest.TestCase):
 
         self.assertTrue(isinstance(finder, unittest.TestSuite))
 
+    def test_find_test_case_classes(self):
+        """
+        The ``UnitTestFinder`` test suite should find test cases classes from
+        the given modules.
+        """
+        class M1TestCase(unittest.TestCase):
+            def test_pass(self):
+                pass
+            def test_fail(self):
+                self.fail()
+
+        class M2TestCase(unittest.TestCase):
+            def test_pass(self):
+                pass
+            def test_error(self):
+                raise Exception()
+
+        from finder import UnitTestFinder
+
+        with installed_module('m1', scope={'M1TestCase': M1TestCase}) as m1, \
+                installed_module('m2', scope={'M2TestCase': M2TestCase}) as m2:
+            result = unittest.TestResult()
+            finder = UnitTestFinder(m1, m2)
+            finder.run(result)
+
+            self.assertEquals(4, result.testsRun)
+            self.assertEquals(1, len(result.failures))
+            self.assertEquals(1, len(result.errors))
+
 import contextlib
 
 def create_module(name, code='', scope=None):
