@@ -80,11 +80,24 @@ def create_module(name, code='', scope=None):
     """
     import imp
     import sys
+    import inspect
 
     scope = scope if scope is not None else {}
     module = imp.new_module(name)
 
     exec(code, scope)
+
+    module_objs = [
+        obj for n, obj in scope.items()
+         if (
+            not n.startswith('__') and hasattr(obj, '__module__') and
+            (name not in locals()) and (name not in globals())
+        )
+    ]
+
+    for obj in module_objs:
+        obj.__module__ = name
+
     module.__dict__.update(scope)
     sys.modules[name] = module
 
