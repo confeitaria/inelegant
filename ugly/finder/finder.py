@@ -1,6 +1,6 @@
 import unittest
 import doctest
-
+import importlib
 import inspect
 
 class TestFinder(unittest.TestSuite):
@@ -12,6 +12,9 @@ class TestFinder(unittest.TestSuite):
         unittest.TestSuite.__init__(self)
 
         for module in modules:
+            if isinstance(module, basestring):
+                module = importlib.import_module(module)
+
             self.addTest(unittest.defaultTestLoader.loadTestsFromModule(module))
             try:
                 self.addTest(doctest.DocTestSuite(module))
