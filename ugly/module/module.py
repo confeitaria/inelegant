@@ -38,20 +38,14 @@ def create_module(name, code='', scope=None):
     scope = scope if scope is not None else {}
     module = imp.new_module(name)
 
-    exec(code, scope)
+    exec code in scope
 
-    module_objs = [
-        obj for n, obj in scope.items()
-         if (
-            not n.startswith('__') and hasattr(obj, '__module__') and
-            (name not in locals()) and (name not in globals())
-        )
-    ]
-
-    for obj in module_objs:
-        obj.__module__ = name
+    for v in scope.values():
+        if is_adoptable(v):
+            adopt(module, v)
 
     module.__dict__.update(scope)
+
     sys.modules[name] = module
 
     return module
@@ -107,3 +101,19 @@ def adopt(module, entity):
             adopt(module, m.im_func)
     elif inspect.isfunction(entity):
         entity.__module__ = module.__name__
+
+def is_adoptable(obj):
+    """
+    Checks whether an object is adoptable. Adoptable objects are basically
+    classes and functions::
+
+    >>> class Example(object): pass
+    >>> def f(a): pass
+    >>> is_adoptable(Example)
+    True
+    >>> is_adoptable(f)
+    True
+    >>> is_adoptable(Example())
+    False
+    """
+    return inspect.isclass(obj) or inspect.isfunction(obj)
