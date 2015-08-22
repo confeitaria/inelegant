@@ -1,21 +1,21 @@
 import unittest
 
-class TestUnitTestFinder(unittest.TestCase):
+from ugly.finder import TestFinder
+
+class TestTestFinder(unittest.TestCase):
 
     def test_is_test_suite(self):
         """
-        The ``UnitTestFinder`` class should be a test suite.
+        The ``TestFinder`` class should be a test suite.
         """
-        from finder import UnitTestFinder
-
-        finder = UnitTestFinder()
+        finder = TestFinder()
 
         self.assertTrue(isinstance(finder, unittest.TestSuite))
 
     def test_find_test_case_classes(self):
         """
-        The ``UnitTestFinder`` test suite should find test cases classes from
-        the given modules.
+        The ``TestFinder`` test suite should find test cases classes from the
+        given modules.
         """
         class TestCase1(unittest.TestCase):
             def test_pass(self):
@@ -29,12 +29,10 @@ class TestUnitTestFinder(unittest.TestCase):
             def test_error(self):
                 raise Exception()
 
-        from finder import UnitTestFinder
-
         with installed_module('m1', scope={'TestCase1': TestCase1}) as m1, \
                 installed_module('m2', scope={'TestCase2': TestCase2}) as m2:
             result = unittest.TestResult()
-            finder = UnitTestFinder(m1, m2)
+            finder = TestFinder(m1, m2)
             finder.run(result)
 
             self.assertEquals(4, result.testsRun)

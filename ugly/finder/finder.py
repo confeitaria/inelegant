@@ -5,7 +5,7 @@ except:
 
 import inspect
 
-class UnitTestFinder(unittest.TestSuite):
+class TestFinder(unittest.TestSuite):
     """
     ``UnitTestFinder`` is a test suite which receives as its arguments a list of
     modules to search for all tests inside them.
