@@ -71,3 +71,38 @@ class TestTestFinder(unittest.TestCase):
             self.assertEquals(3, result.testsRun)
             self.assertEquals(2, len(result.failures))
             self.assertEquals(0, len(result.errors))
+
+    def test_implement_load_tests(self):
+        """
+        One can delegate the ```load_tests()`` protocol`__ to the ``TestFinder``
+        by setting ``load_tests`` to the bound ``TestFinder.load_tests()`` at
+        the module.
+
+        __ https://docs.python.org/2/library/unittest.html#load-tests-protocol
+        """
+        class TestCase1(unittest.TestCase):
+            def test_pass(self):
+                pass
+            def test_fail(self):
+                self.fail()
+
+        class TestCase2(unittest.TestCase):
+            def test_pass(self):
+                pass
+            def test_error(self):
+                raise Exception()
+
+        with installed_module('m1', scope={'TestCase1': TestCase1}) as m1, \
+                installed_module('m2', scope={'TestCase2': TestCase2}) as m2, \
+                installed_module('m3') as m3:
+            finder = TestFinder(m1, m2)
+
+            m3.load_tests = finder.load_tests
+
+            result = unittest.TestResult()
+            suite = unittest.defaultTestLoader.loadTestsFromModule(m3)
+            suite.run(result)
+
+            self.assertEquals(4, result.testsRun)
+            self.assertEquals(1, len(result.failures))
+            self.assertEquals(1, len(result.errors))
