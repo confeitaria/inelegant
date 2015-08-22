@@ -93,3 +93,22 @@ class TestModule(unittest.TestCase):
             self.assertEquals(m.__name__, Class.__module__)
             self.assertEquals(m.__name__, Class.method.__module__)
             self.assertEquals(m.__name__, function.__module__)
+
+    def test_create_module_adopts_scope_entities(self):
+        """
+        All classes and functions from the scope should be adopted by the module
+        made by ``create_module()``.
+        """
+        class Class(object):
+            def method(self):
+                pass
+        def function(a):
+            pass
+
+        m = create_module(
+            'example', scope={'Class': Class, 'function': function}
+        )
+
+        self.assertEquals(m.__name__, Class.__module__)
+        self.assertEquals(m.__name__, Class.method.__module__)
+        self.assertEquals(m.__name__, function.__module__)
