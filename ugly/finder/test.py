@@ -40,3 +40,34 @@ class TestTestFinder(unittest.TestCase):
             self.assertEquals(4, result.testsRun)
             self.assertEquals(1, len(result.failures))
             self.assertEquals(1, len(result.errors))
+
+    def test_load_doctests(self):
+        """
+        The ``TestFinder`` test suite load the doctests found at the given
+        modules.
+        """
+        class Class(object):
+            """
+            >>> 2+2
+            4
+            """
+            def method(self):
+                """
+                >>> 3+3
+                FAIL
+                """
+                pass
+        def f(self):
+            """
+            >>> raise Exception()
+            """
+            pass
+
+        with installed_module('m', scope={'Class': Class, 'f': f}) as m:
+            result = unittest.TestResult()
+            finder = TestFinder(m)
+            finder.run(result)
+
+            self.assertEquals(3, result.testsRun)
+            self.assertEquals(2, len(result.failures))
+            self.assertEquals(0, len(result.errors))
