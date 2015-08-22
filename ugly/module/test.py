@@ -1,7 +1,7 @@
 import unittest
 import inspect
 
-from ugly.module import create_module, installed_module
+from ugly.module import create_module, installed_module, adopt
 
 class TestModule(unittest.TestCase):
 
@@ -71,3 +71,25 @@ class TestModule(unittest.TestCase):
 
         with self.assertRaises(ImportError):
             import example
+
+    def test_adopt(self):
+        """
+        ``ugly.module.adopt()`` receives two arguments: a module and a "declared
+        entity" (either a class or a function). It sets the ``__module__``
+        attribute of the entity to the module name, if possible. If the class
+        has its own declared methods the ``__module__`` attribute of them is
+        also set.
+        """
+        class Class(object):
+            def method(self):
+                pass
+        def function(a):
+            pass
+
+        with installed_module('example') as m:
+            adopt(m, Class)
+            adopt(m, function)
+
+            self.assertEquals(m.__name__, Class.__module__)
+            self.assertEquals(m.__name__, Class.method.__module__)
+            self.assertEquals(m.__name__, function.__module__)
