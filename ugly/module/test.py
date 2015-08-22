@@ -51,3 +51,23 @@ class TestModule(unittest.TestCase):
         import example
         self.assertEquals(3, example.x)
 
+    def test_installed_module(self):
+        """
+        ``ugly.module.installed_module()`` returns a context manager. One can
+        give it to the ``with`` statement and its result will be a module.
+        ``ugly.module.installed_module()`` accepts the same arguments from
+        ``create_module()``.
+        """
+        with installed_module('example', scope={'x': 3}, code='x += 1') as m:
+            self.assertEquals(4, m.x)
+
+    def test_installed_module_uninstalls_module(self):
+        """
+        When exiting the ``with`` block, ``ugly.module.installed_module()``
+        uninstalls its module from ``sys.modules``.
+        """
+        with installed_module('example') as m:
+            import example
+
+        with self.assertRaises(ImportError):
+            import example
