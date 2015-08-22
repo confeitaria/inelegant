@@ -107,6 +107,42 @@ class TestTestFinder(unittest.TestCase):
             self.assertEquals(1, len(result.failures))
             self.assertEquals(1, len(result.errors))
 
+    def test_accept_module_names(self):
+        """
+        If some of the arguments given to ``TestFinder`` are strings, then it
+        will be assumed to be a module name. The module will be imported and
+        then the seach will proceed on it.
+        """
+        class TestCase1(unittest.TestCase):
+            def test_pass(self):
+                pass
+            def test_fail(self):
+                self.fail()
+            def test_error(self):
+                raise Exception()
+
+        class Class(object):
+            """
+            >>> 3+3
+            6
+            """
+            def method(self):
+                """
+                >>> 2+2
+                FAIL
+                """
+                pass
+
+        with installed_module('m1', scope={'TestCase1': TestCase1}), \
+                installed_module('m2', scope={'Class': Class}):
+            result = unittest.TestResult()
+            finder = TestFinder('m1', 'm2')
+            finder.run(result)
+
+            self.assertEquals(5, result.testsRun)
+            self.assertEquals(2, len(result.failures))
+            self.assertEquals(1, len(result.errors))
+
 import sys
 import finder
 
