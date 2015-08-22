@@ -106,3 +106,11 @@ class TestTestFinder(unittest.TestCase):
             self.assertEquals(4, result.testsRun)
             self.assertEquals(1, len(result.failures))
             self.assertEquals(1, len(result.errors))
+
+import sys
+import finder
+
+load_tests = TestFinder(sys.modules[__name__], finder).load_tests
+
+if __name__ == "__main__":
+    unittest.main()
