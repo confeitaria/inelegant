@@ -2,6 +2,7 @@ try:
     import unittest2 as unittest
 except:
     import unittest
+import doctest
 
 import inspect
 
@@ -15,4 +16,8 @@ class TestFinder(unittest.TestSuite):
 
         for module in modules:
             self.addTest(unittest.defaultTestLoader.loadTestsFromModule(module))
+            try:
+                self.addTest(doctest.DocTestSuite(module))
+            except ValueError:
+                pass
 
