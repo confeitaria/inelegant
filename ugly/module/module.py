@@ -79,3 +79,31 @@ def installed_module(name, code='', scope=None):
     """
     yield create_module(name, code, scope)
     del sys.modules[name]
+
+def adopt(module, entity):
+    """
+    When a module "adopts" a class or a function, the ``__module__`` attribute
+    of the given class or function is set to the name of the module. For
+    example, if we have a class as the one below::
+
+    >>> class Example(object):
+    ...     def method(self):
+    ...         pass
+
+    Then it will have its ``__module__`` values set to the name of the modul ebelow
+
+    >>> with installed_module('example') as m:
+    ...     adopt(m, Example)
+    ...     Example.__module__
+    ...     Example.method.__module__
+    'example'
+    'example'
+    """
+    if inspect.isclass(entity):
+        entity.__module__ = module.__name__
+        attrs = ( getattr(entity, n) for n in dir(entity) )
+        methods = ( a for a in attrs if inspect.ismethod(a) )
+        for m in methods:
+            adopt(module, m.im_func)
+    elif inspect.isfunction(entity):
+        entity.__module__ = module.__name__
