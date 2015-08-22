@@ -18,3 +18,5 @@ class TestFinder(unittest.TestSuite):
             except ValueError:
                 pass
 
+    def load_tests(self, loader, tests, pattern):
+        return self
