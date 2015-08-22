@@ -9,17 +9,17 @@ class TestModule(unittest.TestCase):
         """
         ``ugly.module.create_module()`` should create a module.
         """
-        m = create_module('test')
+        m = create_module('example')
 
         self.assertTrue(inspect.ismodule(m))
-        self.assertTrue('test', m.__name__)
+        self.assertTrue('example', m.__name__)
 
     def test_create_module_scope(self):
         """
         If ``ugly.module.create_module()`` receives a dict as its ``scope``
         argument, then the values from the dict should be set into the module.
         """
-        m = create_module('test', scope={'x': 3})
+        m = create_module('example', scope={'x': 3})
 
         self.assertEquals(3, m.x)
 
@@ -28,7 +28,7 @@ class TestModule(unittest.TestCase):
         If ``ugly.module.create_module()`` receives its ``code`` argument,
         then whatever it creates should be set in the module scope.
         """
-        m = create_module('test', code='x = 3')
+        m = create_module('example', code='x = 3')
 
         self.assertEquals(3, m.x)
 
@@ -37,6 +37,17 @@ class TestModule(unittest.TestCase):
         ``ugly.module.create_module()`` can receive both ``scope`` and ``code``
         arguments, in which case ``code`` can use anything from the scope.
         """
-        m = create_module('test', scope={'x': 3}, code='x += 1')
+        m = create_module('example', scope={'x': 3}, code='x += 1')
 
         self.assertEquals(4, m.x)
+
+    def test_create_module_installs_module(self):
+        """
+        ``ugly.module.create_module()`` adds the created module to
+        ``sys.modules`` so it can be imported.
+        """
+        m = create_module('example', scope={'x': 3})
+
+        import example
+        self.assertEquals(3, example.x)
+
