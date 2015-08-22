@@ -1,7 +1,4 @@
-try:
-    import unittest2 as unittest
-except:
-    import unittest
+import unittest
 import doctest
 
 import inspect
