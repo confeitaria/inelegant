@@ -94,7 +94,7 @@ def adopt(module, entity):
     'example'
     """
     if not is_adoptable(entity):
-        raise AdoptException()
+        raise AdoptException(entity)
 
     if inspect.isclass(entity):
         entity.__module__ = module.__name__
@@ -150,4 +150,21 @@ class AdoptException(Exception):
         ...
     AdoptException: 'dict' is not adoptable because it is a builtin.
     """
-    pass
+
+    def __init__(self, obj=None):
+        if obj is None:
+            message = None
+        elif not inspect.isclass(obj) and not inspect.isfunction(obj):
+            message = "'{0}' values such as {1} are not adoptable.".format(
+                type(obj).__name__, str(obj)
+            )
+        elif inspect.isbuiltin(obj) or obj.__module__ == '__builtin__':
+            message = "'{0}' is not adoptable because it is a builtin.".format(
+                obj.__name__
+            )
+
+        if message is not None:
+            Exception.__init__(self, message)
+        else:
+            Exception.__init__(self)
+
