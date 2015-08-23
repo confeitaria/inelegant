@@ -2,6 +2,7 @@ import unittest
 import doctest
 import importlib
 import inspect
+import sys
 
 class TestFinder(unittest.TestSuite):
     """
@@ -13,7 +14,13 @@ class TestFinder(unittest.TestSuite):
 
         for module in modules:
             if isinstance(module, basestring):
-                module = importlib.import_module(module)
+                if module == '.':
+                    caller = sys._getframe(1)
+                    name = caller.f_globals['__name__']
+                else:
+                    name = module
+
+                module = importlib.import_module(name)
 
             self.addTest(unittest.defaultTestLoader.loadTestsFromModule(module))
             try:
