@@ -97,15 +97,42 @@ def adopt(module, entity):
         raise AdoptException(entity)
 
     if inspect.isclass(entity):
-        attrs = ( getattr(entity, n) for n in dir(entity) )
-        attrs = ( a for a in attrs if is_adoptable(a) and a.__module__ == entity.__module__)
-        for a in attrs:
+        for a in get_adoptable_attrs(entity):
             adopt(module, a)
-        entity.__module__ = module.__name__
-    elif inspect.isfunction(entity):
-        entity.__module__ = module.__name__
     elif inspect.ismethod(entity):
-        entity.im_func.__module__ = module.__name__
+        entity = entity.im_func
+
+    entity.__module__ = module.__name__
+
+def get_adoptable_attrs(obj):
+    """
+    Get all attributes from the object which can be adopted::
+
+    >>> class Example(object):
+    ...     def method(self):
+    ...         pass
+    ...     class Inner(object):
+    ...         pass
+    ...     value = 3
+    ...     builtin = dict
+    >>> adoptable = list(get_adoptable_attrs(Example))
+    >>> len(adoptable)
+    2
+    >>> Example.method in adoptable
+    True
+    >>> Example.Inner in adoptable
+    True
+    >>> Example.builtin in adoptable
+    False
+    >>> Example.value in adoptable
+    False
+    """
+    attrs = ( getattr(obj, n) for n in dir(obj) )
+    return (
+        a
+            for a in attrs
+            if is_adoptable(a) and a.__module__ == obj.__module__
+    )
 
 def is_adoptable(obj):
     """
@@ -126,13 +153,42 @@ def is_adoptable(obj):
     >>> is_adoptable(dict)
     False
     """
+    return is_adoptable_type(obj) and not is_builtin(obj)
+
+def is_adoptable_type(obj):
+    """
+    Checks whether an object is of an adoptable type - a class, a function or a
+    method::
+
+    >>> class Example(object):
+    ...     def method(self):
+    ...         pass
+    >>> def f(a): pass
+    >>> is_adoptable_type(Example)
+    True
+    >>> is_adoptable_type(Example.method)
+    True
+    >>> is_adoptable_type(f)
+    True
+    >>> is_adoptable_type(Example())
+    False
+    """
     return (
-        (
-            inspect.isclass(obj) or inspect.isfunction(obj) or
-            inspect.ismethod(obj)
-        ) and
-        not (inspect.isbuiltin(obj) or obj.__module__ == '__builtin__')
+        inspect.isclass(obj) or inspect.isfunction(obj) or inspect.ismethod(obj)
     )
+
+def is_builtin(obj):
+    """
+    Checks whether an object is built-in - either is a built-in function or
+    belongs to the ``builtin`` module::
+
+    >>> class Example(object): pass
+    >>> is_builtin(Example)
+    False
+    >>> is_builtin(dict)
+    True
+    """
+    return inspect.isbuiltin(obj) or obj.__module__ == '__builtin__'
 
 class AdoptException(Exception):
     """
@@ -159,14 +215,11 @@ class AdoptException(Exception):
     def __init__(self, obj=None):
         if obj is None:
             message = None
-        elif not (
-                inspect.isclass(obj) or inspect.isfunction(obj) or
-                inspect.ismethod(obj)
-            ):
+        elif not is_adoptable_type(obj):
             message = "'{0}' values such as {1} are not adoptable.".format(
                 type(obj).__name__, str(obj)
             )
-        elif inspect.isbuiltin(obj) or obj.__module__ == '__builtin__':
+        elif is_builtin(obj):
             message = "'{0}' is not adoptable because it is a builtin.".format(
                 obj.__name__
             )
