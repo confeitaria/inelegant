@@ -1,1 +1,1 @@
-from .module import create_module, installed_module, adopt
+from .module import create_module, installed_module, adopt, AdoptException

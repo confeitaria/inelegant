@@ -93,6 +93,9 @@ def adopt(module, entity):
     'example'
     'example'
     """
+    if not is_adoptable(entity):
+        raise AdoptException()
+
     if inspect.isclass(entity):
         entity.__module__ = module.__name__
         attrs = ( getattr(entity, n) for n in dir(entity) )
@@ -116,4 +119,10 @@ def is_adoptable(obj):
     >>> is_adoptable(Example())
     False
     """
-    return inspect.isclass(obj) or inspect.isfunction(obj)
+    return (
+        (inspect.isclass(obj) or inspect.isfunction(obj)) and
+        not (inspect.isbuiltin(obj) or obj.__module__ == '__builtin__')
+    )
+
+class AdoptException(Exception):
+    pass
