@@ -97,13 +97,15 @@ def adopt(module, entity):
         raise AdoptException(entity)
 
     if inspect.isclass(entity):
-        entity.__module__ = module.__name__
         attrs = ( getattr(entity, n) for n in dir(entity) )
-        methods = ( a for a in attrs if inspect.ismethod(a) )
-        for m in methods:
-            adopt(module, m.im_func)
+        attrs = ( a for a in attrs if is_adoptable(a) and a.__module__ == entity.__module__)
+        for a in attrs:
+            adopt(module, a)
+        entity.__module__ = module.__name__
     elif inspect.isfunction(entity):
         entity.__module__ = module.__name__
+    elif inspect.ismethod(entity):
+        entity.im_func.__module__ = module.__name__
 
 def is_adoptable(obj):
     """
@@ -125,7 +127,10 @@ def is_adoptable(obj):
     False
     """
     return (
-        (inspect.isclass(obj) or inspect.isfunction(obj)) and
+        (
+            inspect.isclass(obj) or inspect.isfunction(obj) or
+            inspect.ismethod(obj)
+        ) and
         not (inspect.isbuiltin(obj) or obj.__module__ == '__builtin__')
     )
 
@@ -154,7 +159,10 @@ class AdoptException(Exception):
     def __init__(self, obj=None):
         if obj is None:
             message = None
-        elif not inspect.isclass(obj) and not inspect.isfunction(obj):
+        elif not (
+                inspect.isclass(obj) or inspect.isfunction(obj) or
+                inspect.ismethod(obj)
+            ):
             message = "'{0}' values such as {1} are not adoptable.".format(
                 type(obj).__name__, str(obj)
             )
