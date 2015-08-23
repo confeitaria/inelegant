@@ -118,6 +118,11 @@ def is_adoptable(obj):
     True
     >>> is_adoptable(Example())
     False
+
+    Built-in classes and functions are not adoptable, though::
+
+    >>> is_adoptable(dict)
+    False
     """
     return (
         (inspect.isclass(obj) or inspect.isfunction(obj)) and
@@ -125,4 +130,24 @@ def is_adoptable(obj):
     )
 
 class AdoptException(Exception):
+    """
+    Exception raised when trying to make a module to adopt an unadoptable
+    object, such as one that is not a function or object...
+
+    ::
+
+    >>> with installed_module('m') as m:
+    ...     adopt(m, 3)
+    Traceback (most recent call last):
+        ...
+    AdoptException: 'int' values such as 3 are not adoptable.
+
+    ...or a built-in function::
+
+    >>> with installed_module('m') as m:
+    ...     adopt(m, dict)
+    Traceback (most recent call last):
+        ...
+    AdoptException: 'dict' is not adoptable because it is a builtin.
+    """
     pass
