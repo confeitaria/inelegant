@@ -1,7 +1,7 @@
 import unittest
 import inspect
 
-from ugly.module import create_module, installed_module, adopt
+from ugly.module import create_module, installed_module, adopt, AdoptException
 
 class TestModule(unittest.TestCase):
 
@@ -112,6 +112,15 @@ class TestModule(unittest.TestCase):
         self.assertEquals(m.__name__, Class.__module__)
         self.assertEquals(m.__name__, Class.method.__module__)
         self.assertEquals(m.__name__, function.__module__)
+
+    def test_adopt_fails_on_builtins(self):
+        """
+        ``ugly.module.adopt()`` raises an exception if required to adopt a
+        builtin.
+        """
+        with installed_module('example') as m:
+            with self.assertRaises(AdoptException):
+                adopt(m, dict)
 
 from ugly.finder import TestFinder
 
