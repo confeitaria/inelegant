@@ -122,6 +122,27 @@ class TestModule(unittest.TestCase):
             with self.assertRaises(AdoptException):
                 adopt(m, dict)
 
+    def test_adopts_internal_class(self):
+        """
+        When ``ugly.module.adopt()`` is called on a class, it adopts any other
+        classes defined inside the adoptee.
+        """
+        class OuterClass(object):
+            pass
+
+        class Class1(object):
+            class Class2(object):
+                pass
+            UnadoptedClass = OuterClass
+
+        with installed_module('m1') as m1, \
+                installed_module('m2', scope={'Class3': OuterClass}) as m2:
+            adopt(m1, Class1)
+
+            self.assertEquals(m1.__name__, Class1.__module__)
+            self.assertEquals(m1.__name__, Class1.Class2.__module__)
+            self.assertNotEquals(m1.__name__, Class1.UnadoptedClass.__module__)
+
 from ugly.finder import TestFinder
 
 load_tests = TestFinder('.', 'ugly.module.module').load_tests
