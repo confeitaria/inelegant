@@ -143,6 +143,16 @@ class TestTestFinder(unittest.TestCase):
             self.assertEquals(2, len(result.failures))
             self.assertEquals(1, len(result.errors))
 
+    def test_accept_period_module(self):
+        """
+        If the sting ``'.'`` is given to ``TestFinder``, it should look for
+        tests inside the module it was created.
+        """
+        period_tests = list(iter(TestFinder('.')))
+        name_tests = list(iter(TestFinder(__name__)))
+
+        self.assertEquals(period_tests, name_tests)
+
 import sys
 import finder
 
