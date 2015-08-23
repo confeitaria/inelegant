@@ -113,12 +113,9 @@ class TestModule(unittest.TestCase):
         self.assertEquals(m.__name__, Class.method.__module__)
         self.assertEquals(m.__name__, function.__module__)
 
-import sys
-import module
-
 from ugly.finder import TestFinder
 
-load_tests = TestFinder(sys.modules[__name__], module).load_tests
+load_tests = TestFinder('.', 'ugly.module.module').load_tests
 
 if __name__ == "__main__":
     unittest.main()

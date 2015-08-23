@@ -153,10 +153,7 @@ class TestTestFinder(unittest.TestCase):
 
         self.assertEquals(period_tests, name_tests)
 
-import sys
-import finder
-
-load_tests = TestFinder(sys.modules[__name__], finder).load_tests
+load_tests = TestFinder('.', 'ugly.finder.finder').load_tests
 
 if __name__ == "__main__":
     unittest.main()
