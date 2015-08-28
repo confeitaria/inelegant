@@ -13,7 +13,7 @@ class TestServer(unittest.TestCase):
         """
         ``ugly.net.Server`` is a ` ``SocketServer.TCPServer`` `__ subclass.
         
-        __ https://docs.python.org/2/library/socketserver.html#socketserver-tcpserver-example
+        __ https://docs.python.org/2/library/socketserver.html
         """
         def serve():
             server = Server(
