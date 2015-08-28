@@ -20,8 +20,7 @@ class TestServer(unittest.TestCase):
                 address='localhost', port=9000, message='Server is up'
             )
             server.handle_request()
-            server.socket.close()
-            server.shutdown()
+            server.server_close()
 
         process = multiprocessing.Process(target=serve)
         process.daemon = True
@@ -33,6 +32,8 @@ class TestServer(unittest.TestCase):
             msg = s.recv(len('Server is up'))
 
             self.assertEquals('Server is up', msg)
+
+        process.join()
 
 from ugly.finder import TestFinder
 

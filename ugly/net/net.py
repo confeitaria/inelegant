@@ -19,8 +19,7 @@ class Server(SocketServer.TCPServer):
 
     >>> def serve():
     ...     server.handle_request()
-    ...     server.socket.close()
-    ...     server.shutdown()
+    ...     server.server_close()
 
     If we give it to a process...
 
@@ -37,6 +36,8 @@ class Server(SocketServer.TCPServer):
     ...     s.connect(('localhost', 9000))
     ...     s.recv(10)
     'My message'
+    >>> process.join()
+
     """
 
     def __init__(
