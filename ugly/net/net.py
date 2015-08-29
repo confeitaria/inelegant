@@ -1,8 +1,9 @@
 import socket
 import errno
-import socket
+import time
 import contextlib
 import SocketServer
+import threading
 
 class Server(SocketServer.TCPServer):
     """
@@ -52,6 +53,20 @@ class Server(SocketServer.TCPServer):
         SocketServer.TCPServer.__init__(
             self, (self.address, self.port), ServerHandler
         )
+
+    def __enter__(self):
+        self.thread = threading.Thread(target=self._start)
+        self.thread.start()
+        time.sleep(0.01)
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.shutdown()
+        self.server_close()
+        self.thread.join()
+
+    def _start(self):
+        self.serve_forever()
 
 class ServerHandler(SocketServer.BaseRequestHandler):
 
