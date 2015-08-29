@@ -4,6 +4,7 @@ import multiprocessing
 import socket
 import contextlib
 import time
+import errno
 
 from ugly.net import Server
 
@@ -34,6 +35,27 @@ class TestServer(unittest.TestCase):
             self.assertEquals('Server is up', msg)
 
         process.join()
+
+
+    def test_with(self):
+        """
+        ``ugly.net.Server`` is also a context manager. If given to an ``with``
+        statement, the server will start at the beginning and stop at the end
+        of the block.
+        """
+        with Server(message='Server is up') as server:
+            with contextlib.closing(socket.socket()) as s:
+                s.connect(('localhost', 9000))
+                msg = s.recv(len('Server is up'))
+
+                self.assertEquals('Server is up', msg)
+
+        s = socket.socket()
+        s.settimeout(0.00001)
+        with contextlib.closing(s) as s:
+            with self.assertRaises(socket.error) as a:
+                s.connect(('localhost', 9000))
+                msg = s.recv(len('Server is up'))
 
 from ugly.finder import TestFinder
 
