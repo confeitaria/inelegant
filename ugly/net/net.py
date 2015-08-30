@@ -44,12 +44,13 @@ class Server(SocketServer.TCPServer):
 
     def __init__(
             self, address='localhost', port=9000, message='Message sent',
-            start_delay=0
+            start_delay=0, wait_for_release=0.001
         ):
         self.address = address
         self.port = port
         self.message = message
         self.start_delay = start_delay
+        self.wait_for_release = wait_for_release
 
         self.init_lock = threading.Lock()
 
@@ -68,8 +69,12 @@ class Server(SocketServer.TCPServer):
         self.thread.daemon = True
         self.thread.start()
 
-        with self.init_lock:
-            return self
+        if self.start_delay <= 0:
+            self.init_lock.acquire()
+            self.init_lock.release()
+            time.sleep(self.wait_for_release)
+
+        return self
 
     def __exit__(self, type, value, traceback):
         with self.init_lock:
