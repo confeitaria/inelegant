@@ -61,7 +61,7 @@ class Server(SocketServer.TCPServer):
 
     def __enter__(self):
         self.thread = threading.Thread(target=self._start)
-        self.thread.daemon = False
+        self.thread.daemon = True
         self.thread.start()
         time.sleep(0.01)
         return self
