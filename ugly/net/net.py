@@ -30,7 +30,7 @@ class Server(SocketServer.TCPServer):
     >>> process = multiprocessing.Process(target=serve)
     >>> process.daemon = True
     >>> process.start()
-    >>> time.sleep(0.003)
+    >>> time.sleep(0.01)
 
     ...we can get the answer::
 
@@ -51,6 +51,8 @@ class Server(SocketServer.TCPServer):
         self.message = message
         self.start_delay = start_delay
 
+        self.init_lock = threading.Lock()
+
     def handle_request(self):
         self._lazy_init()
 
@@ -65,23 +67,30 @@ class Server(SocketServer.TCPServer):
         self.thread = threading.Thread(target=self._start)
         self.thread.daemon = True
         self.thread.start()
-        time.sleep(0.01)
-        return self
+
+        with self.init_lock:
+            return self
 
     def __exit__(self, type, value, traceback):
-        self.shutdown()
-        self.server_close()
-        self.thread.join()
+        with self.init_lock:
+            if self._is_initialized():
+                self.shutdown()
+                self.server_close()
+                self.thread.join()
 
     def _start(self):
         self.serve_forever()
 
     def _lazy_init(self):
-        if not hasattr(self, 'socket'):
-            time.sleep(self.start_delay)
-            SocketServer.TCPServer.__init__(
-                self, (self.address, self.port), ServerHandler
-            )
+        with self.init_lock:
+            if not self._is_initialized():
+                time.sleep(self.start_delay)
+                SocketServer.TCPServer.__init__(
+                    self, (self.address, self.port), ServerHandler
+                )
+
+    def _is_initialized(self):
+        return hasattr(self, 'socket')
 
 class ServerHandler(SocketServer.BaseRequestHandler):
 
