@@ -5,6 +5,34 @@ import contextlib
 import SocketServer
 import threading
 
+def wait_server_up(address, port, tries=1000, timeout=1):
+    """
+    This function blocks the execution until connecting successfully to the
+    given address and port, or until an error happens - in this case, it will
+    raise the exception.
+
+    If an conection is refused, this error will be ignored since it probably
+    means the server is not up yet. However, this error will only be ignored
+    for <tries> times (by default 1000). Once the connection is refuses for more
+    than <tries> times, an exception will be raised.
+    """
+    for i in xrange(tries):
+        s = socket.socket()
+        s.settimeout(timeout)
+        with contextlib.closing(s):
+            try:
+                s.connect((address, port))
+                break
+            except socket.error as e:
+                if e.errno == errno.ECONNREFUSED:
+                    time.sleep(timeout)
+                else:
+                    raise
+    else:
+        raise Exception(
+            'Connection to server failed after {0} attempts'.format(tries)
+        )
+
 class Server(SocketServer.TCPServer):
     """
     ``ugly.net.Server`` is a very simple TCP server that only responds with the
