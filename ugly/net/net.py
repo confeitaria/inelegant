@@ -43,11 +43,13 @@ class Server(SocketServer.TCPServer):
     """
 
     def __init__(
-            self, address='localhost', port=9000, message='Message sent'
+            self, address='localhost', port=9000, message='Message sent',
+            start_delay=0
         ):
         self.address = address
         self.port = port
         self.message = message
+        self.start_delay = start_delay
 
     def handle_request(self):
         self._lazy_init()
@@ -76,6 +78,7 @@ class Server(SocketServer.TCPServer):
 
     def _lazy_init(self):
         if not hasattr(self, 'socket'):
+            time.sleep(self.start_delay)
             SocketServer.TCPServer.__init__(
                 self, (self.address, self.port), ServerHandler
             )
