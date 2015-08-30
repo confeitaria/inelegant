@@ -79,6 +79,14 @@ class TestServer(unittest.TestCase):
 
                 self.assertEquals('Server is up', msg)
 
+    def test_with_shutdown_before_startup(self):
+        """
+        If a server is requested to shutdown even before starting up,
+        ``ugly.net.Server`` should handle it appropriately.
+        """
+        with Server(start_delay=0.1) as server:
+            pass
+
 from ugly.finder import TestFinder
 
 load_tests = TestFinder('.', 'ugly.net.net').load_tests
