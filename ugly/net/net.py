@@ -43,13 +43,11 @@ class Server(SocketServer.TCPServer):
     """
 
     def __init__(
-            self, address='localhost', port=9000, message='Message sent',
-            timeout=0.5
+            self, address='localhost', port=9000, message='Message sent'
         ):
         self.address = address
         self.port = port
         self.message = message
-        self.timeout = timeout
 
     def handle_request(self):
         self._lazy_init()
