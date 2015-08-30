@@ -6,7 +6,7 @@ import contextlib
 import time
 import errno
 
-from ugly.net import Server
+from ugly.net import Server, wait_server_up
 
 class TestServer(unittest.TestCase):
 
@@ -96,6 +96,22 @@ class TestServer(unittest.TestCase):
         start = time.time()
         with Server(start_delay=delay) as server:
             self.assertTrue(time.time() - start < delay)
+
+
+
+class TestWaiters(unittest.TestCase):
+
+    def test_wait_port_up(self):
+        """
+        ``wait_server_up()`` will block until there is a socket listening at
+        the given port from the given address.
+        """
+        delay = 0.01
+        start = time.time()
+        with Server(start_delay=delay) as server:
+            wait_server_up('localhost', 9000, timeout=0.001)
+
+            self.assertTrue(time.time() - start > delay)
 
 from ugly.finder import TestFinder
 
