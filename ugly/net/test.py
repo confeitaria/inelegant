@@ -57,6 +57,28 @@ class TestServer(unittest.TestCase):
                 s.connect(('localhost', 9000))
                 msg = s.recv(len('Server is up'))
 
+    def test_start_delay(self):
+        """
+        Sometimes we want our server to delay its effective port listening. We
+        can define the amount of seconds to be delayed with the ``start_delay``
+        argument.
+        """
+        with Server(message='Server is up', start_delay=0.01) as server:
+            s = socket.socket()
+            s.settimeout(0.0001)
+            with contextlib.closing(s) as s:
+                with self.assertRaises(socket.error) as a:
+                    s.connect(('localhost', 9000))
+                    msg = s.recv(len('Server is up'))
+
+            time.sleep(0.01)
+
+            with contextlib.closing(socket.socket()) as s:
+                s.connect(('localhost', 9000))
+                msg = s.recv(len('Server is up'))
+
+                self.assertEquals('Server is up', msg)
+
 from ugly.finder import TestFinder
 
 load_tests = TestFinder('.', 'ugly.net.net').load_tests
