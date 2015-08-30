@@ -40,6 +40,50 @@ class Server(SocketServer.TCPServer):
     'My message'
     >>> process.join()
 
+    You may prefer, however, to use it with an ``with`` statement. In this case,
+    the server is started up and shut down automatically::
+
+    >>> with Server(message='My message'):
+    ...     with contextlib.closing(socket.socket()) as s:
+    ...         s.connect(('localhost', 9000))
+    ...         s.recv(10)
+    'My message'
+    >>> with contextlib.closing(socket.socket()) as s:
+    ...     s.connect(('localhost', 9000))
+    ...     s.recv(10)
+    Traceback (most recent call last):
+     ...
+    error: [Errno 111] Connection refused
+
+    You can make the class wait a bit before binding to the port::
+
+    >>> start = time.time()
+    >>> with Server(start_delay=0.1):
+    ...     time.time() - start < 0.1
+    ...     with contextlib.closing(socket.socket()) as s:
+    ...         try:
+    ...             s.connect(('localhost', 9000))
+    ...             s.recv(10)
+    ...         except socket.error as e:
+    ...             print e
+    True
+    [Errno 111] Connection refused
+
+    The ``start_delay`` argument is the *minimum* time the class will wait until
+    grabbing the port, so it is well advisible to wait a bit more before
+    connecting::
+
+    >>> start = time.time()
+    >>> with Server(message='My message', start_delay=0.1):
+    ...     time.time() - start < 0.1
+    ...     time.sleep(0.11)
+    ...     time.time() - start < 0.1
+    ...     with contextlib.closing(socket.socket()) as s:
+    ...         s.connect(('localhost', 9000))
+    ...         s.recv(10)
+    True
+    False
+    'My message'
     """
 
     def __init__(
