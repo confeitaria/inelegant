@@ -112,6 +112,16 @@ class Server(SocketServer.TCPServer):
     True
     False
     'My message'
+
+    Why would anyone want the server to be slower to go up? Mostly to test code
+    that should wait for a port to be listening - basically, the
+    ``wait_server_up`` function::
+
+    >>> start = time.time()
+    >>> with Server(message='My message', start_delay=0.1):
+    ...     wait_server_up('localhost', 9000, timeout=0.001)
+    ...     time.time() - start > 0.1
+    True
     """
 
     def __init__(
