@@ -147,7 +147,7 @@ class Server(SocketServer.TCPServer):
         SocketServer.TCPServer.serve_forever(self, poll_interval)
 
     def __enter__(self):
-        self.thread = threading.Thread(target=self._start)
+        self.thread = threading.Thread(target=self.serve_forever)
         self.thread.daemon = True
         self.thread.start()
 
@@ -164,9 +164,6 @@ class Server(SocketServer.TCPServer):
                 self.shutdown()
                 self.server_close()
                 self.thread.join()
-
-    def _start(self):
-        self.serve_forever()
 
     def _lazy_init(self):
         with self.init_lock:

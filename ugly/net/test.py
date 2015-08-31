@@ -97,8 +97,6 @@ class TestServer(unittest.TestCase):
         with Server(start_delay=delay) as server:
             self.assertTrue(time.time() - start < delay)
 
-
-
 class TestWaiters(unittest.TestCase):
 
     def test_wait_port_up(self):
