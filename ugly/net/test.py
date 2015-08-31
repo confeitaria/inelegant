@@ -6,7 +6,7 @@ import contextlib
 import time
 import errno
 
-from ugly.net import Server, wait_server_up
+from ugly.net import Server, wait_server_up, get_socket
 
 class TestServer(unittest.TestCase):
 
@@ -28,7 +28,7 @@ class TestServer(unittest.TestCase):
         process.start()
         time.sleep(0.003)
 
-        with contextlib.closing(socket.socket()) as s:
+        with contextlib.closing(get_socket()) as s:
             s.connect(('localhost', 9000))
             msg = s.recv(len('Server is up'))
 
@@ -44,15 +44,13 @@ class TestServer(unittest.TestCase):
         of the block.
         """
         with Server(message='Server is up') as server:
-            with contextlib.closing(socket.socket()) as s:
+            with contextlib.closing(get_socket()) as s:
                 s.connect(('localhost', 9000))
                 msg = s.recv(len('Server is up'))
 
                 self.assertEquals('Server is up', msg)
 
-        s = socket.socket()
-        s.settimeout(0.00001)
-        with contextlib.closing(s) as s:
+        with contextlib.closing(get_socket(timeout=0.00001)) as s:
             with self.assertRaises(socket.error) as a:
                 s.connect(('localhost', 9000))
                 msg = s.recv(len('Server is up'))
@@ -64,16 +62,14 @@ class TestServer(unittest.TestCase):
         argument.
         """
         with Server(message='Server is up', start_delay=0.01) as server:
-            s = socket.socket()
-            s.settimeout(0.0001)
-            with contextlib.closing(s) as s:
+            with contextlib.closing(get_socket(timeout=0.0001)) as s:
                 with self.assertRaises(socket.error) as a:
                     s.connect(('localhost', 9000))
                     msg = s.recv(len('Server is up'))
 
             time.sleep(0.02)
 
-            with contextlib.closing(socket.socket()) as s:
+            with contextlib.closing(get_socket()) as s:
                 s.connect(('localhost', 9000))
                 msg = s.recv(len('Server is up'))
 

@@ -181,7 +181,7 @@ class ServerHandler(SocketServer.BaseRequestHandler):
     def handle(self):
         self.request.sendall(self.server.message+'\0')
 
-def get_socket(timeout=0):
+def get_socket(timeout=None):
     """
     This function creates sockets. Its main appeal is that one can give the
     timeout as an argument::
