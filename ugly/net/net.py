@@ -86,8 +86,8 @@ class Server(SocketServer.TCPServer):
     You can make the class wait a bit before binding to the port::
 
     >>> start = time.time()
-    >>> with Server(start_delay=0.1):
-    ...     time.time() - start < 0.1
+    >>> with Server(start_delay=0.01):
+    ...     time.time() - start < 0.01
     ...     with contextlib.closing(socket.socket()) as s:
     ...         try:
     ...             s.connect(('localhost', 9000))
@@ -102,10 +102,10 @@ class Server(SocketServer.TCPServer):
     connecting::
 
     >>> start = time.time()
-    >>> with Server(message='My message', start_delay=0.1):
-    ...     time.time() - start < 0.1
-    ...     time.sleep(0.11)
-    ...     time.time() - start < 0.1
+    >>> with Server(message='My message', start_delay=0.01):
+    ...     time.time() - start < 0.01
+    ...     time.sleep(0.011)
+    ...     time.time() - start < 0.01
     ...     with contextlib.closing(socket.socket()) as s:
     ...         s.connect(('localhost', 9000))
     ...         s.recv(10)
@@ -118,9 +118,9 @@ class Server(SocketServer.TCPServer):
     ``wait_server_up`` function::
 
     >>> start = time.time()
-    >>> with Server(message='My message', start_delay=0.1):
+    >>> with Server(message='My message', start_delay=0.01):
     ...     wait_server_up('localhost', 9000, timeout=0.001)
-    ...     time.time() - start > 0.1
+    ...     time.time() - start > 0.01
     True
     """
 
