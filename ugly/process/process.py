@@ -1,6 +1,29 @@
 import multiprocessing
 
 class ProcessContext(object):
+    """
+    ``ProcessContext`` starts and stops a ``multiprocessing.Process`` instance
+    automatically::
+
+    >>> def serve():
+    ...     time.sleep(0.001)
+
+    >>> with ProcessContext(target=serve) as pc:
+    ...     pc.process.is_alive()
+    True
+    >>> pc.process.is_alive()
+    False
+
+    It also stores any exception raised by the spawned process::
+
+    >>> def serve():
+    ...     raise Exception('example')
+
+    >>> with ProcessContext(target=serve) as pc:
+    ...     pass
+    >>> pc.exceptions
+    [Exception('example',)]
+    """
 
     def __init__(self, target, args=(), timeout=1):
         self.timeout = timeout
