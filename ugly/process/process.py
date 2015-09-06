@@ -11,4 +11,8 @@ class ProcessContext(object):
         return self
 
     def __exit__(self, type, value, traceback):
+        if value is not None:
+            self.process.terminate()
+
         self.process.join(self.timeout)
+
