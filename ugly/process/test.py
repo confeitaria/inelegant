@@ -22,7 +22,7 @@ class TestProcessContext(unittest.TestCase):
 
         self.assertFalse(pc.process.is_alive())
 
-    def test_process_context_serve(self):
+    def test_serve(self):
         """
         To ensure  ``ProcessContext`` can start a server, here is a simple test
         doing that.
@@ -38,7 +38,7 @@ class TestProcessContext(unittest.TestCase):
             with contextlib.closing(client) as client:
                 self.assertEquals('example', client.recv())
 
-    def test_process_context_finish_after_exception(self):
+    def test_terminate_after_exception(self):
         """
         The process started by ``ProcessContext`` should be terminated if an
         exception happened in the ``with`` block.
