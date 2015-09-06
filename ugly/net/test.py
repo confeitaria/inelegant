@@ -54,7 +54,7 @@ class TestServer(unittest.TestCase):
 
 class TestWaiters(unittest.TestCase):
 
-    def test_wait_port_up(self):
+    def test_wait_server_up(self):
         """
         ``wait_server_up()`` will block until there is a socket listening at
         the given port from the given address.
@@ -86,7 +86,7 @@ class TestWaiters(unittest.TestCase):
             condition.notify_all()
             condition.release()
 
-    def test_wait_port_up_does_not_acquire_port(self):
+    def test_wait_server_up_does_not_acquire_port(self):
         """
         ``wait_server_up()`` cannot impede other processes of capturing the
         port.
