@@ -33,6 +33,39 @@ def wait_server_up(address, port, tries=1000, timeout=1):
             'Connection to server failed after {0} attempts'.format(tries)
         )
 
+def wait_server_down(address, port, tries=1000, timeout=0.0001):
+    """
+    This function blocks until the given port is free at the given address, or
+    until an error occurrs, in which case the exception is raised.
+
+    If an conection is refused or reset, this error will be ignored since it
+    probably means respectively the server is not up (as excepted) or just went
+    down during the connection, which is acceptable.
+
+    The funcion allows for defining the socket timeout. Setting a low value made
+    this function faster than setting none.
+    """
+    for i in xrange(tries):
+        s = socket.socket()
+        with contextlib.closing(s):
+            try:
+                s.settimeout(timeout)
+                s.connect((address, port))
+            except socket.timeout:
+                continue
+            except socket.error as e:
+                if e.errno in (errno.ECONNREFUSED, errno.ECONNRESET):
+                    break
+                elif e.errno == errno.ETIMEDOUT:
+                    continue
+                else:
+                    raise
+    else:
+        raise Exception(
+            'Server stayed up after {0} connection attempts. '
+            'May it be running from a process outside the tests?'.format(tries)
+        )
+
 class Server(SocketServer.TCPServer):
     """
     ``ugly.net.Server`` is a very simple TCP server that only responds with the
