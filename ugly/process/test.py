@@ -2,6 +2,7 @@ import unittest
 
 import contextlib
 import time
+import multiprocessing.connection
 
 from ugly.process import ProcessContext
 
@@ -14,12 +15,29 @@ class TestProcessContext(unittest.TestCase):
         been finished.
         """
         def serve():
-            time.sleep(0.01)
+            time.sleep(0.001)
 
         with ProcessContext(target=serve) as pc:
             self.assertTrue(pc.process.is_alive())
 
         self.assertFalse(pc.process.is_alive())
+
+    def test_process_context_serve(self):
+        """
+        To ensure  ``ProcessContext`` can start a server, here is a simple test
+        doing that.
+        """
+        def serve():
+            listener = multiprocessing.connection.Listener(('localhost', 9000))
+            with contextlib.closing(listener):
+                with contextlib.closing(listener.accept()) as connection:
+                    connection.send('example')
+
+        with ProcessContext(target=serve):
+            client = multiprocessing.connection.Client(('localhost', 9000))
+            with contextlib.closing(client) as client:
+                self.assertEquals('example', client.recv())
+
 
 from ugly.finder import TestFinder
 
