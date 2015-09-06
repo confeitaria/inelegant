@@ -146,6 +146,14 @@ class Server(SocketServer.TCPServer):
 
         SocketServer.TCPServer.serve_forever(self, poll_interval)
 
+    def server_close(self):
+        if self._is_initialized():
+            SocketServer.TCPServer.server_close(self)
+
+    def shutdown(self):
+        if self._is_initialized():
+            SocketServer.TCPServer.shutdown(self)
+
     def __enter__(self):
         self.thread = threading.Thread(target=self.serve_forever)
         self.thread.daemon = True

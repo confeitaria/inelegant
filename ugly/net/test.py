@@ -56,44 +56,6 @@ class TestServer(unittest.TestCase):
                 s.connect(('localhost', 9000))
                 msg = s.recv(len('Server is up'))
 
-    def test_start_delay(self):
-        """
-        Sometimes we want our server to delay its effective port listening. We
-        can define the amount of seconds to be delayed with the ``start_delay``
-        argument.
-        """
-        with Server(message='Server is up', start_delay=0.01) as server:
-            with contextlib.closing(get_socket(timeout=0.0001)) as s:
-                with self.assertRaises(socket.error) as a:
-                    s.connect(('localhost', 9000))
-                    msg = s.recv(len('Server is up'))
-
-            time.sleep(0.02)
-
-            with contextlib.closing(get_socket()) as s:
-                s.connect(('localhost', 9000))
-                msg = s.recv(len('Server is up'))
-
-                self.assertEquals('Server is up', msg)
-
-    def test_with_shutdown_before_startup(self):
-        """
-        If a server is requested to shutdown even before starting up,
-        ``ugly.net.Server`` should handle it appropriately.
-        """
-        with Server(start_delay=0.1) as server:
-            pass
-
-    def test_start_delay_no_block(self):
-        """
-        If we give a positive ``start_delay`` to the server, it should **not**
-        block the parent thread.
-        """
-        delay = 0.1
-        start = time.time()
-        with Server(start_delay=delay) as server:
-            self.assertTrue(time.time() - start < delay)
-
 class TestWaiters(unittest.TestCase):
 
     def test_wait_port_up(self):
