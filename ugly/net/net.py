@@ -82,56 +82,15 @@ class Server(SocketServer.TCPServer):
     Traceback (most recent call last):
      ...
     error: [Errno 111] Connection refused
-
-    You can make the class wait a bit before binding to the port::
-
-    >>> start = time.time()
-    >>> with Server(start_delay=0.01):
-    ...     time.time() - start < 0.01
-    ...     with contextlib.closing(socket.socket()) as s:
-    ...         try:
-    ...             s.connect(('localhost', 9000))
-    ...             s.recv(10)
-    ...         except socket.error as e:
-    ...             print e
-    True
-    [Errno 111] Connection refused
-
-    The ``start_delay`` argument is the *minimum* time the class will wait until
-    grabbing the port, so it is well advisible to wait a bit more before
-    connecting::
-
-    >>> start = time.time()
-    >>> with Server(message='My message', start_delay=0.01):
-    ...     time.time() - start < 0.01
-    ...     time.sleep(0.011)
-    ...     time.time() - start < 0.01
-    ...     with contextlib.closing(socket.socket()) as s:
-    ...         s.connect(('localhost', 9000))
-    ...         s.recv(10)
-    True
-    False
-    'My message'
-
-    Why would anyone want the server to be slower to go up? Mostly to test code
-    that should wait for a port to be listening - basically, the
-    ``wait_server_up`` function::
-
-    >>> start = time.time()
-    >>> with Server(message='My message', start_delay=0.01):
-    ...     wait_server_up('localhost', 9000, timeout=0.001)
-    ...     time.time() - start > 0.01
-    True
     """
 
     def __init__(
             self, address='localhost', port=9000, message='Message sent',
-            start_delay=0, wait_for_release=0.001
+            wait_for_release=0.001
         ):
         self.address = address
         self.port = port
         self.message = message
-        self.start_delay = start_delay
         self.wait_for_release = wait_for_release
 
         self.init_lock = threading.Lock()
@@ -159,10 +118,9 @@ class Server(SocketServer.TCPServer):
         self.thread.daemon = True
         self.thread.start()
 
-        if self.start_delay <= 0:
-            self.init_lock.acquire()
-            self.init_lock.release()
-            time.sleep(self.wait_for_release)
+        self.init_lock.acquire()
+        self.init_lock.release()
+        time.sleep(self.wait_for_release)
 
         return self
 
@@ -176,7 +134,6 @@ class Server(SocketServer.TCPServer):
     def _lazy_init(self):
         with self.init_lock:
             if not self._is_initialized():
-                time.sleep(self.start_delay)
                 SocketServer.TCPServer.__init__(
                     self, (self.address, self.port), ServerHandler
                 )
