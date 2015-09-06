@@ -38,6 +38,22 @@ class TestProcessContext(unittest.TestCase):
             with contextlib.closing(client) as client:
                 self.assertEquals('example', client.recv())
 
+    def test_process_context_finish_after_exception(self):
+        """
+        The process started by ``ProcessContext`` should be terminated if an
+        exception happened in the ``with`` block.
+        """
+        def serve():
+            time.sleep(60)
+
+        try:
+            start = time.time()
+            with ProcessContext(target=serve) as pc:
+                raise Exception()
+        except:
+            self.assertFalse(pc.process.is_alive())
+            self.assertTrue(time.time() - start < 60)
+
 
 from ugly.finder import TestFinder
 
