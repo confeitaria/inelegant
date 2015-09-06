@@ -78,7 +78,7 @@ class TestWaiters(unittest.TestCase):
 
         condition = multiprocessing.Condition()
         with ProcessContext(target=serve, args=(condition,)) as pc:
-            wait_server_up('localhost', 9000, timeout=0.0001)
+            wait_server_up('localhost', 9000)
 
             self.assertTrue(time.time() - start > delay)
 
@@ -145,14 +145,14 @@ class TestWaiters(unittest.TestCase):
 
         condition = multiprocessing.Condition()
         with ProcessContext(target=serve, args=(condition,)) as pc:
-            wait_server_up('localhost', 9000, timeout=0.0001)
+            wait_server_up('localhost', 9000)
             start = time.time()
 
             condition.acquire()
             condition.notify_all()
             condition.release()
 
-            wait_server_down('localhost', 9000, timeout=0.0001)
+            wait_server_down('localhost', 9000)
 
             self.assertTrue(time.time() - start > delay)
 

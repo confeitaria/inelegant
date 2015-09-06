@@ -5,7 +5,7 @@ import contextlib
 import SocketServer
 import threading
 
-def wait_server_up(address, port, tries=1000, timeout=1):
+def wait_server_up(address, port, tries=1000, timeout=0.0001):
     """
     This function blocks the execution until connecting successfully to the
     given address and port, or until an error happens - in this case, it will
