@@ -7,7 +7,7 @@ import contextlib
 import time
 import errno
 
-from ugly.net import Server, wait_server_up, get_socket
+from ugly.net import Server, wait_server_up, wait_server_down, get_socket
 from ugly.process import ProcessContext
 
 class TestServer(unittest.TestCase):
@@ -120,6 +120,42 @@ class TestWaiters(unittest.TestCase):
             condition.acquire()
             condition.notify_all()
             condition.release()
+
+class TestWaiters(unittest.TestCase):
+
+    def test_wait_server_down(self):
+        """
+        ``wait_server_up()`` will block a until port being listened is down.
+        """
+        delay = 0.01
+
+        def serve(condition):
+            server = Server(message='Server is up')
+
+            thread = threading.Thread(target=server.serve_forever)
+            thread.start()
+
+            condition.acquire()
+            condition.wait()
+
+            time.sleep(delay)
+
+            server.shutdown()
+            thread.join()
+
+        condition = multiprocessing.Condition()
+        with ProcessContext(target=serve, args=(condition,)) as pc:
+            wait_server_up('localhost', 9000, timeout=0.0001)
+            start = time.time()
+
+            condition.acquire()
+            condition.notify_all()
+            condition.release()
+
+            wait_server_down('localhost', 9000, timeout=0.0001)
+
+            self.assertTrue(time.time() - start > delay)
+
 
 from ugly.finder import TestFinder
 
