@@ -8,6 +8,7 @@ import time
 import errno
 
 from ugly.net import Server, wait_server_up, get_socket
+from ugly.process import ProcessContext
 
 class TestServer(unittest.TestCase):
 
@@ -24,18 +25,13 @@ class TestServer(unittest.TestCase):
             server.handle_request()
             server.server_close()
 
-        process = multiprocessing.Process(target=serve)
-        process.daemon = True
-        process.start()
-        time.sleep(0.003)
+        with ProcessContext(target=serve):
+            time.sleep(0.003)
+            with contextlib.closing(get_socket()) as s:
+                s.connect(('localhost', 9000))
+                msg = s.recv(len('Server is up'))
 
-        with contextlib.closing(get_socket()) as s:
-            s.connect(('localhost', 9000))
-            msg = s.recv(len('Server is up'))
-
-            self.assertEquals('Server is up', msg)
-
-        process.join()
+                self.assertEquals('Server is up', msg)
 
 
     def test_with(self):
@@ -66,40 +62,29 @@ class TestWaiters(unittest.TestCase):
         delay = 0.01
         start = time.time()
 
-        def serve(condition, queue):
-            try:
-                time.sleep(delay)
+        def serve(condition):
+            time.sleep(delay)
 
-                server = Server(message='Server is up')
+            server = Server(message='Server is up')
 
-                thread = threading.Thread(target=server.serve_forever)
-                thread.start()
+            thread = threading.Thread(target=server.serve_forever)
+            thread.start()
 
-                condition.acquire()
-                condition.wait()
+            condition.acquire()
+            condition.wait()
 
-                server.shutdown()
-                thread.join()
-            except Exception as e:
-                queue.put(e)
+            server.shutdown()
+            thread.join()
 
         condition = multiprocessing.Condition()
-        queue = multiprocessing.Queue()
-        process = multiprocessing.Process(target=serve, args=(condition, queue))
-        process.start()
+        with ProcessContext(target=serve, args=(condition,)) as pc:
+            wait_server_up('localhost', 9000, timeout=0.0001)
 
-        wait_server_up('localhost', 9000, timeout=0.0001)
+            self.assertTrue(time.time() - start > delay)
 
-        self.assertTrue(time.time() - start > delay)
-
-        condition.acquire()
-        condition.notify_all()
-        condition.release()
-
-        process.join()
-
-        if not queue.empty():
-            raise queue.get()
+            condition.acquire()
+            condition.notify_all()
+            condition.release()
 
     def test_wait_port_up_does_not_acquire_port(self):
         """
@@ -108,44 +93,33 @@ class TestWaiters(unittest.TestCase):
         """
         delay = 0.01
 
-        def serve(condition, queue):
-            try:
-                time.sleep(delay)
+        def serve(condition):
+            time.sleep(delay)
 
-                server = Server(message='Server is up')
+            server = Server(message='Server is up')
 
-                thread = threading.Thread(target=server.serve_forever)
-                thread.start()
+            thread = threading.Thread(target=server.serve_forever)
+            thread.start()
 
-                condition.acquire()
-                condition.wait()
+            condition.acquire()
+            condition.wait()
 
-                server.shutdown()
-                thread.join()
-            except Exception as e:
-                queue.put(e)
+            server.shutdown()
+            thread.join()
 
         condition = multiprocessing.Condition()
-        queue = multiprocessing.Queue()
-        process = multiprocessing.Process(target=serve, args=(condition, queue))
-        process.start()
+        with ProcessContext(target=serve, args=(condition,)) as pc:
+            wait_server_up('localhost', 9000, timeout=delay*2)
 
-        wait_server_up('localhost', 9000, timeout=delay*2)
+            with contextlib.closing(get_socket()) as s:
+                s.connect(('localhost', 9000))
+                msg = s.recv(len('Server is up'))
 
-        with contextlib.closing(get_socket()) as s:
-            s.connect(('localhost', 9000))
-            msg = s.recv(len('Server is up'))
+                self.assertEquals('Server is up', msg)
 
-            self.assertEquals('Server is up', msg)
-
-        condition.acquire()
-        condition.notify_all()
-        condition.release()
-
-        process.join()
-
-        if not queue.empty():
-            raise queue.get()
+            condition.acquire()
+            condition.notify_all()
+            condition.release()
 
 from ugly.finder import TestFinder
 
