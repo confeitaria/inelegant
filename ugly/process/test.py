@@ -54,6 +54,21 @@ class TestProcessContext(unittest.TestCase):
             self.assertFalse(pc.process.is_alive())
             self.assertTrue(time.time() - start < 60)
 
+    def test_save_process_exception(self):
+        """
+        If an exception happens in the spawned process, ``ProcessContext``
+        should provide it to the original process.
+        """
+        def serve():
+            raise AssertionError('Actually, it is expected')
+
+        with ProcessContext(target=serve) as pc:
+            pass
+
+        self.assertEquals(1, len(pc.exceptions))
+        self.assertIsInstance(pc.exceptions[0], AssertionError)
+        self.assertEquals('Actually, it is expected', pc.exceptions[0].args[0])
+
 
 from ugly.finder import TestFinder
 
