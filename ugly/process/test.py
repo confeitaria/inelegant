@@ -28,13 +28,13 @@ class TestProcessContext(unittest.TestCase):
         doing that.
         """
         def serve():
-            listener = multiprocessing.connection.Listener(('localhost', 9000))
+            listener = multiprocessing.connection.Listener(('localhost', 9001))
             with contextlib.closing(listener):
                 with contextlib.closing(listener.accept()) as connection:
                     connection.send('example')
 
         with ProcessContext(target=serve):
-            client = multiprocessing.connection.Client(('localhost', 9000))
+            client = multiprocessing.connection.Client(('localhost', 9001))
             with contextlib.closing(client) as client:
                 self.assertEquals('example', client.recv())
 
