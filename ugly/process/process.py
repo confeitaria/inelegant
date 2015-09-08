@@ -15,35 +15,33 @@ class ProcessContext(object):
     >>> pc.process.is_alive()
     False
 
-    It also stores any exception raised by the spawned process::
+    It also stores any exception untreated by the spawned process::
 
     >>> def serve():
     ...     raise Exception('example')
 
     >>> with ProcessContext(target=serve) as pc:
     ...     pass
-    >>> pc.exceptions
-    [Exception('example',)]
+    >>> pc.exception
+    Exception('example',)
     """
 
     def __init__(self, target, args=(), timeout=1):
         self.timeout = timeout
-        self.exceptions = []
-        self.exceptions_queue = multiprocessing.Queue()
-        self.from_process_queue = multiprocessing.Queue()
-        self.to_process_queue = multiprocessing.Queue()
+        self.exception = None
+        self.conversation = Conversation(target)
         self.process = multiprocessing.Process(
-            target=self._conversational(target), args=args
+            target=self.conversation, args=args
         )
 
     def get(self):
-        return self.from_process_queue.get()
+        return self.conversation.talk()
 
     def send(self, value):
-        self.to_process_queue.put(value)
+        self.conversation.listen(value)
 
     def go(self):
-        self.send(None)
+        self.conversation.listen(None)
 
     def __enter__(self):
         self.process.start()
@@ -54,26 +52,48 @@ class ProcessContext(object):
             self.process.terminate()
 
         self.process.join(self.timeout)
-        while not self.exceptions_queue.empty():
-            self.exceptions.append(self.exceptions_queue.get())
+        self.exception = self.conversation.get_error()
 
-    def _conversational(self, target):
+class Conversation(object):
+
+    def __init__(self, function):
+        self.listen_from = multiprocessing.Queue()
+        self.talk_to = multiprocessing.Queue()
+        self.errors_to = multiprocessing.Queue()
+        self.function = function
+
+    def __call__(self, *args, **kwargs):
+        f = self.start_conversation(self.function)
+        return f(*args, **kwargs)
+
+    def talk(self):
+        return self.talk_to.get()
+
+    def listen(self, value):
+        self.listen_from.put(value)
+
+    def get_error(self):
+        if not self.errors_to.empty():
+            return self.errors_to.get()
+
+    def start_conversation(self, function):
         def f(*args, **kwargs):
             try:
-                value = target(*args, **kwargs)
-                if inspect.isgeneratorfunction(target):
-                    self._converse(value)
+                value = function(*args, **kwargs)
+
+                if inspect.isgeneratorfunction(function):
+                    self.converse(value)
             except Exception as e:
-                self.exceptions_queue.put(e)
+                self.errors_to.put(e)
 
         return f
 
-    def _converse(self, generator):
-        generated_value = generator.next()
+    def converse(self, generator):
+        to_talk = generator.next()
         while True:
             try:
-                self.from_process_queue.put(generated_value)
-                sent_value = self.to_process_queue.get()
-                generated_value = generator.send(sent_value)
+                self.talk_to.put(to_talk)
+                listened = self.listen_from.get()
+                to_talk = generator.send(listened)
             except StopIteration:
                 break

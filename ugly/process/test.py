@@ -65,9 +65,8 @@ class TestProcessContext(unittest.TestCase):
         with ProcessContext(target=serve) as pc:
             pass
 
-        self.assertEquals(1, len(pc.exceptions))
-        self.assertIsInstance(pc.exceptions[0], AssertionError)
-        self.assertEquals('Actually, it is expected', pc.exceptions[0].args[0])
+        self.assertIsInstance(pc.exception, AssertionError)
+        self.assertEquals('Actually, it is expected', pc.exception.args[0])
 
     def test_send_receive_data(self):
         """
@@ -89,8 +88,8 @@ class TestProcessContext(unittest.TestCase):
 
             pc.go()
 
-        if pc.exceptions:
-            raise pc.exceptions[0]
+        if pc.exception is not None:
+            raise pc.exception
 
 from ugly.finder import TestFinder
 
