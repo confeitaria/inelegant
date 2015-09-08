@@ -62,7 +62,7 @@ class TestWaiters(unittest.TestCase):
         delay = 0.01
         start = time.time()
 
-        def serve(condition):
+        def serve():
             time.sleep(delay)
 
             server = Server(message='Server is up')
@@ -70,21 +70,15 @@ class TestWaiters(unittest.TestCase):
             thread = threading.Thread(target=server.serve_forever)
             thread.start()
 
-            condition.acquire()
-            condition.wait()
-
+            yield # blocks until "pc.go()"
             server.shutdown()
             thread.join()
 
-        condition = multiprocessing.Condition()
-        with ProcessContext(target=serve, args=(condition,)) as pc:
+        with ProcessContext(target=serve) as pc:
             wait_server_up('localhost', 9000)
-
             self.assertTrue(time.time() - start > delay)
 
-            condition.acquire()
-            condition.notify_all()
-            condition.release()
+            pc.go() # resumes execution at "yield"
 
     def test_wait_server_up_does_not_acquire_port(self):
         """
@@ -93,7 +87,7 @@ class TestWaiters(unittest.TestCase):
         """
         delay = 0.01
 
-        def serve(condition):
+        def serve():
             time.sleep(delay)
 
             server = Server(message='Server is up')
@@ -101,14 +95,11 @@ class TestWaiters(unittest.TestCase):
             thread = threading.Thread(target=server.serve_forever)
             thread.start()
 
-            condition.acquire()
-            condition.wait()
-
+            yield
             server.shutdown()
             thread.join()
 
-        condition = multiprocessing.Condition()
-        with ProcessContext(target=serve, args=(condition,)) as pc:
+        with ProcessContext(target=serve) as pc:
             wait_server_up('localhost', 9000, timeout=delay*2)
 
             with contextlib.closing(get_socket()) as s:
@@ -117,11 +108,7 @@ class TestWaiters(unittest.TestCase):
 
                 self.assertEquals('Server is up', msg)
 
-            condition.acquire()
-            condition.notify_all()
-            condition.release()
-
-class TestWaiters(unittest.TestCase):
+            pc.go()
 
     def test_wait_server_down(self):
         """
@@ -129,28 +116,22 @@ class TestWaiters(unittest.TestCase):
         """
         delay = 0.01
 
-        def serve(condition):
+        def serve():
             server = Server(message='Server is up')
 
             thread = threading.Thread(target=server.serve_forever)
             thread.start()
-
-            condition.acquire()
-            condition.wait()
+            yield # blocks until "pc.go()"
 
             time.sleep(delay)
-
             server.shutdown()
             thread.join()
 
-        condition = multiprocessing.Condition()
-        with ProcessContext(target=serve, args=(condition,)) as pc:
+        with ProcessContext(target=serve) as pc:
             wait_server_up('localhost', 9000)
             start = time.time()
 
-            condition.acquire()
-            condition.notify_all()
-            condition.release()
+            pc.go() # resumes execution at "yield"
 
             wait_server_down('localhost', 9000)
 
