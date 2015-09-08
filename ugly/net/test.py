@@ -70,7 +70,7 @@ class TestWaiters(unittest.TestCase):
             thread = threading.Thread(target=server.serve_forever)
             thread.start()
 
-            yield # blocks until "pc.go()"
+            yield # Should wait until the assert is done.
             server.shutdown()
             thread.join()
 
@@ -78,7 +78,7 @@ class TestWaiters(unittest.TestCase):
             wait_server_up('localhost', 9000)
             self.assertTrue(time.time() - start > delay)
 
-            pc.go() # resumes execution at "yield"
+            pc.go() # Once the assert is done, proceed.
 
     def test_wait_server_up_does_not_acquire_port(self):
         """
@@ -95,7 +95,7 @@ class TestWaiters(unittest.TestCase):
             thread = threading.Thread(target=server.serve_forever)
             thread.start()
 
-            yield
+            yield # Wait until asserts are checkd.
             server.shutdown()
             thread.join()
 
@@ -108,7 +108,7 @@ class TestWaiters(unittest.TestCase):
 
                 self.assertEquals('Server is up', msg)
 
-            pc.go()
+            pc.go() # Once the asserts were tested, we can shut the server down.
 
     def test_wait_server_down(self):
         """
@@ -121,7 +121,7 @@ class TestWaiters(unittest.TestCase):
 
             thread = threading.Thread(target=server.serve_forever)
             thread.start()
-            yield # blocks until "pc.go()"
+            yield # Wait until server is up.
 
             time.sleep(delay)
             server.shutdown()
@@ -131,7 +131,7 @@ class TestWaiters(unittest.TestCase):
             wait_server_up('localhost', 9000)
             start = time.time()
 
-            pc.go() # resumes execution at "yield"
+            pc.go() # Once server is up, we can proceed with the test.
 
             wait_server_down('localhost', 9000)
 
