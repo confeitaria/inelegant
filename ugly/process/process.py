@@ -1,4 +1,5 @@
 import multiprocessing
+import inspect
 
 class ProcessContext(object):
     """
@@ -29,9 +30,20 @@ class ProcessContext(object):
         self.timeout = timeout
         self.exceptions = []
         self.exceptions_queue = multiprocessing.Queue()
+        self.from_process_queue = multiprocessing.Queue()
+        self.to_process_queue = multiprocessing.Queue()
         self.process = multiprocessing.Process(
-            target=self.queue_exception(target), args=args
+            target=self._conversational(target), args=args
         )
+
+    def get(self):
+        return self.from_process_queue.get()
+
+    def send(self, value):
+        self.to_process_queue.put(value)
+
+    def go(self):
+        self.send(None)
 
     def __enter__(self):
         self.process.start()
@@ -45,11 +57,23 @@ class ProcessContext(object):
         while not self.exceptions_queue.empty():
             self.exceptions.append(self.exceptions_queue.get())
 
-    def queue_exception(self, target):
+    def _conversational(self, target):
         def f(*args, **kwargs):
             try:
-                target(*args, **kwargs)
+                value = target(*args, **kwargs)
+                if inspect.isgeneratorfunction(target):
+                    self._converse(value)
             except Exception as e:
                 self.exceptions_queue.put(e)
 
         return f
+
+    def _converse(self, generator):
+        generated_value = generator.next()
+        while True:
+            try:
+                self.from_process_queue.put(generated_value)
+                sent_value = self.to_process_queue.get()
+                generated_value = generator.send(sent_value)
+            except StopIteration:
+                break
