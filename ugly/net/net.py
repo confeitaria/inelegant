@@ -8,13 +8,77 @@ import threading
 def wait_server_up(address, port, tries=1000, timeout=0.0001):
     """
     This function blocks the execution until connecting successfully to the
-    given address and port, or until an error happens - in this case, it will
-    raise the exception.
+    given address and port.
 
-    If an conection is refused, this error will be ignored since it probably
-    means the server is not up yet. However, this error will only be ignored
-    for <tries> times (by default 1000). Once the connection is refuses for more
-    than <tries> times, an exception will be raised.
+    It is useful because server functions, classes, processes etc. frequently
+    take some time to start listening a port - they have to load resources,
+    process them etc. A common workaround is to use ``time.sleep()`` or similar
+    function to block the execution for a small amount of time. However, this
+    is both unreliable and wasteful. It is unreliable because the server may
+    occasionally take more time to boot than the function sleeps. It is also
+    wasteful since, to avoid the unreliability, we tend to wait for a larger
+    time than the server requires in most situations.
+
+    With ``wait_server_up()`` we can avoid it. It will block only until the port
+    is serving. For example, if we have a "slow server" as the one below...
+
+    ::
+
+    >>> import ugly.net, multiprocessing, socket, contextlib, time
+    >>> def serve():
+    ...     time.sleep(0.01)
+    ...     server = ugly.net.Server('localhost', 9000, message='my message')
+    ...     server.serve_forever()
+
+    ...that we start in a different process...
+
+    ::
+
+    >>> process = multiprocessing.Process(target=serve)
+
+    ...trying to get the value just after starting the process will probably
+    fail::
+
+    >>> process.start()
+    >>> with contextlib.closing(socket.socket()) as s:
+    ...     s.connect(('localhost', 9000))
+    ...     s.recv(10)
+    Traceback (most recent call last):
+     ...
+    error: [Errno 111] Connection refused
+    >>> process.terminate()
+
+    Now, if we use ``wait_server_up()``, the port will be surely available::
+
+    >>> process = multiprocessing.Process(target=serve)
+    >>> process.start()
+    >>> with contextlib.closing(socket.socket()) as s:
+    ...     wait_server_up('localhost', 9000)
+    ...     s.connect(('localhost', 9000))
+    ...     s.recv(10)
+    'my message'
+    >>> process.terminate()
+
+    And the best thing is, it will take only a minimum amount of time::
+
+    >>> process = multiprocessing.Process(target=serve)
+    >>> process.start()
+    >>> with contextlib.closing(socket.socket()) as s:
+    ...     start = time.time()
+    ...     wait_server_up('localhost', 9000)
+    ...     0.01 < time.time() - start < 0.02
+    True
+    >>> process.terminate()
+
+    If a network error happens, it will raise the exception, except if the
+    connection is refused. If an conection is refused, this error will be
+    ignored since it probably means the server is not up yet. However, this
+    error will only be ignored for <tries> times (by default 1000). Once the
+    connection is refuses for more than <tries> times, an exception will be
+    raised.
+
+    The funcion allows for defining the socket timeout. Setting a low value made
+    this function faster than setting none.
     """
     for i in xrange(tries):
         s = socket.socket()
@@ -35,15 +99,75 @@ def wait_server_up(address, port, tries=1000, timeout=0.0001):
 
 def wait_server_down(address, port, tries=1000, timeout=0.0001):
     """
-    This function blocks until the given port is free at the given address, or
-    until an error occurrs, in which case the exception is raised.
+    This function blocks until the given port is free at the given address.
+
+    It is useful because server functions, classes, processes etc. frequently
+    take some time to stop listening a port - they have to unload resources,
+    close files etc. A common workaround is to use ``time.sleep()`` or similar
+    function to block the execution for a small amount of time. However, this
+    is both unreliable and wasteful. It is unreliable because the server may
+    occasionally take more time to shut down than the function sleeps. It is
+    also wasteful since, to avoid the unreliability, we tend to wait for a
+    larger times than the server requires in most situations to shut down.
+
+    With ``wait_server_down()`` we can avoid it. It will block only until nobody
+    is listening the port anymore. For example, if we have a "slow server" as
+    the one below...
+
+    ::
+
+    >>> import ugly.net, threading, contextlib, socket
+    >>> server = ugly.net.Server('localhost', 9000, message='my message')
+    >>> def serve():
+    ...     server.serve_forever() # This only stops the loop
+    ...     time.sleep(0.01)
+    ...     server.server_close()  # This effectively close the connection
+
+    ...that we start in a different thread...
+
+    ::
+
+    >>> thread = threading.Thread(target=serve)
+
+    ...we could not bind to the same port while it is not finished.::
+
+    >>> thread.start()
+    >>> with contextlib.closing(socket.socket()) as s:
+    ...     wait_server_up('localhost', 9000)
+    ...     server.shutdown()
+    ...     s.bind(('localhost', 9000))
+    Traceback (most recent call last):
+     ...
+    error: [Errno 98] Address already in use
+    >>> thread.join()
+
+    Now, if we use ``wait_server_down()``, the port will be surely available::
+
+    >>> server = ugly.net.Server('localhost', 9000, message='my message')
+    >>> thread = threading.Thread(target=serve)
+    >>> thread.start()
+    >>> with contextlib.closing(socket.socket()) as s:
+    ...     wait_server_up('localhost', 9000)
+    ...     server.shutdown()
+    ...     wait_server_down('localhost', 9000)
+    ...     s.bind(('localhost', 9000))
+    >>> thread.join()
+
+    And the best thing is, it will take only a minimum amount of time::
+
 
     If an conection is refused or reset, this error will be ignored since it
     probably means respectively the server is not up (as excepted) or just went
     down during the connection, which is acceptable.
 
-    The funcion allows for defining the socket timeout. Setting a low value made
-    this function faster than setting none.
+    The function tries to connect to the server for a number of times given by
+    the ``tries`` argument. Each connection will have the timeout given by the
+    ``timeout`` argument. If the server is not down after roughly
+    ``tries*timeout`` function, you can make it wait longer by giving a larger
+    value to any function. In general, the values for timeout are very small,
+    so it is easier to give it, but then each connection can take a bit more of
+    time than needed. If the server takes too much time to shut down, however,
+    it may not be a problem.
     """
     for i in xrange(tries):
         s = socket.socket()
