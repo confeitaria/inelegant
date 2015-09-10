@@ -87,7 +87,7 @@ class ProcessContext(object):
         self.exception = None
         self.conversation = Conversation(target)
         self.process = multiprocessing.Process(
-            target=self.conversation, args=args
+            target=self.conversation.start, args=args
         )
 
     def get(self):
@@ -148,7 +148,7 @@ class Conversation(object):
         self.errors_to = multiprocessing.Queue()
         self.function = function
 
-    def __call__(self, *args, **kwargs):
+    def start(self, *args, **kwargs):
         f = self.start_conversation(self.function)
         return f(*args, **kwargs)
 
