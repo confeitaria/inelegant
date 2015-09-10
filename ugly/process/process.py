@@ -142,11 +142,19 @@ class ProcessContext(object):
 
 class Conversation(object):
 
-    def __init__(self, function):
-        self.listen_from = multiprocessing.Queue()
-        self.talk_to = multiprocessing.Queue()
-        self.errors_to = multiprocessing.Queue()
+    def __init__(
+            self, function, listen_from=None, talk_to=None, errors_to=None
+        ):
         self.function = function
+        self.listen_from =(
+            listen_from if listen_from is not None else multiprocessing.Queue()
+        )
+        self.talk_to =(
+            talk_to if talk_to is not None else multiprocessing.Queue()
+        )
+        self.errors_to =(
+            errors_to if errors_to is not None else multiprocessing.Queue()
+        )
 
     def start(self, *args, **kwargs):
         f = self.start_conversation(self.function)
