@@ -139,21 +139,26 @@ class ProcessContext(object):
 
         self.process.join(self.timeout)
         self.exception = self.conversation.get_error()
+        self.result = self.conversation.get_result()
 
 class Conversation(object):
 
     def __init__(
-            self, function, listen_from=None, talk_to=None, errors_to=None
+            self, function, listen_from=None, talk_to=None, errors_to=None,
+            result=None
         ):
         self.function = function
-        self.listen_from =(
+        self.listen_from = (
             listen_from if listen_from is not None else multiprocessing.Queue()
         )
-        self.talk_to =(
+        self.talk_to = (
             talk_to if talk_to is not None else multiprocessing.Queue()
         )
-        self.errors_to =(
+        self.errors_to = (
             errors_to if errors_to is not None else multiprocessing.Queue()
+        )
+        self.result =(
+            result if result is not None else multiprocessing.Queue()
         )
 
     def start(self, *args, **kwargs):
@@ -170,6 +175,10 @@ class Conversation(object):
         if not self.errors_to.empty():
             return self.errors_to.get()
 
+    def get_result(self):
+        if not self.result.empty():
+            return self.result.get()
+
     def start_conversation(self, function):
         def f(*args, **kwargs):
             try:
@@ -177,6 +186,8 @@ class Conversation(object):
 
                 if inspect.isgeneratorfunction(function):
                     self.converse(value)
+                else:
+                    self.result.put(value)
             except Exception as e:
                 self.errors_to.put(e)
 
