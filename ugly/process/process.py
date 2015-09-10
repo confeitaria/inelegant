@@ -15,6 +15,9 @@ class ProcessContext(object):
     >>> pc.process.is_alive()
     False
 
+    Retrieving exceptions
+    ---------------------
+
     It also stores any exception untreated by the spawned process::
 
     >>> def serve():
@@ -24,6 +27,59 @@ class ProcessContext(object):
     ...     pass
     >>> pc.exception
     Exception('example',)
+
+    Sending and receiving data
+    --------------------------
+
+    If the target function is a generator function, then the spawned process
+    will block at each ``yield`` statement. The yielded value can be retrieved
+    by ``ProcessContect.get()``. This method, however, does not make the process
+    continue; to do that, one should call ``ProcessContect.go()``:
+
+    >>> def serve():
+    ...     yield 1
+    ...     yield 2
+    ...     yield 5
+    >>> with ProcessContext(target=serve) as pc:
+    ...     pc.get()
+    ...     pc.go()
+    ...     pc.get()
+    ...     pc.go()
+    ...     pc.get()
+    ...     pc.go()
+    1
+    2
+    5
+
+    >>> def serve():
+    ...     value1, value2 = yield 1
+    ...     yield (value1+value2)
+    >>> with ProcessContext(target=serve) as pc:
+    ...     value = pc.get()
+    ...     pc.send([value, 1])
+    ...     sum = pc.get()
+    ...     pc.go()
+    ...     sum
+    2
+
+    Note that ``ProcessContect.get()`` will return all values in the order they
+    were yielded, even if one call ``ProcessContect.send()`` or
+    ``ProcessContect.go()`` in the meantime::
+
+    >>> def serve():
+    ...     yield 1
+    ...     yield 2
+    ...     yield 5
+    >>> with ProcessContext(target=serve) as pc:
+    ...     pc.go()
+    ...     pc.go()
+    ...     pc.go()
+    ...     pc.get()
+    ...     pc.get()
+    ...     pc.get()
+    1
+    2
+    5
     """
 
     def __init__(self, target, args=(), timeout=1):
@@ -35,12 +91,42 @@ class ProcessContext(object):
         )
 
     def get(self):
+        """
+        Retrieves a value yielded by the target function::
+
+        >>> def serve():
+        ...     yield 1
+        >>> with ProcessContext(target=serve) as pc:
+        ...     value = pc.get()
+        ...     pc.go()
+        ...     value
+        1
+        """
         return self.conversation.talk()
 
     def send(self, value):
+        """
+        Sends a value to be returned by the ``yield`` statement at the target
+        function::
+
+        >>> def serve():
+        ...     value = yield
+        ...     yield value + 1
+        >>> with ProcessContext(target=serve) as pc:
+        ...     pc.send(1)
+        ...     pc.get() # Ignored, from the first yield.
+        ...     value = pc.get()
+        ...     pc.go()
+        ...     value
+        2
+        """
         self.conversation.listen(value)
 
     def go(self):
+        """
+        Makes a process blocked by a ``yield`` statement proceed with its
+        execution. It is equivalent to ``ProcessContect.send(None)``.
+        """
         self.conversation.listen(None)
 
     def __enter__(self):
