@@ -91,6 +91,20 @@ class TestProcessContext(unittest.TestCase):
         if pc.exception is not None:
             raise pc.exception
 
+    def test_get_result(self):
+        """
+        ``ProcessContext`` should store the returned value (if the function is
+        not a generator function).
+        """
+        def serve():
+            return 1
+
+        with ProcessContext(target=serve) as pc:
+            pass
+
+        self.assertEquals(1, pc.result)
+
+
 from ugly.finder import TestFinder
 
 load_tests = TestFinder('.', 'ugly.process.process').load_tests
