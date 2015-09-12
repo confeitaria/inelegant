@@ -102,7 +102,7 @@ class ProcessContext(object):
         ...     value
         1
         """
-        return self.conversation.talk()
+        return self.conversation.get_from_child()
 
     def send(self, value):
         """
@@ -120,14 +120,14 @@ class ProcessContext(object):
         ...     value
         2
         """
-        self.conversation.listen(value)
+        self.conversation.send_to_child(value)
 
     def go(self):
         """
         Makes a process blocked by a ``yield`` statement proceed with its
         execution. It is equivalent to ``ProcessContect.send(None)``.
         """
-        self.conversation.listen(None)
+        self.conversation.send_to_child(None)
 
     def __enter__(self):
         self.process.start()
@@ -143,62 +143,44 @@ class ProcessContext(object):
 
 class Conversation(object):
 
-    def __init__(
-            self, function, listen_from=None, talk_to=None, errors_to=None,
-            result=None
-        ):
+    def __init__(self, function):
         self.function = function
-        self.listen_from = (
-            listen_from if listen_from is not None else multiprocessing.Queue()
-        )
-        self.talk_to = (
-            talk_to if talk_to is not None else multiprocessing.Queue()
-        )
-        self.errors_to = (
-            errors_to if errors_to is not None else multiprocessing.Queue()
-        )
-        self.result =(
-            result if result is not None else multiprocessing.Queue()
-        )
+        self.child_to_parent = multiprocessing.Queue()
+        self.parent_to_child = multiprocessing.Queue()
+        self.error = multiprocessing.Queue()
+        self.result = multiprocessing.Queue()
 
     def start(self, *args, **kwargs):
-        f = self.start_conversation(self.function)
-        return f(*args, **kwargs)
+        try:
+            value = self.function(*args, **kwargs)
 
-    def talk(self):
-        return self.talk_to.get()
+            if inspect.isgeneratorfunction(self.function):
+                self.converse(value)
+            else:
+                self.result.put(value)
+        except Exception as e:
+            self.error.put(e)
 
-    def listen(self, value):
-        self.listen_from.put(value)
+    def get_from_child(self):
+        return self.child_to_parent.get()
+
+    def send_to_child(self, value):
+        self.parent_to_child.put(value)
 
     def get_error(self):
-        if not self.errors_to.empty():
-            return self.errors_to.get()
+        if not self.error.empty():
+            return self.error.get()
 
     def get_result(self):
         if not self.result.empty():
             return self.result.get()
 
-    def start_conversation(self, function):
-        def f(*args, **kwargs):
-            try:
-                value = function(*args, **kwargs)
-
-                if inspect.isgeneratorfunction(function):
-                    self.converse(value)
-                else:
-                    self.result.put(value)
-            except Exception as e:
-                self.errors_to.put(e)
-
-        return f
-
     def converse(self, generator):
-        to_talk = generator.next()
+        to_parent = generator.next()
         while True:
             try:
-                self.talk_to.put(to_talk)
-                listened = self.listen_from.get()
-                to_talk = generator.send(listened)
+                self.child_to_parent.put(to_parent)
+                from_parent = self.parent_to_child.get()
+                to_parent = generator.send(from_parent)
             except StopIteration:
                 break
