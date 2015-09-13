@@ -3,8 +3,8 @@ import inspect
 
 class ContextualProcess(multiprocessing.Process):
     """
-    ``ContextualProcess`` starts and stops a ``multiprocessing.Process`` instance
-    automatically::
+    ``ContextualProcess`` is a ``multiprocessing.Process`` sublclass that starts 
+    and stops itself automatically::
 
     >>> import time
     >>> def serve():
@@ -16,8 +16,19 @@ class ContextualProcess(multiprocessing.Process):
     >>> pc.is_alive()
     False
 
-    Retrieving exceptions
-    ---------------------
+    Retrieving results and exceptions
+    ---------------------------------
+
+    Once the process is finished, the returned value can be retrieved from the
+    contextual process::
+
+    >>> def serve():
+    ...     return 3
+
+    >>> with ContextualProcess(target=serve) as pc:
+    ...     pass
+    >>> pc.result
+    3
 
     It also stores any exception untreated by the spawned process::
 
@@ -34,8 +45,8 @@ class ContextualProcess(multiprocessing.Process):
 
     If the target function is a generator function, then the spawned process
     will block at each ``yield`` statement. The yielded value can be retrieved
-    by ``ProcessContect.get()``. This method, however, does not make the process
-    continue; to do that, one should call ``ProcessContect.go()``:
+    by ``ContextualProcess.get()``. This method, however, does not make the
+    process continue; to do that, one should call ``ProcessContect.go()``:
 
     >>> def serve():
     ...     yield 1
@@ -63,8 +74,8 @@ class ContextualProcess(multiprocessing.Process):
     ...     sum
     2
 
-    Note that ``ContextualProcess.get()`` will return all values in the order they
-    were yielded, even if one call ``ProcessContect.send()`` or
+    Note that ``ContextualProcess.get()`` will return all values in the order
+    they were yielded, even if one call ``ProcessContect.send()`` or
     ``ProcessContect.go()`` in the meantime::
 
     >>> def serve():
