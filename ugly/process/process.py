@@ -237,7 +237,49 @@ class ContextualProcess(multiprocessing.Process):
             raise self.exception
 
 class Conversation(object):
+    """
+    ```Conversation``` provides a somewhat more succinct way to interact with a
+    function running in a different process.
 
+    Creating a conversation
+    -----------------------
+
+    ``Conversation`` receives a generator function as its argument; giving a
+    normal function will result in error. Once created, the bound ``start()``
+    method from the conversation can be given as a target to
+    ``multiprocessing.Process``. So, we could have a function like this::
+
+    >>> def f():
+    ...     value = yield 1
+    ...     yield value + 1
+
+    ...that would be used like this::
+
+    >>> conversation = Conversation(function=f)
+    >>> import multiprocessing
+    >>> process = multiprocessing.Process(target=conversation.start)
+    >>> process.start()
+
+    "Talking" and "listening" to the process
+    ----------------------------------------
+
+    Once a conversation process started, there should follow a series of steps
+    where, for each ``yield`` in the generator function, the main process first
+    gets the yielded value and then send a value back::
+
+    >>> conversation.get_from_child()
+    1
+    >>> conversation.send_to_child(2)
+    >>> conversation.get_from_child()
+    3
+    >>> conversation.send_to_child(None)
+    >>> process.join()
+
+    **It is mandatory to always get and send a value to each ``yield``
+    statement.** You may note that we send a ``None`` value to the child process
+    before joining the process. If we do not do that, the joined process will
+    be blocked - and the main process as well.
+    """
     def __init__(self, function):
         if not inspect.isgeneratorfunction(function):
             raise TypeError('Conversations require generator functions.')
