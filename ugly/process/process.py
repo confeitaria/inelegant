@@ -84,11 +84,31 @@ class ProcessContext(object):
 
     def __init__(self, target, args=(), timeout=1):
         self.timeout = timeout
+
+        self.result = None
         self.exception = None
-        self.conversation = Conversation(target)
-        self.process = multiprocessing.Process(
-            target=self.conversation.start, args=args
-        )
+
+        try:
+            self.conversation = Conversation(target)
+            self.target = self.conversation.start
+        except:
+            self.conversation = None
+            self.target = target
+
+        self.error_queue = multiprocessing.Queue()
+        self.result_queue = multiprocessing.Queue()
+
+        self.process = multiprocessing.Process(target=self.run, args=args)
+
+    def run(self, *args, **kwargs):
+        try:
+            result = self.target(*args, **kwargs)
+
+            self.result_queue.put(result)
+            self.error_queue.put(None)
+        except Exception as e:
+            self.result_queue.put(None)
+            self.error_queue.put(e)
 
     def get(self):
         """
@@ -138,42 +158,34 @@ class ProcessContext(object):
             self.process.terminate()
 
         self.process.join(self.timeout)
-        self.exception = self.conversation.get_error()
-        self.result = self.conversation.get_result()
+
+        if not self.error_queue.empty():
+            self.exception = self.error_queue.get()
+        if not self.result_queue.empty():
+            self.result = self.result_queue.get()
 
 class Conversation(object):
 
     def __init__(self, function):
+        if not inspect.isgeneratorfunction(function):
+            raise TypeError('Conversations require generator functions.')
+
         self.function = function
         self.child_to_parent = multiprocessing.Queue()
         self.parent_to_child = multiprocessing.Queue()
-        self.error = multiprocessing.Queue()
-        self.result = multiprocessing.Queue()
 
     def start(self, *args, **kwargs):
         try:
-            value = self.function(*args, **kwargs)
-
-            if inspect.isgeneratorfunction(self.function):
-                self.converse(value)
-            else:
-                self.result.put(value)
+            generator = self.function(*args, **kwargs)
+            self.converse(generator)
         except Exception as e:
-            self.error.put(e)
+            generator.throw(e)
 
     def get_from_child(self):
         return self.child_to_parent.get()
 
     def send_to_child(self, value):
         self.parent_to_child.put(value)
-
-    def get_error(self):
-        if not self.error.empty():
-            return self.error.get()
-
-    def get_result(self):
-        if not self.result.empty():
-            return self.result.get()
 
     def converse(self, generator):
         to_parent = generator.next()
