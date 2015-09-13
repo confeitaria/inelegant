@@ -85,9 +85,11 @@ class ContextualProcess(multiprocessing.Process):
 
     def __init__(
             self, group=None, target=None, name=None, args=None, kwargs=None,
-            timeout=1
+            timeout=1, force_terminate=False, raise_child_error=False
         ):
         self.timeout = timeout
+        self.force_terminate = force_terminate
+        self.raise_child_error = raise_child_error
 
         self.result = None
         self.exception = None
@@ -119,6 +121,9 @@ class ContextualProcess(multiprocessing.Process):
             self.error_queue.put(e)
 
     def clean_up(self):
+        if self.force_terminate:
+            self.terminate()
+
         self.join(self.timeout)
 
         if not self.error_queue.empty():
@@ -175,6 +180,9 @@ class ContextualProcess(multiprocessing.Process):
             self.terminate()
 
         self.clean_up()
+
+        if self.raise_child_error and self.exception is not None:
+            raise self.exception
 
 class Conversation(object):
 
