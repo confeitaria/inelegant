@@ -110,6 +110,14 @@ class ProcessContext(object):
             self.result_queue.put(None)
             self.error_queue.put(e)
 
+    def clean_up(self):
+        self.process.join(self.timeout)
+
+        if not self.error_queue.empty():
+            self.exception = self.error_queue.get()
+        if not self.result_queue.empty():
+            self.result = self.result_queue.get()
+
     def get(self):
         """
         Retrieves a value yielded by the target function::
@@ -151,18 +159,14 @@ class ProcessContext(object):
 
     def __enter__(self):
         self.process.start()
+
         return self
 
     def __exit__(self, type, value, traceback):
         if value is not None:
             self.process.terminate()
 
-        self.process.join(self.timeout)
-
-        if not self.error_queue.empty():
-            self.exception = self.error_queue.get()
-        if not self.result_queue.empty():
-            self.result = self.result_queue.get()
+        self.clean_up()
 
 class Conversation(object):
 
