@@ -130,6 +130,25 @@ class TestContextualProcess(unittest.TestCase):
 
             self.assertEquals('Actually, it is expected', e.args[0])
 
+    def test_send_receive_data_fails_on_non_generator_function(self):
+        """
+        If one tries to send to or receive data from a ``ContextualProcess``
+        that received a non-generator function, those calls should fail.
+        """
+        def serve():
+            time.sleep(0.001)
+
+        with ContextualProcess(target=serve) as pc:
+            with self.assertRaises(ValueError):
+                value = pc.get()
+
+            with self.assertRaises(ValueError):
+                value = pc.send(2)
+
+            with self.assertRaises(ValueError):
+                pc.go()
+
+
 from ugly.finder import TestFinder
 
 load_tests = TestFinder('.', 'ugly.process.process').load_tests
