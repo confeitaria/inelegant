@@ -19,9 +19,7 @@ class TestServer(unittest.TestCase):
         __ https://docs.python.org/2/library/socketserver.html
         """
         def serve():
-            server = Server(
-                address='localhost', port=9000, message='Server is up'
-            )
+            server = Server(host='localhost', port=9000, message='Server is up')
             server.handle_request()
             server.server_close()
 

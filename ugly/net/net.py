@@ -5,7 +5,7 @@ import contextlib
 import SocketServer
 import threading
 
-def wait_server_up(address, port, tries=1000, timeout=0.0001):
+def wait_server_up(host, port, tries=1000, timeout=0.0001):
     """
     This function blocks the execution until connecting successfully to the
     given address and port.
@@ -85,7 +85,7 @@ def wait_server_up(address, port, tries=1000, timeout=0.0001):
         s.settimeout(timeout)
         with contextlib.closing(s):
             try:
-                s.connect((address, port))
+                s.connect((host, port))
                 break
             except socket.error as e:
                 if e.errno == errno.ECONNREFUSED:
@@ -97,7 +97,7 @@ def wait_server_up(address, port, tries=1000, timeout=0.0001):
             'Connection to server failed after {0} attempts'.format(tries)
         )
 
-def wait_server_down(address, port, tries=1000, timeout=0.0001):
+def wait_server_down(host, port, tries=1000, timeout=0.0001):
     """
     This function blocks until the given port is free at the given address.
 
@@ -174,7 +174,7 @@ def wait_server_down(address, port, tries=1000, timeout=0.0001):
         with contextlib.closing(s):
             try:
                 s.settimeout(timeout)
-                s.connect((address, port))
+                s.connect((host, port))
             except socket.timeout:
                 continue
             except socket.error as e:
@@ -196,7 +196,7 @@ class Server(SocketServer.TCPServer):
     same message, given to its constructor::
 
     >>> server = Server(
-    ...     address='localhost', port=9000, message='My message'
+    ...     host='localhost', port=9000, message='My message'
     ... )
 
     It is a ``SocketServer.TCPServer`` subclass, so one can use it as one would
@@ -242,10 +242,10 @@ class Server(SocketServer.TCPServer):
     """
 
     def __init__(
-            self, address='localhost', port=9000, message='Message sent',
+            self, host='localhost', port=9000, message='Message sent',
             wait_for_release=0.001
         ):
-        self.address = address
+        self.host = host
         self.port = port
         self.message = message
         self.wait_for_release = wait_for_release
@@ -292,7 +292,7 @@ class Server(SocketServer.TCPServer):
         with self.init_lock:
             if not self._is_initialized():
                 SocketServer.TCPServer.__init__(
-                    self, (self.address, self.port), ServerHandler
+                    self, (self.host, self.port), ServerHandler
                 )
 
     def _is_initialized(self):
