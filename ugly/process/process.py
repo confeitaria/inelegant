@@ -96,7 +96,8 @@ class ContextualProcess(multiprocessing.Process):
 
     def __init__(
             self, group=None, target=None, name=None, args=None, kwargs=None,
-            timeout=1, force_terminate=False, raise_child_error=False
+            timeout=1, force_terminate=False, raise_child_error=False,
+            daemon=True
         ):
         self.timeout = timeout
         self.force_terminate = force_terminate
@@ -120,6 +121,8 @@ class ContextualProcess(multiprocessing.Process):
         multiprocessing.Process.__init__(
             self, group=group, target=self.target, name=name
         )
+
+        self.daemon = daemon
 
     def run(self):
         try:
