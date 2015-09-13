@@ -194,12 +194,25 @@ class ContextualProcess(multiprocessing.Process):
         ...     pc.go()
         ...     value
         1
+
+        It fails if the ``ContextualProcess`` target is not a generator
+        function::
+
+        >>> import time
+        >>> def cannot_send_anything():
+        ...     time.sleep(0.001)
+        >>> with ContextualProcess(target=cannot_send_anything) as pc:
+        ...     value = pc.get()
+        Traceback (most recent call last):
+          ...
+        ValueError: cannot_send_anything is not a generator function and so can\
+not send values back before returning.
+
         """
         if self.conversation is None:
             raise ValueError(
-                'The target function {0} is not a generator function and so '
-                'cannot send values back before returning.'
-                ''.format(self.target.__name__)
+                '{0} is not a generator function and so cannot send values '
+                'back before returning.'.format(self.target.__name__)
             )
 
         return self.conversation.get_from_child()
@@ -219,12 +232,25 @@ class ContextualProcess(multiprocessing.Process):
         ...     pc.go()
         ...     value
         2
+
+
+        It fails if the ``ContextualProcess`` target is not a generator
+        function::
+
+        >>> import time
+        >>> def cannot_receive_anything():
+        ...     time.sleep(0.001)
+        >>> with ContextualProcess(target=cannot_receive_anything) as pc:
+        ...     value = pc.send(1)
+        Traceback (most recent call last):
+          ...
+        ValueError: cannot_receive_anything is not a generator function and so \
+cannot receive values after starting up.
         """
         if self.conversation is None:
             raise ValueError(
-                'The target function {0} is not a generator function and so '
-                'cannot receive values after starting up.'
-                ''.format(self.target.__name__)
+                '{0} is not a generator function and so cannot receive values '
+                'after starting up.'.format(self.target.__name__)
             )
 
         self.conversation.send_to_child(value)
@@ -233,12 +259,24 @@ class ContextualProcess(multiprocessing.Process):
         """
         Makes a process blocked by a ``yield`` statement proceed with its
         execution. It is equivalent to ``ProcessContect.send(None)``.
+
+        It fails if the ``ContextualProcess`` target is not a generator
+        function::
+
+        >>> import time
+        >>> def cannot_go():
+        ...     time.sleep(0.001)
+        >>> with ContextualProcess(target=cannot_go) as pc:
+        ...     value = pc.go()
+        Traceback (most recent call last):
+          ...
+        ValueError: cannot_go is not a generator function. It cannot be stopped\
+ - much less go ahead after stopping.
         """
         if self.conversation is None:
             raise ValueError(
-                'The target function {0} is not a generator function. It '
-                'cannot be stopped - much less go ahead after stopping.'
-                ''.format(self.target.__name__)
+                '{0} is not a generator function. It cannot be stopped - much '
+                'less go ahead after stopping.'.format(self.target.__name__)
             )
 
         self.conversation.send_to_child(None)
