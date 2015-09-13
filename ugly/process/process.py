@@ -195,6 +195,13 @@ class ContextualProcess(multiprocessing.Process):
         ...     value
         1
         """
+        if self.conversation is None:
+            raise ValueError(
+                'The target function {0} is not a generator function and so '
+                'cannot send values back before returning.'
+                ''.format(self.target.__name__)
+            )
+
         return self.conversation.get_from_child()
 
     def send(self, value):
@@ -213,6 +220,13 @@ class ContextualProcess(multiprocessing.Process):
         ...     value
         2
         """
+        if self.conversation is None:
+            raise ValueError(
+                'The target function {0} is not a generator function and so '
+                'cannot receive values after starting up.'
+                ''.format(self.target.__name__)
+            )
+
         self.conversation.send_to_child(value)
 
     def go(self):
@@ -220,6 +234,13 @@ class ContextualProcess(multiprocessing.Process):
         Makes a process blocked by a ``yield`` statement proceed with its
         execution. It is equivalent to ``ProcessContect.send(None)``.
         """
+        if self.conversation is None:
+            raise ValueError(
+                'The target function {0} is not a generator function. It '
+                'cannot be stopped - much less go ahead after stopping.'
+                ''.format(self.target.__name__)
+            )
+
         self.conversation.send_to_child(None)
 
     def __enter__(self):
