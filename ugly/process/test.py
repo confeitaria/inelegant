@@ -24,8 +24,8 @@ class TestContextualProcess(unittest.TestCase):
 
     def test_serve(self):
         """
-        To ensure  ``ContextualProcess`` can start a server, here is a simple test
-        doing that.
+        To ensure ``ContextualProcess`` can start a server, here is a simple
+        test doing that.
         """
         def serve():
             listener = multiprocessing.connection.Listener(('localhost', 9001))
@@ -90,8 +90,8 @@ class TestContextualProcess(unittest.TestCase):
 
     def test_get_result(self):
         """
-        ``ContextualProcess`` should store the returned value (if the function is
-        not a generator function).
+        ``ContextualProcess`` should store the returned value (if the function
+        is not a generator function).
         """
         def serve():
             return 1
@@ -101,6 +101,34 @@ class TestContextualProcess(unittest.TestCase):
 
         self.assertEquals(1, pc.result)
 
+    def test_force_terminate(self):
+        """
+        If ``force_terminate`` is set to ``True`` at ``ContextualProcess``
+        initialization, then the process should be forcefully terminated after
+        the block finishes.
+        """
+        def serve():
+            while True: pass
+
+        with ContextualProcess(target=serve, force_terminate=True) as pc:
+            pass
+
+        self.assertFalse(pc.is_alive())
+
+    def test_raise_child_error(self):
+        """
+        If ``raise_child_error`` is set to ``True`` at ``ContextualProcess``
+        initialization and an untreated exception finished the child process,
+        then this exception should be re-raised after the block.
+        """
+        def serve():
+            raise AssertionError('Actually, it is expected')
+
+        with self.assertRaises(AssertionError) as e:
+            with ContextualProcess(target=serve, raise_child_error=True) as pc:
+                pass
+
+            self.assertEquals('Actually, it is expected', e.args[0])
 
 from ugly.finder import TestFinder
 
