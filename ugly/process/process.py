@@ -1,18 +1,19 @@
 import multiprocessing
 import inspect
 
-class ProcessContext(object):
+class ContextualProcess(multiprocessing.Process):
     """
-    ``ProcessContext`` starts and stops a ``multiprocessing.Process`` instance
+    ``ContextualProcess`` starts and stops a ``multiprocessing.Process`` instance
     automatically::
 
+    >>> import time
     >>> def serve():
     ...     time.sleep(0.001)
 
-    >>> with ProcessContext(target=serve) as pc:
-    ...     pc.process.is_alive()
+    >>> with ContextualProcess(target=serve) as pc:
+    ...     pc.is_alive()
     True
-    >>> pc.process.is_alive()
+    >>> pc.is_alive()
     False
 
     Retrieving exceptions
@@ -23,7 +24,7 @@ class ProcessContext(object):
     >>> def serve():
     ...     raise Exception('example')
 
-    >>> with ProcessContext(target=serve) as pc:
+    >>> with ContextualProcess(target=serve) as pc:
     ...     pass
     >>> pc.exception
     Exception('example',)
@@ -40,7 +41,7 @@ class ProcessContext(object):
     ...     yield 1
     ...     yield 2
     ...     yield 5
-    >>> with ProcessContext(target=serve) as pc:
+    >>> with ContextualProcess(target=serve) as pc:
     ...     pc.get()
     ...     pc.go()
     ...     pc.get()
@@ -54,7 +55,7 @@ class ProcessContext(object):
     >>> def serve():
     ...     value1, value2 = yield 1
     ...     yield (value1+value2)
-    >>> with ProcessContext(target=serve) as pc:
+    >>> with ContextualProcess(target=serve) as pc:
     ...     value = pc.get()
     ...     pc.send([value, 1])
     ...     sum = pc.get()
@@ -62,7 +63,7 @@ class ProcessContext(object):
     ...     sum
     2
 
-    Note that ``ProcessContect.get()`` will return all values in the order they
+    Note that ``ContextualProcess.get()`` will return all values in the order they
     were yielded, even if one call ``ProcessContect.send()`` or
     ``ProcessContect.go()`` in the meantime::
 
@@ -70,7 +71,7 @@ class ProcessContext(object):
     ...     yield 1
     ...     yield 2
     ...     yield 5
-    >>> with ProcessContext(target=serve) as pc:
+    >>> with ContextualProcess(target=serve) as pc:
     ...     pc.go()
     ...     pc.go()
     ...     pc.go()
@@ -82,7 +83,10 @@ class ProcessContext(object):
     5
     """
 
-    def __init__(self, target, args=(), timeout=1):
+    def __init__(
+            self, group=None, target=None, name=None, args=None, kwargs=None,
+            timeout=1
+        ):
         self.timeout = timeout
 
         self.result = None
@@ -98,11 +102,15 @@ class ProcessContext(object):
         self.error_queue = multiprocessing.Queue()
         self.result_queue = multiprocessing.Queue()
 
-        self.process = multiprocessing.Process(target=self.run, args=args)
+        self.args = args if args is not None else ()
+        self.kwargs = kwargs if kwargs is not None else {}
+        multiprocessing.Process.__init__(
+            self, group=group, target=self.target, name=name
+        )
 
-    def run(self, *args, **kwargs):
+    def run(self):
         try:
-            result = self.target(*args, **kwargs)
+            result = self.target(*self.args, **self.kwargs)
 
             self.result_queue.put(result)
             self.error_queue.put(None)
@@ -111,7 +119,7 @@ class ProcessContext(object):
             self.error_queue.put(e)
 
     def clean_up(self):
-        self.process.join(self.timeout)
+        self.join(self.timeout)
 
         if not self.error_queue.empty():
             self.exception = self.error_queue.get()
@@ -124,7 +132,7 @@ class ProcessContext(object):
 
         >>> def serve():
         ...     yield 1
-        >>> with ProcessContext(target=serve) as pc:
+        >>> with ContextualProcess(target=serve) as pc:
         ...     value = pc.get()
         ...     pc.go()
         ...     value
@@ -140,7 +148,7 @@ class ProcessContext(object):
         >>> def serve():
         ...     value = yield
         ...     yield value + 1
-        >>> with ProcessContext(target=serve) as pc:
+        >>> with ContextualProcess(target=serve) as pc:
         ...     pc.send(1)
         ...     pc.get() # Ignored, from the first yield.
         ...     value = pc.get()
@@ -158,13 +166,13 @@ class ProcessContext(object):
         self.conversation.send_to_child(None)
 
     def __enter__(self):
-        self.process.start()
+        self.start()
 
         return self
 
     def __exit__(self, type, value, traceback):
         if value is not None:
-            self.process.terminate()
+            self.terminate()
 
         self.clean_up()
 
@@ -179,8 +187,8 @@ class Conversation(object):
         self.parent_to_child = multiprocessing.Queue()
 
     def start(self, *args, **kwargs):
+        generator = self.function(*args, **kwargs)
         try:
-            generator = self.function(*args, **kwargs)
             self.converse(generator)
         except Exception as e:
             generator.throw(e)
