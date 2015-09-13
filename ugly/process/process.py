@@ -40,6 +40,17 @@ class ContextualProcess(multiprocessing.Process):
     >>> pc.exception
     Exception('example',)
 
+    However, it may not be trivial to access the exception attribute in some
+    situations where the child process died. In these cases, the
+    ``raise_child_error`` argument from ``ContextualProcess`` is handy: it will
+    ensure this very same exception is re-raised at the end of the block::
+
+    >>> with ContextualProcess(target=serve, raise_child_error=True) as pc:
+    ...     pass
+    Traceback (most recent call last):
+      ...
+    Exception: example
+
     Sending and receiving data
     --------------------------
 
@@ -92,6 +103,33 @@ class ContextualProcess(multiprocessing.Process):
     1
     2
     5
+
+    Forcing termination
+    -------------------
+
+    By default, ``ContextualProcess`` will be joined to the main process but it
+    is a problem if the child process does not end by itself. For example, the
+    function below would run forever, blocking the main process at the end of
+    the block::
+
+    >>> def forever():
+    ...     while True:
+    ...         pass
+
+    However, one can set the ``force_terminate`` argument from
+    ``ContextualProcess`` to ``True``. In this case, the child process will be
+    terminated::
+
+    >>> with ContextualProcess(target=serve, force_terminate=True) as pc:
+    ...     pc.is_alive()
+    True
+    >>> pc.is_alive()
+    False
+
+    In general, it is better used as a last resort debugging feature: if a
+    child process keeps blocking, it can be terminated for easier discovering
+    what is going on. However, nothing impedes a user of using it against a
+    permanent process (e.g. a server that is ``serve_forever()``).
     """
 
     def __init__(
