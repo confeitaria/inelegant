@@ -63,12 +63,26 @@ def wait_server_up(host, port, timeout=1, tries=100):
 
     >>> process = multiprocessing.Process(target=serve)
     >>> process.start()
-    >>> with contextlib.closing(socket.socket()) as s:
-    ...     start = time.time()
-    ...     wait_server_up('localhost', 9000)
-    ...     0.01 < time.time() - start < 0.02
+    >>> start = time.time()
+    >>> wait_server_up('localhost', 9000)
+    >>> 0.01 < time.time() - start < 0.02
     True
     >>> process.terminate()
+    >>> process.join()
+
+    The function will wait until a timeout is reached. By default, the timeout
+    is one second. However, it can be changed to wait more (or less) type with
+    the ``timeout`` argument. It expects a value in seconds.
+
+    ::
+
+    >>> start = time.time()
+    >>> wait_server_up('localhost', 9000, timeout=0.05)
+    Traceback (most recent call last):
+     ...
+    Exception: Connection to server failed after 100 attempts
+    >>> 0.05 < time.time() - start < 0.1
+    True
 
     If a network error happens, it will raise the exception, except if the
     connection is refused. If an conection is refused, this error will be
@@ -76,9 +90,6 @@ def wait_server_up(host, port, timeout=1, tries=100):
     error will only be ignored for <tries> times (by default 1000). Once the
     connection is refuses for more than <tries> times, an exception will be
     raised.
-
-    The funcion allows for defining the socket timeout. Setting a low value made
-    this function faster than setting none.
     """
     socket_timeout = timeout / tries
     if socket_timeout < 0.0001:
@@ -124,7 +135,7 @@ def wait_server_down(host, port, timeout=1, tries=100):
     >>> server = ugly.net.Server('localhost', 9000, message='my message')
     >>> def serve():
     ...     server.serve_forever() # This only stops the loop
-    ...     time.sleep(0.01)
+    ...     time.sleep(0.001)
     ...     server.server_close()  # This effectively close the connection
 
     ...that we start in a different thread...
@@ -159,19 +170,25 @@ def wait_server_down(host, port, timeout=1, tries=100):
 
     And the best thing is, it will take only a minimum amount of time::
 
-
     If an conection is refused or reset, this error will be ignored since it
     probably means respectively the server is not up (as excepted) or just went
     down during the connection, which is acceptable.
 
-    The function tries to connect to the server for a number of times given by
-    the ``tries`` argument. Each connection will have the timeout given by the
-    ``timeout`` argument. If the server is not down after roughly
-    ``tries*timeout`` function, you can make it wait longer by giving a larger
-    value to any function. In general, the values for timeout are very small,
-    so it is easier to give it, but then each connection can take a bit more of
-    time than needed. If the server takes too much time to shut down, however,
-    it may not be a problem.
+    The function will wait until a timeout is reached. By default, the timeout
+    is one second. However, it can be changed to wait more (or less) type with
+    the ``timeout`` argument. It expects a value in seconds.
+
+    ::
+
+    >>> with Server():
+    ...     start = time.time()
+    ...     wait_server_down('localhost', 9000, timeout=0.05)
+    Traceback (most recent call last):
+     ...
+    Exception: Server stayed up after 100 connection attempts. May it be runnin\
+g from a process outside the tests?
+    >>> 0.05 < time.time() - start < 0.1
+    True
     """
     socket_timeout = timeout / tries
     if socket_timeout < 0.0001:
