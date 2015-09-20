@@ -24,7 +24,7 @@ class TestServer(unittest.TestCase):
             server.server_close()
 
         with ContextualProcess(target=serve):
-            time.sleep(0.003)
+            time.sleep(0.01)
             with contextlib.closing(get_socket()) as s:
                 s.connect(('localhost', 9000))
                 msg = s.recv(len('Server is up'))
