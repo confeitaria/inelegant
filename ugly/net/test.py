@@ -135,6 +135,35 @@ class TestWaiters(unittest.TestCase):
 
             self.assertTrue(time.time() - start > delay)
 
+    def test_wait_server_up_timeout(self):
+        """
+        ``wait_server_up()`` should wait for the time given in seconds as the
+        ``timeout`` function.
+        """
+        timeout = 0.1
+        with self.assertRaises(Exception):
+            start = time.time()
+            wait_server_up('localhost', 9000, timeout=timeout)
+
+        now = time.time()
+
+        self.assertTrue(timeout < now - start < 2*timeout)
+
+    def test_wait_server_down_timeout(self):
+        """
+        ``wait_server_down()`` should wait for the time given in seconds as the
+        ``timeout`` function.
+        """
+        timeout = 0.1
+        with Server():
+            with self.assertRaises(Exception):
+                start = time.time()
+                wait_server_down('localhost', 9000, timeout=timeout)
+
+            now = time.time()
+
+            self.assertTrue(timeout < now - start < 2*timeout)
+
 
 from ugly.finder import TestFinder
 
