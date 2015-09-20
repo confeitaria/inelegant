@@ -5,7 +5,7 @@ import contextlib
 import SocketServer
 import threading
 
-def wait_server_up(host, port, tries=1000, timeout=0.0001):
+def wait_server_up(host, port, timeout=1, tries=100):
     """
     This function blocks the execution until connecting successfully to the
     given address and port.
@@ -80,16 +80,20 @@ def wait_server_up(host, port, tries=1000, timeout=0.0001):
     The funcion allows for defining the socket timeout. Setting a low value made
     this function faster than setting none.
     """
+    socket_timeout = timeout / tries
+    if socket_timeout < 0.0001:
+        socket_timeout = 0.0001
+
     for i in xrange(tries):
         s = socket.socket()
-        s.settimeout(timeout)
+        s.settimeout(socket_timeout)
         with contextlib.closing(s):
             try:
                 s.connect((host, port))
                 break
             except socket.error as e:
                 if e.errno == errno.ECONNREFUSED:
-                    time.sleep(timeout)
+                    time.sleep(socket_timeout)
                 else:
                     raise
     else:
@@ -97,7 +101,7 @@ def wait_server_up(host, port, tries=1000, timeout=0.0001):
             'Connection to server failed after {0} attempts'.format(tries)
         )
 
-def wait_server_down(host, port, tries=1000, timeout=0.0001):
+def wait_server_down(host, port, timeout=1, tries=100):
     """
     This function blocks until the given port is free at the given address.
 
@@ -169,12 +173,17 @@ def wait_server_down(host, port, tries=1000, timeout=0.0001):
     time than needed. If the server takes too much time to shut down, however,
     it may not be a problem.
     """
+    socket_timeout = timeout / tries
+    if socket_timeout < 0.0001:
+        socket_timeout = 0.0001
+
     for i in xrange(tries):
         s = socket.socket()
         with contextlib.closing(s):
             try:
-                s.settimeout(timeout)
+                s.settimeout(socket_timeout)
                 s.connect((host, port))
+                time.sleep(socket_timeout)
             except socket.timeout:
                 continue
             except socket.error as e:
