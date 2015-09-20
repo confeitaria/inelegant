@@ -1,4 +1,6 @@
 import unittest
+import tempfile
+import contextlib
 
 from ugly.module import installed_module
 
@@ -152,6 +154,30 @@ class TestTestFinder(unittest.TestCase):
         name_tests = list(iter(TestFinder(__name__)))
 
         self.assertEquals(period_tests, name_tests)
+
+    def test_accept_file(self):
+        """
+        If a file object is given to ``TestFinder``, these files should be
+        loaded as doctests.
+        """
+        _, path = tempfile.mkstemp()
+
+        with open(path, 'w') as f:
+            f.write(
+                '>>> 2+2\n'
+                '4\n'
+                '>>> 3+3\n'
+                'FAIL'
+            )
+
+        with open(path) as f:
+            result = unittest.TestResult()
+            finder = TestFinder(f)
+            finder.run(result)
+
+            self.assertEquals(1, result.testsRun)
+            self.assertEquals(1, len(result.failures))
+            self.assertEquals(0, len(result.errors))
 
 load_tests = TestFinder('.', 'ugly.finder.finder').load_tests
 
