@@ -10,18 +10,18 @@ class TestFinder(unittest.TestSuite):
     ``UnitTestFinder`` is a test suite which receives as its arguments a list of
     modules to search for all tests inside them.
     """
-    def __init__(self, *modules):
+    def __init__(self, *testables):
         unittest.TestSuite.__init__(self)
 
-        for module in modules:
-            if isinstance(module, file):
-                self.add_doctests(module.name)
-            elif isinstance(module, basestring):
-                if module == '.':
+        for testable in testables:
+            if isinstance(testable, file):
+                self.add_doctests(testable.name)
+            elif isinstance(testable, basestring):
+                if testable == '.':
                     caller = sys._getframe(1)
                     name = caller.f_globals['__name__']
                 else:
-                    name = module
+                    name = testable
 
                 try:
                     module = importlib.import_module(name)
@@ -29,7 +29,7 @@ class TestFinder(unittest.TestSuite):
                 except ImportError:
                     self.add_doctests(name)
             else:
-                self.add_tests_from_module(module)
+                self.add_tests_from_module(testable)
 
     def add_doctests(self, file_name):
         module_relative = not file_name.startswith(os.sep)
