@@ -3,6 +3,7 @@ import doctest
 import importlib
 import inspect
 import sys
+import os
 
 class TestFinder(unittest.TestSuite):
     """
@@ -13,7 +14,9 @@ class TestFinder(unittest.TestSuite):
         unittest.TestSuite.__init__(self)
 
         for module in modules:
-            if isinstance(module, basestring):
+            if isinstance(module, file):
+                self.add_doctests(module.name)
+            elif isinstance(module, basestring):
                 if module == '.':
                     caller = sys._getframe(1)
                     name = caller.f_globals['__name__']
@@ -22,11 +25,24 @@ class TestFinder(unittest.TestSuite):
 
                 module = importlib.import_module(name)
 
-            self.addTest(unittest.defaultTestLoader.loadTestsFromModule(module))
-            try:
-                self.addTest(doctest.DocTestSuite(module))
-            except ValueError:
-                pass
+                self.add_tests_from_module(module)
+            else:
+                self.add_tests_from_module(module)
+
+    def add_doctests(self, file_name):
+        module_relative = not file_name.startswith(os.sep)
+        self.addTest(
+            doctest.DocFileSuite(file_name, module_relative=module_relative)
+        )
+
+    def add_tests_from_module(self, module):
+        self.addTest(
+            unittest.defaultTestLoader.loadTestsFromModule(module)
+        )
+        try:
+            self.addTest(doctest.DocTestSuite(module))
+        except ValueError:
+            pass
 
     def load_tests(self, loader, tests, pattern):
         """
