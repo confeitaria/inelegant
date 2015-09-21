@@ -1,6 +1,7 @@
 import unittest
 import tempfile
 import contextlib
+import os
 
 from ugly.module import installed_module
 
@@ -179,6 +180,7 @@ class TestTestFinder(unittest.TestCase):
             self.assertEquals(1, len(result.failures))
             self.assertEquals(0, len(result.errors))
 
+        os.remove(path)
 
     def test_accept_file_path(self):
         """
@@ -202,6 +204,26 @@ class TestTestFinder(unittest.TestCase):
         self.assertEquals(1, result.testsRun)
         self.assertEquals(1, len(result.failures))
         self.assertEquals(0, len(result.errors))
+
+        os.remove(path)
+
+    def test_empty_file_no_error(self):
+        """
+        If the given file is empty, it should not result in error when trying
+        to load the doctests.
+        """
+        _, path = tempfile.mkstemp()
+
+        result = unittest.TestResult()
+        finder = TestFinder(path)
+        finder.run(result)
+
+        self.assertEquals(1, result.testsRun)
+        self.assertEquals(0, len(result.failures))
+        self.assertEquals(0, len(result.errors))
+
+        os.remove(path)
+
 
 load_tests = TestFinder('.', 'ugly.finder.finder').load_tests
 
