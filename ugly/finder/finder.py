@@ -36,27 +36,28 @@ class TestFinder(unittest.TestSuite):
                 doctestable = module
 
             if module is not None:
-                self.add_tests_from_module(module)
+                self.add_module(module)
             if doctestable is not None:
-                self.add_doctests(doctestable)
+                self.add_doctest(doctestable)
 
-    def add_doctests(self, file_name):
-        if inspect.ismodule(file_name):
+    def add_doctest(self, doctestable):
+        if inspect.ismodule(doctestable):
             suite = doctest.DocTestSuite(
-                file_name, test_finder=self.doctest_finder
+                doctestable, test_finder=self.doctest_finder
             )
         else:
-            module_relative = not file_name.startswith(os.sep)
+            module_relative = not doctestable.startswith(os.sep)
             suite = doctest.DocFileSuite(
-                file_name, module_relative=module_relative
+                doctestable, module_relative=module_relative
             )
 
         self.addTest(suite)
 
-    def add_tests_from_module(self, module):
+    def add_module(self, module):
         self.addTest(
             unittest.defaultTestLoader.loadTestsFromModule(module)
         )
+
 
     def load_tests(self, loader, tests, pattern):
         """
