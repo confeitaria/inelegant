@@ -15,25 +15,7 @@ class TestFinder(unittest.TestSuite):
         self.doctest_finder = doctest.DocTestFinder(exclude_empty=False)
 
         for testable in testables:
-            doctestable = None
-            module = None
-            if isinstance(testable, file):
-                doctestable = testable.name
-            elif isinstance(testable, basestring):
-                if testable == '.':
-                    caller = sys._getframe(1)
-                    name = caller.f_globals['__name__']
-                else:
-                    name = testable
-
-                try:
-                    module = importlib.import_module(name)
-                    doctestable = module
-                except ImportError:
-                    doctestable = name
-            elif inspect.ismodule(testable):
-                module = testable
-                doctestable = module
+            module, doctestable = self.get_sources(testable)
 
             if module is not None:
                 self.add_module(module)
@@ -58,6 +40,28 @@ class TestFinder(unittest.TestSuite):
             unittest.defaultTestLoader.loadTestsFromModule(module)
         )
 
+    def get_sources(self, testable):
+        doctestable = None
+        module = None
+        if isinstance(testable, file):
+            doctestable = testable.name
+        elif isinstance(testable, basestring):
+            if testable == '.':
+                caller = sys._getframe(2)
+                name = caller.f_globals['__name__']
+            else:
+                name = testable
+
+            try:
+                module = importlib.import_module(name)
+                doctestable = module
+            except ImportError:
+                doctestable = name
+        elif inspect.ismodule(testable):
+            module = testable
+            doctestable = module
+
+        return module, doctestable
 
     def load_tests(self, loader, tests, pattern):
         """
