@@ -23,9 +23,11 @@ class TestFinder(unittest.TestSuite):
                 else:
                     name = module
 
-                module = importlib.import_module(name)
-
-                self.add_tests_from_module(module)
+                try:
+                    module = importlib.import_module(name)
+                    self.add_tests_from_module(module)
+                except ImportError:
+                    self.add_doctests(name)
             else:
                 self.add_tests_from_module(module)
 
