@@ -179,6 +179,30 @@ class TestTestFinder(unittest.TestCase):
             self.assertEquals(1, len(result.failures))
             self.assertEquals(0, len(result.errors))
 
+
+    def test_accept_file_path(self):
+        """
+        If a path to a file is given to ``TestFinder``, these files should be
+        loaded as doctests.
+        """
+        _, path = tempfile.mkstemp()
+
+        with open(path, 'w') as f:
+            f.write(
+                '>>> 2+2\n'
+                '4\n'
+                '>>> 3+3\n'
+                'FAIL'
+            )
+
+        result = unittest.TestResult()
+        finder = TestFinder(path)
+        finder.run(result)
+
+        self.assertEquals(1, result.testsRun)
+        self.assertEquals(1, len(result.failures))
+        self.assertEquals(0, len(result.errors))
+
 load_tests = TestFinder('.', 'ugly.finder.finder').load_tests
 
 if __name__ == "__main__":
