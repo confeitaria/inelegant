@@ -173,9 +173,6 @@ class ContextualProcess(multiprocessing.Process):
             self.error_queue.put(e)
 
     def join(self, timeout=None):
-        if self.force_terminate:
-            self.terminate()
-
         multiprocessing.Process.join(self, timeout)
 
         if not self.error_queue.empty():
@@ -287,7 +284,7 @@ cannot receive values after starting up.
         return self
 
     def __exit__(self, type, value, traceback):
-        if value is not None:
+        if value is not None or self.force_terminate:
             self.terminate()
 
         self.join(self.timeout)
