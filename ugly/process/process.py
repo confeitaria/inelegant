@@ -173,6 +173,34 @@ class ContextualProcess(multiprocessing.Process):
             self.error_queue.put(e)
 
     def join(self, timeout=None):
+        """
+        As the corresponding method from the ``multiprocessing.Process`` class,
+        this one will block the execution until the subprocess finishes or the
+        timeout is reached. The timeout is optional; if not given, the process
+        will block indefinitely.
+
+        A difference from the parent's ``join()`` is that one can retrieve the
+        returned value from the target after joining::
+
+        >>> def add(a, b):
+        ...     return a+b
+        >>> process = ContextualProcess(target=add, args=(1, 2))
+        >>> process.start()
+        >>> process.join()
+        >>> process.result
+        3
+
+        If the target function ends due an untreated exception, it will be
+        available as well::
+
+        >>> def fail():
+        ...     raise Exception('error')
+        >>> process = ContextualProcess(target=fail)
+        >>> process.start()
+        >>> process.join()
+        >>> process.exception
+        Exception('error',)
+        """
         multiprocessing.Process.join(self, timeout)
 
         if not self.error_queue.empty():
