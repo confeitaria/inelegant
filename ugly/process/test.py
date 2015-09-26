@@ -149,6 +149,25 @@ class TestContextualProcess(unittest.TestCase):
                 pc.go()
 
 
+    def test_get_result_after_join(self):
+        """
+        If ``ContextualProcess`` is joined, the target's returned value should
+        be available provided the timeout is not reached.
+        """
+        def serve():
+            time.sleep(0.001)
+            return 1
+
+        cp = ContextualProcess(target=serve)
+        cp.start()
+
+        self.assertIsNone(cp.result)
+
+        cp.join()
+
+        self.assertEquals(1, cp.result)
+
+
 from ugly.finder import TestFinder
 
 load_tests = TestFinder('.', 'ugly.process.process').load_tests
