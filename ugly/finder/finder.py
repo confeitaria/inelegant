@@ -13,6 +13,8 @@ class TestFinder(unittest.TestSuite):
     def __init__(self, *testables):
         unittest.TestSuite.__init__(self)
         self.doctest_finder = doctest.DocTestFinder(exclude_empty=False)
+        caller = sys._getframe(1)
+        self.caller_module = caller.f_globals['__name__']
 
         for testable in testables:
             module, doctestable = self.get_sources(testable)
@@ -28,10 +30,15 @@ class TestFinder(unittest.TestSuite):
                 doctestable, test_finder=self.doctest_finder
             )
         else:
-            module_relative = not doctestable.startswith(os.sep)
+            if doctestable.startswith(os.sep):
+                module_relative = False
+                package = None
+            else:
+                module_relative = True
+                package = self.caller_module
+
             suite = doctest.DocFileSuite(
-                doctestable, module_relative=module_relative
-            )
+                doctestable, module_relative=module_relative, package=package)
 
         self.addTest(suite)
 
@@ -47,8 +54,7 @@ class TestFinder(unittest.TestSuite):
             doctestable = testable.name
         elif isinstance(testable, basestring):
             if testable == '.':
-                caller = sys._getframe(2)
-                name = caller.f_globals['__name__']
+                name = self.caller_module
             else:
                 name = testable
 

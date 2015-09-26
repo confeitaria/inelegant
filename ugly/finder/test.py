@@ -162,14 +162,15 @@ class TestTestFinder(unittest.TestCase):
         loaded as doctests.
         """
         _, path = tempfile.mkstemp()
+        content = """
+        >>> 2+2
+        4
+        >>> 3+3
+        'FAIL'
+        """
 
         with open(path, 'w') as f:
-            f.write(
-                '>>> 2+2\n'
-                '4\n'
-                '>>> 3+3\n'
-                'FAIL'
-            )
+            f.write(content)
 
         with open(path) as f:
             result = unittest.TestResult()
@@ -188,14 +189,15 @@ class TestTestFinder(unittest.TestCase):
         loaded as doctests.
         """
         _, path = tempfile.mkstemp()
+        content = """
+        >>> 2+2
+        4
+        >>> 3+3
+        'FAIL'
+        """
 
         with open(path, 'w') as f:
-            f.write(
-                '>>> 2+2\n'
-                '4\n'
-                '>>> 3+3\n'
-                'FAIL'
-            )
+            f.write(content)
 
         result = unittest.TestResult()
         finder = TestFinder(path)
