@@ -1,16 +1,16 @@
 import multiprocessing
 import inspect
 
-class ContextualProcess(multiprocessing.Process):
+class Process(multiprocessing.Process):
     """
-    ``ContextualProcess`` is a ``multiprocessing.Process`` sublclass that starts 
-    and stops itself automatically::
+    ``Process`` is a ``multiprocessing.Process`` sublclass that starts and stops
+    itself automatically::
 
     >>> import time
     >>> def serve():
     ...     time.sleep(0.001)
 
-    >>> with ContextualProcess(target=serve) as pc:
+    >>> with Process(target=serve) as pc:
     ...     pc.is_alive()
     True
     >>> pc.is_alive()
@@ -25,7 +25,7 @@ class ContextualProcess(multiprocessing.Process):
     >>> def serve():
     ...     return 3
 
-    >>> with ContextualProcess(target=serve) as pc:
+    >>> with Process(target=serve) as pc:
     ...     pass
     >>> pc.result
     3
@@ -35,17 +35,17 @@ class ContextualProcess(multiprocessing.Process):
     >>> def serve():
     ...     raise Exception('example')
 
-    >>> with ContextualProcess(target=serve) as pc:
+    >>> with Process(target=serve) as pc:
     ...     pass
     >>> pc.exception
     Exception('example',)
 
     However, it may not be trivial to access the exception attribute in some
     situations where the child process died. In these cases, the
-    ``raise_child_error`` argument from ``ContextualProcess`` is handy: it will
-    ensure this very same exception is re-raised at the end of the block::
+    ``raise_child_error`` argument from ``Process`` is handy: it will ensure
+    this very same exception is re-raised at the end of the block::
 
-    >>> with ContextualProcess(target=serve, raise_child_error=True) as pc:
+    >>> with Process(target=serve, raise_child_error=True) as pc:
     ...     pass
     Traceback (most recent call last):
       ...
@@ -56,14 +56,14 @@ class ContextualProcess(multiprocessing.Process):
 
     If the target function is a generator function, then the spawned process
     will block at each ``yield`` statement. The yielded value can be retrieved
-    by ``ContextualProcess.get()``. This method, however, does not make the
-    process continue; to do that, one should call ``ProcessContect.go()``:
+    by ``Process.get()``. This method, however, does not make the process
+    continue; to do that, one should call ``ProcessContect.go()``:
 
     >>> def serve():
     ...     yield 1
     ...     yield 2
     ...     yield 5
-    >>> with ContextualProcess(target=serve) as pc:
+    >>> with Process(target=serve) as pc:
     ...     pc.get()
     ...     pc.go()
     ...     pc.get()
@@ -77,7 +77,7 @@ class ContextualProcess(multiprocessing.Process):
     >>> def serve():
     ...     value1, value2 = yield 1
     ...     yield (value1+value2)
-    >>> with ContextualProcess(target=serve) as pc:
+    >>> with Process(target=serve) as pc:
     ...     value = pc.get()
     ...     pc.send([value, 1])
     ...     sum = pc.get()
@@ -85,15 +85,15 @@ class ContextualProcess(multiprocessing.Process):
     ...     sum
     2
 
-    Note that ``ContextualProcess.get()`` will return all values in the order
-    they were yielded, even if one call ``ProcessContect.send()`` or
-    ``ProcessContect.go()`` in the meantime::
+    Note that ``Process.get()`` will return all values in the order they were
+    yielded, even if one call ``Process.send()`` or ``Process.go()`` in the
+    meantime::
 
     >>> def serve():
     ...     yield 1
     ...     yield 2
     ...     yield 5
-    >>> with ContextualProcess(target=serve) as pc:
+    >>> with Process(target=serve) as pc:
     ...     pc.go()
     ...     pc.go()
     ...     pc.go()
@@ -107,8 +107,8 @@ class ContextualProcess(multiprocessing.Process):
     Forcing termination
     -------------------
 
-    By default, ``ContextualProcess`` will be joined to the main process but it
-    is a problem if the child process does not end by itself. For example, the
+    By default, ``Process`` will be joined to the main process but it is a
+    problem if the child process does not end by itself. For example, the
     function below would run forever, blocking the main process at the end of
     the block::
 
@@ -116,20 +116,19 @@ class ContextualProcess(multiprocessing.Process):
     ...     while True:
     ...         pass
 
-    However, one can set the ``force_terminate`` argument from
-    ``ContextualProcess`` to ``True``. In this case, the child process will be
-    terminated::
+    However, one can set the ``force_terminate`` argument from ``Process`` to
+    ``True``. In this case, the child process will be terminated::
 
-    >>> with ContextualProcess(target=serve, force_terminate=True) as pc:
+    >>> with Process(target=serve, force_terminate=True) as pc:
     ...     pc.is_alive()
     True
     >>> pc.is_alive()
     False
 
-    In general, it is better used as a last resort debugging feature: if a
-    child process keeps blocking, it can be terminated for easier discovering
-    what is going on. However, nothing impedes a user of using it against a
-    permanent process (e.g. a server that is ``serve_forever()``).
+    In general, it is better used as a last resort debugging feature: if a child
+    process keeps blocking, it can be terminated for easier discovering what is
+    going on. However, nothing impedes a user of using it against a permanent
+    process (e.g. a server that is ``serve_forever()``).
     """
 
     def __init__(
@@ -184,7 +183,7 @@ class ContextualProcess(multiprocessing.Process):
 
         >>> def add(a, b):
         ...     return a+b
-        >>> process = ContextualProcess(target=add, args=(1, 2))
+        >>> process = Process(target=add, args=(1, 2))
         >>> process.start()
         >>> process.join()
         >>> process.result
@@ -195,7 +194,7 @@ class ContextualProcess(multiprocessing.Process):
 
         >>> def fail():
         ...     raise Exception('error')
-        >>> process = ContextualProcess(target=fail)
+        >>> process = Process(target=fail)
         >>> process.start()
         >>> process.join()
         >>> process.exception
@@ -214,19 +213,19 @@ class ContextualProcess(multiprocessing.Process):
 
         >>> def serve():
         ...     yield 1
-        >>> with ContextualProcess(target=serve) as pc:
+        >>> with Process(target=serve) as pc:
         ...     value = pc.get()
         ...     pc.go()
         ...     value
         1
 
-        It fails if the ``ContextualProcess`` target is not a generator
+        It fails if the ``Process`` target is not a generator
         function::
 
         >>> import time
         >>> def cannot_send_anything():
         ...     time.sleep(0.001)
-        >>> with ContextualProcess(target=cannot_send_anything) as pc:
+        >>> with Process(target=cannot_send_anything) as pc:
         ...     value = pc.get()
         Traceback (most recent call last):
           ...
@@ -250,7 +249,7 @@ not send values back before returning.
         >>> def serve():
         ...     value = yield
         ...     yield value + 1
-        >>> with ContextualProcess(target=serve) as pc:
+        >>> with Process(target=serve) as pc:
         ...     pc.send(1)
         ...     pc.get() # Ignored, from the first yield.
         ...     value = pc.get()
@@ -259,13 +258,13 @@ not send values back before returning.
         2
 
 
-        It fails if the ``ContextualProcess`` target is not a generator
+        It fails if the ``Process`` target is not a generator
         function::
 
         >>> import time
         >>> def cannot_receive_anything():
         ...     time.sleep(0.001)
-        >>> with ContextualProcess(target=cannot_receive_anything) as pc:
+        >>> with Process(target=cannot_receive_anything) as pc:
         ...     value = pc.send(1)
         Traceback (most recent call last):
           ...
@@ -283,15 +282,15 @@ cannot receive values after starting up.
     def go(self):
         """
         Makes a process blocked by a ``yield`` statement proceed with its
-        execution. It is equivalent to ``ProcessContect.send(None)``.
+        execution. It is equivalent to ``Process.send(None)``.
 
-        It fails if the ``ContextualProcess`` target is not a generator
+        It fails if the ``Process`` target is not a generator
         function::
 
         >>> import time
         >>> def cannot_go():
         ...     time.sleep(0.001)
-        >>> with ContextualProcess(target=cannot_go) as pc:
+        >>> with Process(target=cannot_go) as pc:
         ...     value = pc.go()
         Traceback (most recent call last):
           ...

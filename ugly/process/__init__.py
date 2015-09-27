@@ -1,1 +1,1 @@
-from .process import ContextualProcess
+from .process import Process

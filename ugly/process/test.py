@@ -4,28 +4,28 @@ import contextlib
 import time
 import multiprocessing.connection
 
-from ugly.process import ContextualProcess
+from ugly.process import Process
 
-class TestContextualProcess(unittest.TestCase):
+class TestProcess(unittest.TestCase):
 
     def test_process_context(self):
         """
-        Blocks managed by ``ContextualProcess`` should ensure a paralel process
-        starts and, after the execution of the block, the process should have
-        been finished.
+        Blocks managed by ``Process`` should ensure a paralel process starts
+        and, after the execution of the block, the process should have been
+        finished.
         """
         def serve():
             time.sleep(0.001)
 
-        with ContextualProcess(target=serve) as pc:
+        with Process(target=serve) as pc:
             self.assertTrue(pc.is_alive())
 
         self.assertFalse(pc.is_alive())
 
     def test_serve(self):
         """
-        To ensure ``ContextualProcess`` can start a server, here is a simple
-        test doing that.
+        To ensure ``Process`` can start a server, here is a simple test doing
+        that.
         """
         def serve():
             listener = multiprocessing.connection.Listener(('localhost', 9001))
@@ -33,91 +33,91 @@ class TestContextualProcess(unittest.TestCase):
                 with contextlib.closing(listener.accept()) as connection:
                     connection.send('example')
 
-        with ContextualProcess(target=serve):
+        with Process(target=serve):
             client = multiprocessing.connection.Client(('localhost', 9001))
             with contextlib.closing(client) as client:
                 self.assertEquals('example', client.recv())
 
     def test_terminate_after_exception(self):
         """
-        The process started by ``ContextualProcess`` should be terminated if an
-        exception happened in the ``with`` block.
+        The process started by ``Process`` should be terminated if an exception
+        happened in the ``with`` block.
         """
         def serve():
             time.sleep(60)
 
         try:
             start = time.time()
-            with ContextualProcess(target=serve) as pc:
+            with Process(target=serve) as p:
                 raise Exception()
         except:
-            self.assertFalse(pc.is_alive())
+            self.assertFalse(p.is_alive())
             self.assertTrue(time.time() - start < 60)
 
     def test_save_process_exception(self):
         """
-        If an exception happens in the spawned process, ``ContextualProcess``
-        should provide it to the original process.
+        If an exception happens in the spawned process, ``Process`` should
+        provide it to the original process.
         """
         def serve():
             raise AssertionError('Actually, it is expected')
 
-        with ContextualProcess(target=serve) as pc:
+        with Process(target=serve) as p:
             pass
 
-        self.assertIsInstance(pc.exception, AssertionError)
-        self.assertEquals('Actually, it is expected', pc.exception.args[0])
+        self.assertIsInstance(p.exception, AssertionError)
+        self.assertEquals('Actually, it is expected', p.exception.args[0])
 
     def test_send_receive_data(self):
         """
-        Blocks managed by ``ContextualProcess`` should ensure a paralel process
-        starts and, after the execution of the block, the process should have
-        been finished.
+        Blocks managed by ``Process`` should ensure a paralel process starts
+        and, after the execution of the block, the process should have been
+        finished.
         """
         def serve(value):
             value = yield value
             yield value
 
-        with ContextualProcess(target=serve, args=(1,)) as pc:
-            value = pc.get()
+        with Process(target=serve, args=(1,)) as p:
+            value = p.get()
             self.assertEquals(1, value)
 
-            value = pc.send(2)
-            value = pc.get()
+            value = p.send(2)
+            value = p.get()
             self.assertEquals(2, value)
 
-            pc.go()
+            p.go()
 
     def test_get_result(self):
         """
-        ``ContextualProcess`` should store the returned value (if the function
-        is not a generator function).
+        ``Process`` should store the returned value (if the function is not a
+        generator function).
         """
         def serve():
             return 1
 
-        with ContextualProcess(target=serve) as pc:
+        with Process(target=serve) as p:
             pass
 
-        self.assertEquals(1, pc.result)
+        self.assertEquals(1, p.result)
 
     def test_force_terminate(self):
         """
-        If ``force_terminate`` is set to ``True`` at ``ContextualProcess``
-        initialization, then the process should be forcefully terminated after
-        the block finishes.
+        If ``force_terminate`` is set to ``True`` at ``Process`` initialization,
+        then the process should be forcefully terminated after the block
+        finishes.
         """
         def serve():
             while True: pass
 
-        with ContextualProcess(target=serve, force_terminate=True) as pc:
+        with Process(target=serve, force_terminate=True) as p:
             pass
 
-        self.assertFalse(pc.is_alive())
+        self.assertFalse(p.is_alive())
 
     def test_raise_child_error(self):
         """
-        If ``raise_child_error`` is set to ``True`` at ``ContextualProcess``
+        If ``raise_child_error`` is set to ``True`` at ``Process``
         initialization and an untreated exception finished the child process,
         then this exception should be re-raised after the block.
         """
@@ -125,47 +125,47 @@ class TestContextualProcess(unittest.TestCase):
             raise AssertionError('Actually, it is expected')
 
         with self.assertRaises(AssertionError) as e:
-            with ContextualProcess(target=serve, raise_child_error=True) as pc:
+            with Process(target=serve, raise_child_error=True) as p:
                 pass
 
             self.assertEquals('Actually, it is expected', e.args[0])
 
     def test_send_receive_data_fails_on_non_generator_function(self):
         """
-        If one tries to send to or receive data from a ``ContextualProcess``
-        that received a non-generator function, those calls should fail.
+        If one tries to send to or receive data from a ``Process`` that received
+        a non-generator function, those calls should fail.
         """
         def serve():
             time.sleep(0.001)
 
-        with ContextualProcess(target=serve) as pc:
+        with Process(target=serve) as p:
             with self.assertRaises(ValueError):
-                value = pc.get()
+                value = p.get()
 
             with self.assertRaises(ValueError):
-                value = pc.send(2)
+                value = p.send(2)
 
             with self.assertRaises(ValueError):
-                pc.go()
+                p.go()
 
 
     def test_get_result_after_join(self):
         """
-        If ``ContextualProcess`` is joined, the target's returned value should
-        be available provided the timeout is not reached.
+        If ``Process`` is joined, the target's returned value should be
+        available provided the timeout is not reached.
         """
         def serve():
             time.sleep(0.001)
             return 1
 
-        cp = ContextualProcess(target=serve)
-        cp.start()
+        p = Process(target=serve)
+        p.start()
 
-        self.assertIsNone(cp.result)
+        self.assertIsNone(p.result)
 
-        cp.join()
+        p.join()
 
-        self.assertEquals(1, cp.result)
+        self.assertEquals(1, p.result)
 
 
 from ugly.finder import TestFinder

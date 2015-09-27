@@ -8,7 +8,7 @@ import time
 import errno
 
 from ugly.net import Server, wait_server_up, wait_server_down, get_socket
-from ugly.process import ContextualProcess
+from ugly.process import Process
 
 class TestServer(unittest.TestCase):
 
@@ -23,7 +23,7 @@ class TestServer(unittest.TestCase):
             server.handle_request()
             server.server_close()
 
-        with ContextualProcess(target=serve):
+        with Process(target=serve):
             time.sleep(0.01)
             with contextlib.closing(get_socket()) as s:
                 s.connect(('localhost', 9000))
@@ -72,7 +72,7 @@ class TestWaiters(unittest.TestCase):
             server.shutdown()
             thread.join()
 
-        with ContextualProcess(target=serve) as pc:
+        with Process(target=serve) as pc:
             wait_server_up('localhost', 9000)
             self.assertTrue(time.time() - start > delay)
 
@@ -97,7 +97,7 @@ class TestWaiters(unittest.TestCase):
             server.shutdown()
             thread.join()
 
-        with ContextualProcess(target=serve) as pc:
+        with Process(target=serve) as pc:
             wait_server_up('localhost', 9000, timeout=delay*2)
 
             with contextlib.closing(get_socket()) as s:
@@ -125,7 +125,7 @@ class TestWaiters(unittest.TestCase):
             server.shutdown()
             thread.join()
 
-        with ContextualProcess(target=serve) as pc:
+        with Process(target=serve) as pc:
             wait_server_up('localhost', 9000)
             start = time.time()
 
