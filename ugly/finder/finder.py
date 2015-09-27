@@ -62,7 +62,7 @@ class TestFinder(unittest.TestSuite):
             try:
                 module = importlib.import_module(name)
                 doctestable = module
-            except ImportError:
+            except (ImportError, TypeError):
                 doctestable = name
         elif inspect.ismodule(testable):
             module = testable
