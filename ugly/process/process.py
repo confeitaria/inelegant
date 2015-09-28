@@ -207,6 +207,9 @@ class Process(multiprocessing.Process):
         if not self.result_queue.empty():
             self.result = self.result_queue.get()
 
+        if self.raise_child_error and self.exception is not None:
+            raise self.exception
+
     def get(self):
         """
         Retrieves a value yielded by the target function::
@@ -315,9 +318,6 @@ cannot receive values after starting up.
             self.terminate()
 
         self.join(self.timeout)
-
-        if self.raise_child_error and self.exception is not None:
-            raise self.exception
 
 class Conversation(object):
     """
