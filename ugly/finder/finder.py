@@ -12,40 +12,19 @@ class TestFinder(unittest.TestSuite):
     """
     def __init__(self, *testables):
         unittest.TestSuite.__init__(self)
-        self.doctest_finder = doctest.DocTestFinder(exclude_empty=False)
-        caller = sys._getframe(1)
-        self.caller_module = importlib.import_module(
-            caller.f_globals['__name__']
+
+        caller_frame = sys._getframe(1)
+        caller_module = importlib.import_module(
+            caller_frame.f_globals['__name__']
         )
 
         for testable in testables:
-            module, doctestable = get_sources(testable, self.caller_module)
+            module, doctestable = get_sources(testable, caller_module)
 
             if module is not None:
-                self.add_module(module)
+                add_module(self, module)
             if doctestable is not None:
-                self.add_doctest(doctestable)
-
-    def add_doctest(self, doctestable):
-        if inspect.ismodule(doctestable):
-            suite = doctest.DocTestSuite(
-                doctestable, test_finder=self.doctest_finder
-            )
-        else:
-            if os.path.isabs(doctestable):
-                path = doctestable
-            else:
-                module_dir = os.path.dirname(self.caller_module.__file__)
-                path = os.path.join(module_dir, doctestable)
-
-            suite = doctest.DocFileSuite(path, module_relative=False)
-
-        self.addTest(suite)
-
-    def add_module(self, module):
-        self.addTest(
-            unittest.defaultTestLoader.loadTestsFromModule(module)
-        )
+                add_doctest(self, doctestable, reference_module=caller_module)
 
     def load_tests(self, loader, tests, pattern):
         """
@@ -73,3 +52,23 @@ def get_sources(testable, reference_module=None):
         result = (testable, testable)
 
     return result
+
+def add_doctest(suite, doctestable, reference_module, exclude_empty=False):
+    if inspect.ismodule(doctestable):
+        finder = doctest.DocTestFinder(exclude_empty=exclude_empty)
+        doctest_suite = doctest.DocTestSuite(doctestable, test_finder=finder)
+    else:
+        if os.path.isabs(doctestable):
+            path = doctestable
+        else:
+            module_dir = os.path.dirname(reference_module.__file__)
+            path = os.path.join(module_dir, doctestable)
+
+        doctest_suite = doctest.DocFileSuite(path, module_relative=False)
+
+    suite.addTest(doctest_suite)
+
+def add_module(suite, module):
+    suite.addTest(
+        unittest.defaultTestLoader.loadTestsFromModule(module)
+    )
