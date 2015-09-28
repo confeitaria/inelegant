@@ -260,6 +260,8 @@ class TestTestFinder(unittest.TestCase):
         self.assertEquals(1, len(result.failures))
         self.assertEquals(0, len(result.errors))
 
+        os.remove(file_path)
+
 load_tests = TestFinder('.', 'ugly.finder.finder').load_tests
 
 if __name__ == "__main__":
