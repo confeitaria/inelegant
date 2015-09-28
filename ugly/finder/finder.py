@@ -13,10 +13,7 @@ class TestFinder(unittest.TestSuite):
     def __init__(self, *testables):
         unittest.TestSuite.__init__(self)
 
-        caller_frame = sys._getframe(1)
-        caller_module = importlib.import_module(
-            caller_frame.f_globals['__name__']
-        )
+        caller_module = get_caller_module()
 
         for testable in testables:
             module, doctestable = get_sources(testable, caller_module)
@@ -38,10 +35,7 @@ class TestFinder(unittest.TestSuite):
 
 def get_sources(testable, reference_module=None):
     if reference_module is None:
-        caller_frame = sys._getframe(1)
-        reference_module = importlib.import_module(
-            caller_frame.f_globals['__name__']
-        )
+        caller_frame = get_caller_module()
 
     if isinstance(testable, file):
         result = (None, testable.name)
@@ -58,6 +52,11 @@ def get_sources(testable, reference_module=None):
         result = (testable, testable)
 
     return result
+
+def get_caller_module(stack_index=1):
+    frame = sys._getframe(stack_index+1)
+
+    return importlib.import_module(frame.f_globals['__name__'])
 
 def add_doctest(suite, doctestable, reference_module, exclude_empty=False):
     if inspect.ismodule(doctestable):
