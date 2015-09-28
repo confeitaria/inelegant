@@ -167,6 +167,19 @@ class TestProcess(unittest.TestCase):
 
         self.assertEquals(1, p.result)
 
+    def test_raise_child_error_on_join(self):
+        """
+        A ``Process`` constructed with the argument ``raise_child_error`` set
+        should re-raise the exception that ended the child process, if any,
+        once the process is joined.
+        """
+        def serve():
+            raise AssertionError('Actually, it is expected')
+
+        with self.assertRaises(AssertionError) as e:
+            p = Process(target=serve, raise_child_error=True)
+            p.start()
+            p.join()
 
 from ugly.finder import TestFinder
 
