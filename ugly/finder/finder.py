@@ -30,16 +30,14 @@ class TestFinder(unittest.TestSuite):
                 doctestable, test_finder=self.doctest_finder
             )
         else:
-            if doctestable == os.path.abspath(doctestable):
-                relative = False
-                package = None
+            if os.path.isabs(doctestable):
+                path = doctestable
             else:
-                relative = True
-                package = self.caller_module
+                module = importlib.import_module(self.caller_module)
+                module_dir = os.path.dirname(module.__file__)
+                path = os.path.join(module_dir, doctestable)
 
-            suite = doctest.DocFileSuite(
-                doctestable, module_relative=relative, package=package
-            )
+            suite = doctest.DocFileSuite(path, module_relative=False)
 
         self.addTest(suite)
 
