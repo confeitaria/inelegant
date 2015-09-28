@@ -54,6 +54,20 @@ def get_sources(testable, reference_module=None):
     return result
 
 def get_caller_module(stack_index=1):
+    """
+    ``get_caller_module()`` returns a module from the stack. One can give it the
+    ``stack_index`` arg - an integer defining the position at the call stack
+    from which to get the module.
+
+    So, if a module ``m1`` calls a function ``f`` from module ``m2``, ``f``
+    calls ``g`` from ``m3`` and ``g`` calls ``get_caller_module()`` with stack
+    index 1, then ``m2`` is returned (since it calls ``g``). If the stack index
+    were 2, then ``m2`` would returned, and 3 as the stack index would return
+    ``m1``.
+
+    By default, the value of the stack index is 1 - it will return the module
+    which called the function that called ``get_caller_module()``.
+    """
     frame = sys._getframe(stack_index+1)
 
     return importlib.import_module(frame.f_globals['__name__'])
