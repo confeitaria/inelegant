@@ -37,6 +37,12 @@ class TestFinder(unittest.TestSuite):
         return self
 
 def get_sources(testable, reference_module=None):
+    if reference_module is None:
+        caller_frame = sys._getframe(1)
+        reference_module = importlib.import_module(
+            caller_frame.f_globals['__name__']
+        )
+
     if isinstance(testable, file):
         result = (None, testable.name)
     elif isinstance(testable, basestring):
