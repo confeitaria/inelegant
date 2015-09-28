@@ -16,7 +16,10 @@ class TestFinder(unittest.TestSuite):
         caller_module = get_caller_module()
 
         for testable in testables:
-            module, doctestable = get_sources(testable, caller_module)
+            module = get_module(testable, reference_module=caller_module)
+            doctestable = get_doctestable (
+                testable, reference_module=caller_module
+            )
 
             if module is not None:
                 add_module(self, module)
@@ -33,25 +36,44 @@ class TestFinder(unittest.TestSuite):
         """
         return self
 
-def get_sources(testable, reference_module=None):
+def get_module(testable, reference_module=None):
     if reference_module is None:
-        caller_frame = get_caller_module()
+        reference_module = get_caller_module()
 
-    if isinstance(testable, file):
-        result = (None, testable.name)
-    elif isinstance(testable, basestring):
+    module = None
+
+    if isinstance(testable, basestring):
         if testable == '.':
-            result = (reference_module, reference_module)
+            module = reference_module
         else:
             try:
-                imported = importlib.import_module(testable)
-                result = (imported, imported)
+                module = importlib.import_module(testable)
             except (ImportError, TypeError):
-                result = (None, testable)
+                module = None
     elif inspect.ismodule(testable):
-        result = (testable, testable)
+        module = testable
 
-    return result
+    return module
+
+def get_doctestable(testable, reference_module=None):
+    if reference_module is None:
+        reference_module = get_caller_module()
+
+    doctestable = None
+
+    if isinstance(testable, file):
+        doctestable = testable.name
+    elif isinstance(testable, basestring):
+        if testable == '.':
+            doctestable = reference_module
+        else:
+            doctestable = get_module(testable, reference_module)
+            if doctestable is None:
+                doctestable = testable
+    elif inspect.ismodule(testable):
+        doctestable = testable
+
+    return doctestable
 
 def get_caller_module(stack_index=1):
     """
