@@ -1,7 +1,7 @@
 import unittest
 import tempfile
 import contextlib
-import os
+import os, os.path
 
 from ugly.module import installed_module
 
@@ -226,6 +226,39 @@ class TestTestFinder(unittest.TestCase):
 
         os.remove(path)
 
+    def test_file_relative_to_module(self):
+        """
+        If a relative path is given to ``TestFinder``, it should be accepted.
+        The path should be relative to the module which created the test finder.
+        """
+        content = """
+        >>> 2+2
+        4
+        >>> 3+3
+        'FAIL'
+        """
+
+        path_dir = os.path.join(
+            os.path.dirname(__file__),
+            os.pardir
+        )
+        _, file_path = tempfile.mkstemp(dir=path_dir)
+
+        try:
+            with open(file_path, 'w') as f:
+                f.write(content)
+        except IOError:
+            return unittest.skip('Cannot write on {0}'.format(file_path))
+
+        file_name = os.path.basename(file_path)
+
+        result = unittest.TestResult()
+        finder = TestFinder(os.path.join(os.pardir, file_name))
+        finder.run(result)
+
+        self.assertEquals(1, result.testsRun)
+        self.assertEquals(1, len(result.failures))
+        self.assertEquals(0, len(result.errors))
 
 load_tests = TestFinder('.', 'ugly.finder.finder').load_tests
 
