@@ -14,7 +14,9 @@ class TestFinder(unittest.TestSuite):
         unittest.TestSuite.__init__(self)
         self.doctest_finder = doctest.DocTestFinder(exclude_empty=False)
         caller = sys._getframe(1)
-        self.caller_module = caller.f_globals['__name__']
+        self.caller_module = importlib.import_module(
+            caller.f_globals['__name__']
+        )
 
         for testable in testables:
             module, doctestable = self.get_sources(testable)
@@ -33,8 +35,7 @@ class TestFinder(unittest.TestSuite):
             if os.path.isabs(doctestable):
                 path = doctestable
             else:
-                module = importlib.import_module(self.caller_module)
-                module_dir = os.path.dirname(module.__file__)
+                module_dir = os.path.dirname(self.caller_module.__file__)
                 path = os.path.join(module_dir, doctestable)
 
             suite = doctest.DocFileSuite(path, module_relative=False)
@@ -47,26 +48,21 @@ class TestFinder(unittest.TestSuite):
         )
 
     def get_sources(self, testable):
-        doctestable = None
-        module = None
         if isinstance(testable, file):
-            doctestable = testable.name
+            result = (None, testable.name)
         elif isinstance(testable, basestring):
             if testable == '.':
-                name = self.caller_module
+                result = self.caller_module, self.caller_module
             else:
-                name = testable
-
-            try:
-                module = importlib.import_module(name)
-                doctestable = module
-            except (ImportError, TypeError):
-                doctestable = name
+                try:
+                    imported = importlib.import_module(testable)
+                    result = (imported, imported)
+                except (ImportError, TypeError):
+                    result = (None, testable)
         elif inspect.ismodule(testable):
-            module = testable
-            doctestable = module
+            result = (testable, testable)
 
-        return module, doctestable
+        return result
 
     def load_tests(self, loader, tests, pattern):
         """
