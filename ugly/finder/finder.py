@@ -19,7 +19,7 @@ class TestFinder(unittest.TestSuite):
         )
 
         for testable in testables:
-            module, doctestable = self.get_sources(testable)
+            module, doctestable = get_sources(testable, self.caller_module)
 
             if module is not None:
                 self.add_module(module)
@@ -47,23 +47,6 @@ class TestFinder(unittest.TestSuite):
             unittest.defaultTestLoader.loadTestsFromModule(module)
         )
 
-    def get_sources(self, testable):
-        if isinstance(testable, file):
-            result = (None, testable.name)
-        elif isinstance(testable, basestring):
-            if testable == '.':
-                result = self.caller_module, self.caller_module
-            else:
-                try:
-                    imported = importlib.import_module(testable)
-                    result = (imported, imported)
-                except (ImportError, TypeError):
-                    result = (None, testable)
-        elif inspect.ismodule(testable):
-            result = (testable, testable)
-
-        return result
-
     def load_tests(self, loader, tests, pattern):
         """
         This method follows the ```load_tests() protocol`__. You can assign it
@@ -73,3 +56,20 @@ class TestFinder(unittest.TestSuite):
         __ https://docs.python.org/2/library/unittest.html#load-tests-protocol
         """
         return self
+
+def get_sources(testable, reference_module=None):
+    if isinstance(testable, file):
+        result = (None, testable.name)
+    elif isinstance(testable, basestring):
+        if testable == '.':
+            result = (reference_module, reference_module)
+        else:
+            try:
+                imported = importlib.import_module(testable)
+                result = (imported, imported)
+            except (ImportError, TypeError):
+                result = (None, testable)
+    elif inspect.ismodule(testable):
+        result = (testable, testable)
+
+    return result
