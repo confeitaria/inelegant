@@ -158,6 +158,18 @@ class TestModule(unittest.TestCase):
         with installed_module('m', code='import m') as m:
             pass
 
+    def test_scope_is_already_adopted_on_code_execution(self):
+        """
+        The adoptable objects from the scope should be already adopted once the
+        code is executed.
+        """
+        def f():
+            pass
+
+        scope = {'f': f}
+
+        with installed_module('m', scope=scope, code='v = f.__module__') as m:
+            self.assertEquals('m', m.v)
 
 from ugly.finder import TestFinder
 
