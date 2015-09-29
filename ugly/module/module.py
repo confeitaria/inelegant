@@ -41,11 +41,11 @@ def create_module(name, code='', scope=None):
     module = imp.new_module(name)
     sys.modules[name] = module
 
-    exec code in scope
-
     for v in scope.values():
         if is_adoptable(v):
             adopt(module, v)
+
+    exec code in scope
 
     module.__dict__.update(scope)
 
