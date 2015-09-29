@@ -151,6 +151,13 @@ class TestModule(unittest.TestCase):
         with installed_module('m', code='value = __name__') as m:
             self.assertEquals('m', m.value)
 
+    def test_import_itself(self):
+        """
+        A module should be able to import itself if installed.
+        """
+        with installed_module('m', code='import m') as m:
+            pass
+
 
 from ugly.finder import TestFinder
 
