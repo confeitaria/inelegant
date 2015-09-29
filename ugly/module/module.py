@@ -37,7 +37,9 @@ def create_module(name, code='', scope=None):
     """
     scope = scope if scope is not None else {}
     scope['__name__'] = name
+
     module = imp.new_module(name)
+    sys.modules[name] = module
 
     exec code in scope
 
@@ -46,8 +48,6 @@ def create_module(name, code='', scope=None):
             adopt(module, v)
 
     module.__dict__.update(scope)
-
-    sys.modules[name] = module
 
     return module
 
