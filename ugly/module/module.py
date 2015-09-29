@@ -36,18 +36,16 @@ def create_module(name, code='', scope=None):
     5
     """
     scope = scope if scope is not None else {}
-    scope['__name__'] = name
 
     module = imp.new_module(name)
     sys.modules[name] = module
+    module.__dict__.update(scope)
 
     for v in scope.values():
         if is_adoptable(v):
             adopt(module, v)
 
-    exec code in scope
-
-    module.__dict__.update(scope)
+    exec code in module.__dict__
 
     return module
 
