@@ -36,6 +36,7 @@ def create_module(name, code='', scope=None):
     5
     """
     scope = scope if scope is not None else {}
+    scope['__name__'] = name
     module = imp.new_module(name)
 
     exec code in scope
