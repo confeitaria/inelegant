@@ -143,6 +143,15 @@ class TestModule(unittest.TestCase):
             self.assertEquals(m1.__name__, Class1.Class2.__module__)
             self.assertNotEquals(m1.__name__, Class1.UnadoptedClass.__module__)
 
+    def test_module_name(self):
+        """
+        The value of ``__name__`` for the executd code should be the name of the
+        module.
+        """
+        with installed_module('m', code='value = __name__') as m:
+            self.assertEquals('m', m.value)
+
+
 from ugly.finder import TestFinder
 
 load_tests = TestFinder('.', 'ugly.module.module').load_tests
