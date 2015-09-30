@@ -171,6 +171,25 @@ class TestModule(unittest.TestCase):
         with installed_module('m', scope=scope, code='v = f.__module__') as m:
             self.assertEquals('m', m.v)
 
+    def test_ignore_code_arg_indentation(self):
+        """
+        If the string given as the code arg has some indentation not compatible
+        with Python's syntax, it should be ignored provided the indentation is
+        the same in all non-empty lines. Tabs cannot be mixed with spaces.
+        C'mon, just use the four spaces...
+        """
+        code = """
+            def three():
+                return 3
+
+            def a():
+                return 'a'
+        """
+
+        with installed_module('m', code=code) as m:
+            self.assertEquals(3, m.three())
+            self.assertEquals('a', m.a())
+
 from ugly.finder import TestFinder
 
 load_tests = TestFinder('.', 'ugly.module.module').load_tests
