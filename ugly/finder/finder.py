@@ -103,7 +103,9 @@ def get_module(testable, reference_module=None):
 
     module = None
 
-    if isinstance(testable, basestring):
+    if inspect.ismodule(testable):
+        module = testable
+    elif isinstance(testable, basestring):
         if testable == '.':
             module = reference_module
         else:
@@ -111,8 +113,6 @@ def get_module(testable, reference_module=None):
                 module = importlib.import_module(testable)
             except (ImportError, TypeError):
                 module = None
-    elif inspect.ismodule(testable):
-        module = testable
 
     return module
 
@@ -206,7 +206,9 @@ def get_doctestable(testable, reference_module=None):
 
     doctestable = None
 
-    if isinstance(testable, file):
+    if inspect.ismodule(testable):
+        doctestable = testable
+    elif isinstance(testable, file):
         doctestable = testable.name
     elif isinstance(testable, basestring):
         if testable == '.':
@@ -215,8 +217,6 @@ def get_doctestable(testable, reference_module=None):
             doctestable = get_module(testable, reference_module)
             if doctestable is None:
                 doctestable = testable
-    elif inspect.ismodule(testable):
-        doctestable = testable
 
     return doctestable
 
