@@ -41,11 +41,11 @@ class Process(multiprocessing.Process):
     Exception('example',)
 
     However, it may not be trivial to access the exception attribute in some
-    situations where the child process died. In these cases, the
-    ``raise_child_error`` argument from ``Process`` is handy: it will ensure
-    this very same exception is re-raised at the end of the block::
+    situations where the child process died. In these cases, the ``reraise``
+    argument from ``Process`` is handy: it will ensure this very same exception
+    is re-raised at the end of the block::
 
-    >>> with Process(target=serve, raise_child_error=True) as pc:
+    >>> with Process(target=serve, reraise=True) as pc:
     ...     pass
     Traceback (most recent call last):
       ...
@@ -116,10 +116,10 @@ class Process(multiprocessing.Process):
     ...     while True:
     ...         pass
 
-    However, one can set the ``force_terminate`` argument from ``Process`` to
+    However, one can set the ``terminate`` argument from ``Process`` to
     ``True``. In this case, the child process will be terminated::
 
-    >>> with Process(target=serve, force_terminate=True) as pc:
+    >>> with Process(target=serve, terminate=True) as pc:
     ...     pc.is_alive()
     True
     >>> pc.is_alive()
@@ -133,12 +133,12 @@ class Process(multiprocessing.Process):
 
     def __init__(
             self, group=None, target=None, name=None, args=None, kwargs=None,
-            timeout=1, force_terminate=False, raise_child_error=False,
+            timeout=1, terminate=False, reraise=False,
             daemon=True
         ):
         self.timeout = timeout
-        self.force_terminate = force_terminate
-        self.raise_child_error = raise_child_error
+        self._terminate = terminate
+        self.reraise = reraise
 
         self.result = None
         self.exception = None
@@ -207,7 +207,7 @@ class Process(multiprocessing.Process):
         if not self.result_queue.empty():
             self.result = self.result_queue.get()
 
-        if self.raise_child_error and self.exception is not None:
+        if self.reraise and self.exception is not None:
             raise self.exception
 
     def get(self):
@@ -314,7 +314,7 @@ cannot receive values after starting up.
         return self
 
     def __exit__(self, type, value, traceback):
-        if value is not None or self.force_terminate:
+        if value is not None or self._terminate:
             self.terminate()
 
         self.join(self.timeout)

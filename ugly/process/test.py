@@ -101,31 +101,31 @@ class TestProcess(unittest.TestCase):
 
         self.assertEquals(1, p.result)
 
-    def test_force_terminate(self):
+    def test_terminate(self):
         """
-        If ``force_terminate`` is set to ``True`` at ``Process`` initialization,
-        then the process should be forcefully terminated after the block
+        If ``terminate`` is set to ``True`` at ``Process`` initialization, then
+        the process should be forcefully terminated after the block
         finishes.
         """
         def serve():
             while True: pass
 
-        with Process(target=serve, force_terminate=True) as p:
+        with Process(target=serve, terminate=True) as p:
             pass
 
         self.assertFalse(p.is_alive())
 
-    def test_raise_child_error(self):
+    def test_reraise(self):
         """
-        If ``raise_child_error`` is set to ``True`` at ``Process``
-        initialization and an untreated exception finished the child process,
+        If ``reraise`` is set to ``True`` at ``Process`` initialization and an
+        untreated exception finished the child process,
         then this exception should be re-raised after the block.
         """
         def serve():
             raise AssertionError('Actually, it is expected')
 
         with self.assertRaises(AssertionError) as e:
-            with Process(target=serve, raise_child_error=True) as p:
+            with Process(target=serve, reraise=True) as p:
                 pass
 
             self.assertEquals('Actually, it is expected', e.args[0])
@@ -167,17 +167,17 @@ class TestProcess(unittest.TestCase):
 
         self.assertEquals(1, p.result)
 
-    def test_raise_child_error_on_join(self):
+    def test_reraise_on_join(self):
         """
-        A ``Process`` constructed with the argument ``raise_child_error`` set
-        should re-raise the exception that ended the child process, if any,
+        A ``Process`` constructed with the argument ``reraise`` set should
+        re-raise the exception that ended the child process, if any,
         once the process is joined.
         """
         def serve():
             raise AssertionError('Actually, it is expected')
 
         with self.assertRaises(AssertionError) as e:
-            p = Process(target=serve, raise_child_error=True)
+            p = Process(target=serve, reraise=True)
             p.start()
             p.join()
 
