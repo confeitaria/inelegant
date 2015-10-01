@@ -1,8 +1,10 @@
+# coding: utf-8
 import contextlib
 import imp
 import sys
 import inspect
 import textwrap
+import importlib
 
 def create_module(name, code='', scope=None):
     """
@@ -232,3 +234,85 @@ class AdoptException(Exception):
         else:
             Exception.__init__(self)
 
+
+def get_caller_module(index=1):
+    """
+    ``get_caller_module()`` returns the module from where a specific frame from
+    the frame stack was called.
+
+    A throughout explanation
+    ------------------------
+
+    Let's suppose it is called inside a function defined in a module ``a`` that
+    is called by a function defined in a module ``b``, which is called by a
+    function defined in a module ``c``:
+
+    - if it ``get_caller_module()`` module is called with the index 0, it will
+    return the ``a`` module;
+    - if it is called with index 1, it will return the ``b`` module;
+    - and if its index is 2, it will return the ``c`` module.
+
+    Something like this:
+
+    2 - c
+    1   └ b
+    0     └ a
+            └ get_caller_module()
+
+    Here is a working example::
+
+    >>> from ugly.module import installed_module
+    >>> scope_a = {'get_caller_module': get_caller_module}
+    >>> code_a = '''
+    ...     def f_a():
+    ...         print get_caller_module(0)
+    ...         print get_caller_module(1)
+    ...         print get_caller_module(2)
+    ...     '''
+    >>> with installed_module('a', code=code_a, scope=scope_a):
+    ...     code_b = '''
+    ...         import a
+    ...         def f_b():
+    ...             a.f_a()
+    ...     '''
+    ...     with installed_module('b', code=code_b):
+    ...         code_c = '''
+    ...             import b
+    ...             def f_c():
+    ...                 b.f_b()
+    ...         '''
+    ...         with installed_module('c', code=code_c) as c:
+    ...             c.f_c() # doctest: +ELLIPSIS
+    <module 'a' ...>
+    <module 'b' ...>
+    <module 'c' ...>
+
+    The default index
+    -----------------
+
+    The index, however, is optional: ``get_caller_module()`` by default uses the
+    index 1.
+
+    It may be counterintuitive at first - why not zero?. But it is a more useful
+    default. The function will rarely be called to discover in which module it
+    is being called because _it is already there_. Most of the time one will
+    want to discover where _the function which called ``get_caller_module()``
+    was called.
+
+    For example, we could have the following function::
+
+    >>> def print_current_module():
+    ...     print get_caller_module()
+
+    Were the default index 0, it would print the module where
+    ``get_current_module()`` was defined. However, we want the module where it
+    was _called_ - and this is a level higher::
+
+    >>> scope = {'print_current_module': print_current_module}
+    >>> with installed_module('m', code='print_current_module()', scope=scope):
+    ...     pass # doctest: +ELLIPSIS
+    <module 'm' ...>
+    """
+    frame = sys._getframe(index+1)
+
+    return importlib.import_module(frame.f_globals['__name__'])
