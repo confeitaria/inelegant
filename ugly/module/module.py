@@ -2,6 +2,7 @@ import contextlib
 import imp
 import sys
 import inspect
+import textwrap
 
 def create_module(name, code='', scope=None):
     """
@@ -36,6 +37,9 @@ def create_module(name, code='', scope=None):
     5
     """
     scope = scope if scope is not None else {}
+    if isinstance(code, basestring) and code[:1] == '\n':
+        code = code[1:]
+    code = textwrap.dedent(code)
 
     module = imp.new_module(name)
     sys.modules[name] = module
