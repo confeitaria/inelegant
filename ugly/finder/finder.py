@@ -9,8 +9,131 @@ from ugly.module import get_caller_module
 
 class TestFinder(unittest.TestSuite):
     """
-    ``UnitTestFinder`` is a test suite which receives as its arguments a list of
-    modules to search for all tests inside them.
+    ``TestFinder`` is a subclass of ``unittest.TestSuite``. It receives modules,
+    modules names and file paths as its arguments. It will look for subclasses
+    of ``unittest.TestCase`` and ``unittest.TestSuite`` from each module it
+    receives. It will also look for doctests in the docstrings of the functions
+    and classes from the module. If a file path is given to it, then it will
+    look for doctests inside it.
+
+    Loading test cases
+    ------------------
+
+    If we have the test case below...
+
+    ::
+
+    >>> class SomeTestCase(unittest.TestCase):
+    ...     def test1(self):
+    ...         self.assertEquals(1, 1)
+    ...     def testFail(self):
+    ...         self.assertEquals(1, 0)
+    ...     def testError(self):
+    ...         self.assertEquals(1, 1/0)
+
+    ...in a module, and the module is given to the finder, then all of these
+    tests will be available in the finder::
+
+    >>> from ugly.module import installed_module
+    >>> with installed_module('t', scope={'SomeTestCase': SomeTestCase}) as t:
+    ...     finder = TestFinder(t)
+    ...     finder.countTestCases()
+    3
+
+    It also works if one gives the module name instead of the module itself::
+
+    >>> with installed_module('t', scope={'SomeTestCase': SomeTestCase}):
+    ...     finder = TestFinder('t')
+    ...     finder.countTestCases()
+    3
+
+    All other methods from ``unittest.TestSuite`` are available as well.
+
+    Loading docstrings
+    ------------------
+
+    If a module containing docstrings with doctests is given to the finder then
+    a the doctest cases will also be available. So, if we had such a class::
+
+    >>> class Point(object):
+    ...     '''
+    ...     Is a point:
+    ...
+    ...     >>> p = Point(2, 3)
+    ...     >>> p.x
+    ...     2
+    ...     >>> p.y
+    ...     3
+    ...     '''
+    ...     def __init__(self, x, y):
+    ...         self.x = x
+    ...         self.y = y
+    ...     def distance(self, point):
+    ...         '''
+    ...         Distance to other point:
+    ...
+    ...         >>> Point(0, 0).distance(Point(2, 3)
+    ...         5.0
+    ...         '''
+    ...         return ((self.x-point.x)**2 + (self.y-point.y)**2)**(1/2)
+
+    ...and its module is given to the finder, the finder will have two test
+    cases - one for the class docstring and other for the method docstring::
+
+    >>> with installed_module('point', scope={'Point': Point}) as p:
+    ...     finder = TestFinder(p)
+    ...     finder.countTestCases()
+    2
+
+    The "dot module"
+    ----------------
+
+    Sometimes, we want the finder to load test cases and doctests from the
+    module it was created. While there are many ways to do it, it can be easly
+    accomplished with the "dot module". Just give it the string ``"."`` and the
+    current module will be scanned::
+
+    >>> code = '''
+    ... from ugly.finder import TestFinder
+    ... finder = TestFinder('.')
+    ... '''
+    >>> with installed_module('t', scope={'STC': SomeTestCase}, code=code):
+    ...     finder = TestFinder('t')
+    ...     finder.countTestCases()
+    3
+
+    Loading files
+    -------------
+
+    Doctests can be added to arbitrary text files as well, and ``TestFinder``
+    can also load them. Given a file as the one below::
+
+    >>> import tempfile
+    >>> content = '''
+    ...     >>> 3+3
+    ...     6
+    ... '''
+    >>> _, path = tempfile.mkstemp()
+    >>> with open(path, 'w') as f:
+    ...     f.write(content)
+
+    ...one just needs to give its path to the finder to have the doctests loaded
+    as test cases::
+
+    >>> finder = TestFinder(path)
+    >>> finder.countTestCases()
+    1
+
+    The nicest thing of it all, however, is that one can give all these options,
+    to the finder at once::
+
+    >>> with installed_module('t', scope={'SomeTestCase': SomeTestCase}),\\
+    ...         installed_module('point', scope={'Point': Point}) as p:
+    ...     finder = TestFinder('t', p, path)
+    ...     finder.countTestCases()
+    6
+    >>> import os
+    >>> os.remove(path)
     """
     def __init__(self, *testables):
         unittest.TestSuite.__init__(self)
