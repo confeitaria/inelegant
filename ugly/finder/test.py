@@ -34,8 +34,8 @@ class TestTestFinder(unittest.TestCase):
             def test_error(self):
                 raise Exception()
 
-        with installed_module('m1', scope={'TestCase1': TestCase1}) as m1, \
-                installed_module('m2', scope={'TestCase2': TestCase2}) as m2:
+        with installed_module('m1', defs=[TestCase1]) as m1, \
+                installed_module('m2', defs=[TestCase2]) as m2:
             result = unittest.TestResult()
             finder = TestFinder(m1, m2)
             finder.run(result)
@@ -66,7 +66,7 @@ class TestTestFinder(unittest.TestCase):
             """
             pass
 
-        with installed_module('m', scope={'Class': Class, 'f': f}) as m:
+        with installed_module('m', defs=[Class, f]) as m:
             result = unittest.TestResult()
             finder = TestFinder(m)
             finder.run(result)
@@ -95,8 +95,8 @@ class TestTestFinder(unittest.TestCase):
             def test_error(self):
                 raise Exception()
 
-        with installed_module('m1', scope={'TestCase1': TestCase1}) as m1, \
-                installed_module('m2', scope={'TestCase2': TestCase2}) as m2, \
+        with installed_module('m1',defs=[TestCase1]) as m1, \
+                installed_module('m2', defs=[TestCase2]) as m2, \
                 installed_module('m3') as m3:
             finder = TestFinder(m1, m2)
 
@@ -136,8 +136,8 @@ class TestTestFinder(unittest.TestCase):
                 """
                 pass
 
-        with installed_module('m1', scope={'TestCase1': TestCase1}), \
-                installed_module('m2', scope={'Class': Class}):
+        with installed_module('m1', defs=[TestCase1]), \
+                installed_module('m2', defs=[Class]):
             result = unittest.TestResult()
             finder = TestFinder('m1', 'm2')
             finder.run(result)

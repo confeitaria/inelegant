@@ -80,7 +80,7 @@ class TestFinder(unittest.TestSuite):
     ...and its module is given to the finder, the finder will have two test
     cases - one for the class docstring and other for the method docstring::
 
-    >>> with installed_module('point', scope={'Point': Point}) as p:
+    >>> with installed_module('point', defs=[Point]) as p:
     ...     finder = TestFinder(p)
     ...     finder.countTestCases()
     2
@@ -97,7 +97,7 @@ class TestFinder(unittest.TestSuite):
     ... from ugly.finder import TestFinder
     ... finder = TestFinder('.')
     ... '''
-    >>> with installed_module('t', scope={'STC': SomeTestCase}, code=code):
+    >>> with installed_module('t', defs=[SomeTestCase], code=code):
     ...     finder = TestFinder('t')
     ...     finder.countTestCases()
     3
@@ -127,8 +127,8 @@ class TestFinder(unittest.TestSuite):
     The nicest thing of it all, however, is that one can give all these options,
     to the finder at once::
 
-    >>> with installed_module('t', scope={'SomeTestCase': SomeTestCase}),\\
-    ...         installed_module('point', scope={'Point': Point}) as p:
+    >>> with installed_module('t', defs=[SomeTestCase]),\\
+    ...         installed_module('point', defs=[Point]) as p:
     ...     finder = TestFinder('t', p, path)
     ...     finder.countTestCases()
     6
@@ -201,9 +201,8 @@ def get_module(testable, reference_module=None):
     module::
 
     >>> from ugly.module import installed_module
-    >>> scope = {'get_current_module': get_current_module}
     >>> code = 'print get_current_module()'
-    >>> with installed_module('m', scope=scope, code=code) as m:
+    >>> with installed_module('m', defs=[get_current_module], code=code) as m:
     ...     pass # doctest: +ELLIPSIS
     <module 'ugly.finder.finder' ...>
 
@@ -216,8 +215,7 @@ def get_module(testable, reference_module=None):
 
     Now it should work::
 
-    >>> scope = {'get_current_module': get_current_module}
-    >>> with installed_module('m', scope=scope, code=code) as m:
+    >>> with installed_module('m', defs=[get_current_module], code=code) as m:
     ...     pass # doctest: +ELLIPSIS
     <module 'm' ...>
     """
@@ -271,37 +269,35 @@ def get_doctestable(testable, reference_module=None):
     The function can also receive the string ``"."``. In this case, it will
     return the module that called it::
 
-    >>> scope = {'get_doctestable': get_doctestable}
     >>> code = "print get_doctestable('.')"
-    >>> with installed_module('m', code=code, scope=scope) as m:
+    >>> with installed_module('m', code=code, defs=[get_doctestable]) as m:
     ...     pass # doctest: +ELLIPSIS
     <module 'm' ...>
 
     However, if the function is called from another function, it may not be the
     desired outcome. For example, consider de function below::
 
-    >>> def get_current_doctestable():
+    >>> def current_doctestable():
     ...     return get_doctestable('.')
 
     Were it called inside a module, one would expect it to return the calling
     module, but this does not happen::
 
-    >>> scope = {'get_current_doctestable': get_current_doctestable}
-    >>> code = "print get_current_doctestable()"
-    >>> with installed_module('m', code=code, scope=scope) as m:
+    >>> code = "print current_doctestable()"
+    >>> with installed_module('m', code=code, defs=[current_doctestable])\\
+    ...         as m:
     ...     pass # doctest: +ELLIPSIS
     <module 'ugly.finder.finder' ...>
 
     The new function adds a new call to the frame stack, so the module where
-    ``get_current_doctestable()`` is defined ends up being returned. If we
-    want the dot module to return a different module, we have a solution,
+    ``current_doctestable()`` is defined ends up being returned. If we want the
+    dot module to return a different module, we have a solution,
     however: just set the ``reference_module`` argument::
 
-    >>> def get_current_doctestable():
+    >>> def current_doctestable():
     ...     module = get_caller_module(1)
     ...     return get_doctestable('.', reference_module=module)
-    >>> scope = {'get_current_doctestable': get_current_doctestable}
-    >>> with installed_module('m', code=code, scope=scope) as m:
+    >>> with installed_module('m', code=code, defs=[current_doctestable]) as m:
     ...     pass # doctest: +ELLIPSIS
     <module 'm' ...>
 
