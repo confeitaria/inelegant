@@ -6,7 +6,7 @@ import inspect
 import textwrap
 import importlib
 
-def create_module(name, code='', scope=None):
+def create_module(name, code='', scope=None, defs=()):
     """
     This function creates a module and adds it to the available ones::
 
@@ -47,8 +47,9 @@ def create_module(name, code='', scope=None):
     sys.modules[name] = module
     module.__dict__.update(scope)
 
-    for v in scope.values():
+    for v in defs:
         if is_adoptable(v):
+            module.__dict__[v.__name__] = v
             adopt(module, v)
 
     exec code in module.__dict__
@@ -56,7 +57,7 @@ def create_module(name, code='', scope=None):
     return module
 
 @contextlib.contextmanager
-def installed_module(name, code='', scope=None):
+def installed_module(name, code='', defs=(), scope=None):
     """
     This is a context manager to have a module created during a context::
 
@@ -76,7 +77,7 @@ def installed_module(name, code='', scope=None):
       ...
     ImportError: No module named a
     """
-    yield create_module(name, code, scope)
+    yield create_module(name, code=code, defs=defs, scope=scope)
     del sys.modules[name]
 
 def adopt(module, entity):
