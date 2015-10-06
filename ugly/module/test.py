@@ -94,10 +94,10 @@ class TestModule(unittest.TestCase):
             self.assertEquals(m.__name__, Class.method.__module__)
             self.assertEquals(m.__name__, function.__module__)
 
-    def test_create_module_adopts_scope_entities(self):
+    def test_create_module_does_not_adopt_scope_entities(self):
         """
-        All classes and functions from the scope should be adopted by the module
-        made by ``create_module()``.
+        All classes and functions from the scope should not be adopted by the
+        module made by ``create_module()``.
         """
         class Class(object):
             def method(self):
@@ -109,9 +109,41 @@ class TestModule(unittest.TestCase):
             'example', scope={'Class': Class, 'function': function}
         )
 
+        self.assertNotEquals(m.__name__, Class.__module__)
+        self.assertNotEquals(m.__name__, Class.method.__module__)
+        self.assertNotEquals(m.__name__, function.__module__)
+
+
+    def test_create_module_adopts_def_entities(self):
+        """
+        All classes and functions from the definition list should be adopted by
+        the module made by ``create_module()``.
+        """
+        class Class(object):
+            def method(self):
+                pass
+        def function(a):
+            pass
+
+        m = create_module('example', defs=(Class, function))
+
         self.assertEquals(m.__name__, Class.__module__)
         self.assertEquals(m.__name__, Class.method.__module__)
         self.assertEquals(m.__name__, function.__module__)
+
+    def test_create_module_set_def_entities_in_module(self):
+        """
+        The entities at the ``defs`` list should be set into the module as their
+        ``name`` values.
+        """
+        class Class(object):
+            pass
+        def function(a):
+            pass
+
+        with installed_module('example', defs=(Class, function)) as m:
+            self.assertEquals(m.Class, Class)
+            self.assertEquals(m.function, function)
 
     def test_adopt_fails_on_builtins(self):
         """
@@ -136,7 +168,7 @@ class TestModule(unittest.TestCase):
             UnadoptedClass = OuterClass
 
         with installed_module('m1') as m1, \
-                installed_module('m2', scope={'Class3': OuterClass}) as m2:
+                installed_module('m2', defs=[OuterClass]) as m2:
             adopt(m1, Class1)
 
             self.assertEquals(m1.__name__, Class1.__module__)
@@ -166,9 +198,7 @@ class TestModule(unittest.TestCase):
         def f():
             pass
 
-        scope = {'f': f}
-
-        with installed_module('m', scope=scope, code='v = f.__module__') as m:
+        with installed_module('m', defs=[f], code='v = f.__module__') as m:
             self.assertEquals('m', m.v)
 
     def test_ignore_code_arg_indentation(self):
