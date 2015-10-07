@@ -15,12 +15,47 @@ def create_module(name, code='', scope=None, defs=()):
     >>> my_module == m
     True
 
+    Executing code
+    --------------
+
     You can give the code of the module to it::
 
     >>> m = create_module('with_code', code='x = 3')
     >>> import with_code
     >>> with_code.x
     3
+
+    The block of code can be indented (very much like doctests)::
+
+    >>> m = create_module('with_code', code='''
+    ...                                         x = 3
+    ...                                         y = x+3
+    ... ''')
+    >>> import with_code
+    >>> with_code.x
+    3
+    >>> with_code.y
+    6
+
+    Defining classes and functions
+    ------------------------------
+
+    Most of the time, one wants to define functions and classes inside a module,
+    but putting them into a block of code can be cumbersome. One can, then,
+    define them externally and pass them as the ``defs`` argument::
+
+    >>> def function():
+    ...     pass
+    >>> class Class(object):
+    ...     pass
+    >>> m = create_module('m', defs=[Class, function])
+    >>> m.Class
+    <class 'm.Class'>
+    >>> m.function # doctest: +ELLIPSIS
+    <function function at ...>
+
+    Setting a scope
+    ---------------
 
     It also can receive a dictionary representing a previously set up scope
     (i.e. containing values that will be set in the module)::
