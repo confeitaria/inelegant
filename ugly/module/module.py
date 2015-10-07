@@ -38,23 +38,19 @@ def create_module(name, code='', scope=None, defs=()):
     >>> intricate.z
     5
     """
-    unadoptable = [d for d in defs if not is_adoptable(d)]
-    if unadoptable:
-        raise AdoptException(*unadoptable)
-
     scope = scope if scope is not None else {}
     if isinstance(code, basestring) and code[:1] == '\n':
         code = code[1:]
     code = textwrap.dedent(code)
 
     module = imp.new_module(name)
+    adopt(module, *defs)
     sys.modules[name] = module
+
     module.__dict__.update(scope)
 
-    for v in defs:
-        if is_adoptable(v):
-            module.__dict__[v.__name__] = v
-            adopt(module, v)
+    for d in defs:
+        module.__dict__[d.__name__] = d
 
     exec code in module.__dict__
 
@@ -84,7 +80,7 @@ def installed_module(name, code='', defs=(), scope=None):
     yield create_module(name, code=code, defs=defs, scope=scope)
     del sys.modules[name]
 
-def adopt(module, entity):
+def adopt(module, *entities):
     """
     When a module "adopts" a class or a function, the ``__module__`` attribute
     of the given class or function is set to the name of the module. For
@@ -102,17 +98,30 @@ def adopt(module, entity):
     ...     Example.method.__module__
     'example'
     'example'
+
+    This function can adopt many values at once as well::
+
+    >>> def function():
+    ...     pass
+    >>> with installed_module('example') as m:
+    ...     adopt(m, Example, function)
+    ...     Example.__module__
+    ...     function.__module__
+    'example'
+    'example'
     """
-    if not is_adoptable(entity):
-        raise AdoptException(entity)
+    unadoptable = [e for e in entities if not is_adoptable(e)]
+    if unadoptable:
+        raise AdoptException(*unadoptable)
 
-    if inspect.isclass(entity):
-        for a in get_adoptable_attrs(entity):
-            adopt(module, a)
-    elif inspect.ismethod(entity):
-        entity = entity.im_func
+    for entity in entities:
+        if inspect.isclass(entity):
+            for a in get_adoptable_attrs(entity):
+                adopt(module, a)
+        elif inspect.ismethod(entity):
+            entity = entity.im_func
 
-    entity.__module__ = module.__name__
+        entity.__module__ = module.__name__
 
 def get_adoptable_attrs(obj):
     """
@@ -200,7 +209,7 @@ def is_builtin(obj):
     """
     return inspect.isbuiltin(obj) or obj.__module__ == '__builtin__'
 
-class AdoptException(Exception):
+class AdoptException(ValueError):
     """
     Exception raised when trying to make a module to adopt an unadoptable
     object, such as one that is not a function or object...
@@ -220,6 +229,15 @@ class AdoptException(Exception):
     Traceback (most recent call last):
         ...
     AdoptException: 'dict' is not adoptable because it is a builtin.
+
+    It can also receive more than one value::
+
+    >>> with installed_module('m') as m:
+    ...     adopt(m, dict, 3)
+    Traceback (most recent call last):
+        ...
+    AdoptException: 'dict' is not adoptable because it is a builtin.
+        'int' values such as 3 are not adoptable.
     """
 
     def __init__(self, *objs):
@@ -239,7 +257,7 @@ class AdoptException(Exception):
                 )
 
             if messages:
-                Exception.__init__(self, "\n".join(messages))
+                Exception.__init__(self, "\n    ".join(messages))
             else:
                 Exception.__init__(self)
 
