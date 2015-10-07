@@ -220,6 +220,22 @@ class TestModule(unittest.TestCase):
             self.assertEquals(3, m.three())
             self.assertEquals('a', m.a())
 
+    def test_adopt_code_defs(self):
+        """
+        Classes and functions created from the ``code`` arg should be adopted.
+        """
+        code = """
+            def function():
+                pass
+
+            class Class():
+                pass
+        """
+
+        with installed_module('m', code=code) as m:
+            self.assertEquals('m', m.function.__module__)
+            self.assertEquals('m', m.Class.__module__)
+
 from ugly.finder import TestFinder
 
 load_tests = TestFinder('.', 'ugly.module.module').load_tests
