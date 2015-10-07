@@ -218,22 +218,26 @@ class AdoptException(Exception):
     AdoptException: 'dict' is not adoptable because it is a builtin.
     """
 
-    def __init__(self, obj=None):
-        if obj is None:
-            message = None
-        elif not is_adoptable_type(obj):
-            message = "'{0}' values such as {1} are not adoptable.".format(
-                type(obj).__name__, str(obj)
-            )
-        elif is_builtin(obj):
-            message = "'{0}' is not adoptable because it is a builtin.".format(
-                obj.__name__
-            )
+    def __init__(self, *objs):
+        messages = []
+        for obj in objs:
+            if not is_adoptable_type(obj):
+                messages.append(
+                    "'{0}' values such as {1} are not adoptable.".format(
+                        type(obj).__name__, str(obj)
+                    )
+                )
+            elif is_builtin(obj):
+                messages.append(
+                    "'{0}' is not adoptable because it is a builtin.".format(
+                        obj.__name__
+                    )
+                )
 
-        if message is not None:
-            Exception.__init__(self, message)
-        else:
-            Exception.__init__(self)
+            if messages:
+                Exception.__init__(self, "\n".join(messages))
+            else:
+                Exception.__init__(self)
 
 
 def get_caller_module(index=1):
