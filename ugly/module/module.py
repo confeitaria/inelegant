@@ -38,6 +38,10 @@ def create_module(name, code='', scope=None, defs=()):
     >>> intricate.z
     5
     """
+    unadoptable = [d for d in defs if not is_adoptable(d)]
+    if unadoptable:
+        raise AdoptException(*unadoptable)
+
     scope = scope if scope is not None else {}
     if isinstance(code, basestring) and code[:1] == '\n':
         code = code[1:]
