@@ -321,6 +321,8 @@ class TestTestFinder(unittest.TestCase):
             self.assertIn('DocFileCase', class_names)
             self.assertNotIn('TestCase2', method_names)
 
+        os.remove(path)
+
 load_tests = TestFinder('.', 'ugly.finder.finder').load_tests
 
 if __name__ == "__main__":
