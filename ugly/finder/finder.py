@@ -153,9 +153,44 @@ class TestFinder(unittest.TestSuite):
 
     def load_tests(self, loader, tests, pattern):
         """
-        This method follows the ```load_tests() protocol`__. You can assign it
-        (when bound) to ``load_tests`` inside a module and then the
-        ``TestFinder`` will be the suite to be called.
+        This is, basically, an implementation of the ```load_tests()
+        protocol`__. You can assign it (when bound) to ``load_tests`` inside a
+        module and then the ``TestFinder`` will be the suite to be called.
+
+        For example, suppose we have the following classes
+
+        >>> class TestCase1(unittest.TestCase):
+        ...    def test_fail1(self):
+        ...        self.fail('TestCase1')
+        >>> class TestCase2(unittest.TestCase):
+        ...    def test_fail2(self):
+        ...        self.fail('TestCase1')
+
+        If we add them to two different modules, but then create a finder with
+        the first one and set its bound ``load_tests()`` into the second one,
+        then the second module will only "publish" the cases of the first one::
+
+        >>> from ugly.module import installed_module
+        >>> with installed_module('t1', defs=[TestCase1]) as t1, \\
+        ...        installed_module('t2', defs=[TestCase2]) as t2:
+        ...     t2.load_tests = TestFinder(t1).load_tests
+        ...     loader = unittest.TestLoader()
+        ...     suite = loader.loadTestsFromModule(t2)
+        ...     # doctest: +ELLIPSIS
+        ...     _ = unittest.TextTestRunner(stream=sys.stdout).run(suite)
+        F
+        ======================================================================
+        FAIL: test_fail1 (t1.TestCase1)
+        ----------------------------------------------------------------------
+        Traceback (most recent call last):
+          ...
+        AssertionError: TestCase1
+        <BLANKLINE>
+        ----------------------------------------------------------------------
+        Ran 1 test in ...s
+        <BLANKLINE>
+        FAILED (failures=1)
+
 
         __ https://docs.python.org/2/library/unittest.html#load-tests-protocol
         """
