@@ -262,6 +262,65 @@ class TestTestFinder(unittest.TestCase):
 
         os.remove(file_path)
 
+    def test_get_test_loader(self):
+        """
+        ``get_test_loader()`` should find all tests from the arguments given to
+        it and return a function compatible with the `load_tests() protocol`__.
+
+        __ https://docs.python.org/2/library/unittest.html#load-tests-protocol
+        """
+        _, path = tempfile.mkstemp()
+        content = """
+        >>> 2+2
+        FAIL doctest file
+        """
+
+        with open(path, 'w') as f:
+            f.write(content)
+
+        class Class:
+            """
+            >>> 3+3
+            FAIL docstring
+            """
+            pass
+
+        class TestCase1(unittest.TestCase):
+            def test_fail1(self):
+                self.fail('TestCase1')
+
+        class TestCase2(unittest.TestCase):
+            def test_fail2(self):
+                self.fail('TestCase1')
+
+        with installed_module('m', defs=[Class]) as m, \
+                installed_module('t1', defs=[TestCase1]) as t1, \
+                installed_module('t2', defs=[TestCase2]) as t2:
+            t2.load_tests = TestFinder(t1, m, path).load_tests
+
+            loader = unittest.TestLoader()
+            suite = loader.loadTestsFromModule(t2)
+            result = unittest.TestResult()
+            suite.run(result)
+
+            test_cases = {t[0] for t in result.failures}
+
+            self.assertEquals(3, result.testsRun)
+            self.assertEquals(3, len(result.failures))
+            self.assertEquals(0, len(result.errors))
+
+            method_names = {tc._testMethodName for tc in test_cases}
+
+            self.assertIn('test_fail1', method_names)
+            self.assertNotIn('test_fail2', method_names)
+
+            class_names = {tc.__class__.__name__ for tc in test_cases}
+
+            self.assertIn('TestCase1', class_names)
+            self.assertIn('DocTestCase', class_names)
+            self.assertIn('DocFileCase', class_names)
+            self.assertNotIn('TestCase2', method_names)
+
 load_tests = TestFinder('.', 'ugly.finder.finder').load_tests
 
 if __name__ == "__main__":
