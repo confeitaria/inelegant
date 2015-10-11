@@ -4,9 +4,9 @@ Ugly, a directory of weird helpers for tests
 
 or
 
-=======================================
-Ugly, rather inelegant than unavailable
-=======================================
+===================================================
+Ugly: it is better to be inelegant than unavailable
+===================================================
 
 Ugly groups a series of tools that are very useful for automating tests. Most of
 them are unreliable or costly "in the wild" (while they may be unusually
