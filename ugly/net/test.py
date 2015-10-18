@@ -164,6 +164,58 @@ class TestWaiters(unittest.TestCase):
 
             self.assertTrue(timeout < now - start < 2*timeout)
 
+    def test_wait_server_up_integer_timeout(self):
+        """
+        ``wait_server_up()`` should work with integer timeouts.
+        """
+        timeout = 1
+        with self.assertRaises(Exception):
+            start = time.time()
+            wait_server_up('localhost', 9000, timeout=timeout)
+
+        now = time.time()
+
+        self.assertTrue(timeout < now - start < 2*timeout)
+
+    def test_wait_server_down_integer_timeout(self):
+        """
+        ``wait_server_down()`` should work with integer timeouts.
+        """
+        timeout = 1
+        with Server():
+            with self.assertRaises(Exception):
+                start = time.time()
+                wait_server_down('localhost', 9000, timeout=timeout)
+
+            now = time.time()
+
+            self.assertTrue(timeout < now - start < 2*timeout)
+
+    def test_wait_server_down_timeout_unmet(self):
+        """
+        ``wait_server_down()`` should not wait for the full timeout if the port
+        is freed earlier.
+        """
+        timeout = 1
+        start = time.time()
+        wait_server_down('localhost', 9000, timeout=timeout)
+
+        now = time.time()
+
+        self.assertTrue(now - start < timeout)
+
+    def test_wait_server_up_timeout_unmet(self):
+        """
+        ``wait_server_up()`` should not wait for the full timeout if the port is
+        listening earliner.
+        """
+        timeout = 1
+        with Server():
+            start = time.time()
+            wait_server_up('localhost', 9000, timeout=timeout)
+            now = time.time()
+
+        self.assertTrue(now - start < timeout)
 
 from ugly.finder import TestFinder
 
