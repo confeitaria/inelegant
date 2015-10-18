@@ -26,7 +26,7 @@ def wait_server_up(host, port, timeout=1, tries=100):
 
     >>> import ugly.net, multiprocessing, socket, contextlib, time
     >>> def serve():
-    ...     time.sleep(0.01)
+    ...     time.sleep(0.05)
     ...     server = ugly.net.Server('localhost', 9000, message='my message')
     ...     server.serve_forever()
 
@@ -65,7 +65,7 @@ def wait_server_up(host, port, timeout=1, tries=100):
     >>> process.start()
     >>> start = time.time()
     >>> wait_server_up('localhost', 9000)
-    >>> 0.01 < time.time() - start < 0.02
+    >>> 0.05 < time.time() - start < 0.1
     True
     >>> process.terminate()
     >>> process.join()
@@ -91,7 +91,7 @@ def wait_server_up(host, port, timeout=1, tries=100):
     connection is refuses for more than <tries> times, an exception will be
     raised.
     """
-    socket_timeout = timeout / tries
+    socket_timeout = float(timeout) / tries
     if socket_timeout < 0.0001:
         socket_timeout = 0.0001
 
@@ -190,7 +190,7 @@ g from a process outside the tests?
     >>> 0.05 < time.time() - start < 0.1
     True
     """
-    socket_timeout = timeout / tries
+    socket_timeout = float(timeout) / tries
     if socket_timeout < 0.0001:
         socket_timeout = 0.0001
 
