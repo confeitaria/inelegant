@@ -238,7 +238,7 @@ class TestModule(unittest.TestCase):
 
 from ugly.finder import TestFinder
 
-load_tests = TestFinder('.', 'ugly.module.module').load_tests
+load_tests = TestFinder(__name__, 'ugly.module.module').load_tests
 
 if __name__ == "__main__":
     unittest.main()
