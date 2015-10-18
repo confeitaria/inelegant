@@ -146,15 +146,13 @@ class TestTestFinder(unittest.TestCase):
             self.assertEquals(2, len(result.failures))
             self.assertEquals(1, len(result.errors))
 
-    def test_accept_period_module(self):
+    def test_does_not_accept_period_module(self):
         """
-        If the sting ``'.'`` is given to ``TestFinder``, it should look for
-        tests inside the module it was created.
+        The string ``'.'`` used to represent the current module, but we are not
+        supporting it anymore.
         """
-        period_tests = list(iter(TestFinder('.')))
-        name_tests = list(iter(TestFinder(__name__)))
-
-        self.assertEquals(period_tests, name_tests)
+        with self.assertRaises(Exception):
+            finder = TestFinder('.')
 
     def test_accept_file(self):
         """
@@ -323,7 +321,7 @@ class TestTestFinder(unittest.TestCase):
 
         os.remove(path)
 
-load_tests = TestFinder('.', 'ugly.finder.finder').load_tests
+load_tests = TestFinder(__name__, 'ugly.finder.finder').load_tests
 
 if __name__ == "__main__":
     unittest.main()
