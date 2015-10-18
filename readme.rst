@@ -14,6 +14,145 @@ reliable and efficient on tests).
 
 Right now there are four modules in this project.
 
+"Ugly Net": quick and dirty network tricks
+==========================================
+
+The module ``ugly.net`` provides tools for easing testing some very simple
+network communication code.
+
+Waiter functions
+----------------
+
+These functions wait for a port to be up or down in a specific host. There are
+two of them:
+
+``wait_server_up(host, port)``
+    Blocks until there is a process listening at the given port from the given
+    host. Useful when we want to do something only when a server is already up
+    and running.
+
+    It is not uncommon a server can take a bit of time to start due to resource
+    loading etc. For example, consider the example we saw below. If we remove
+    the waiting time from the second line, it will probably fail::
+
+        >>> with ugly.net.Server('localhost', 9000, message='my message'):
+        ...     time.sleep(0.01)
+        ...     with contextlib.closing(socket.socket()) as s:
+        ...         s.connect(('localhost', 9000))
+        ...         s.recv(10)
+        'my message'
+
+    The problem is, these wait times are wasteful: to ensure the server is up,
+    we wait way more time than it is necessary most of the times. It is
+    unreliable, too, because there will be always a time when the waiting time
+    is not enough.
+
+    With ``wait_server_up()``, the process waits only for the necessary amount
+    of time - and no more::
+
+        >>> start = time.time()
+        >>> with ugly.net.Server('localhost', 9000, message='my message'):
+        ...     ugly.net.wait_server_up('localhost', 9000)
+        ...     time.time() - start < 0.01
+        True
+
+    It has a timeout: by default, it will not wait more than one second and, if
+    the server is not up, an exception is raised. It can be made longer with the
+    ``timeout`` argument::
+
+        >>> start = time.time()
+        >>> with ugly.net.Server('localhost', 9000):
+        ...     ugly.net.wait_server_up('localhost', 9000, timeout=60)
+        ...     time.time() - start < 0.01
+        True
+
+``wait_server_down()``
+    Likewise, it is common to have to wait for a server being down on a specific
+    port. Again, it is common to rely on waiting times. Consider the hypotetical
+    server below::
+
+        >>> def slow_server():
+        ...     with ugly.net.Server('localhost', 9000) as server:
+        ...         yield
+        ...         time.sleep(0.01)
+        ...         server.shutdown()
+
+    If we start and shutdown it, and then try to bound to the same port, it will
+    likely fail::
+
+        >>> with ugly.process.Process(target=slow_server) as p:
+        ...     ugly.net.wait_server_up('localhost', 9000)
+        ...     with contextlib.closing(socket.socket()) as s:
+        ...         p.go() # Request shutdown
+        ...         s.bind(('localhost', 9000))
+        Traceback (most recent call last):
+         ...
+        error: [Errno 98] Address already in use
+
+    A common solution is to add some wait time::
+
+        >>> with ugly.process.Process(target=slow_server) as p:
+        ...     ugly.net.wait_server_up('localhost', 9000)
+        ...     with contextlib.closing(socket.socket()) as s:
+        ...         p.go() # Request shutdown
+        ...         time.sleep(0.02)
+        ...         s.bind(('localhost', 9000))
+
+    Again, it is a suboptimal. Generally, the wait time is way larger
+    than needed most of the time, and even in this situation it will fail
+    sometimes.. With ``wait_server_down()``, the client can block itself until
+    the server is not running anymore - and no more::
+
+        >>> with ugly.process.Process(target=slow_server) as p:
+        ...     ugly.net.wait_server_up('localhost', 9000)
+        ...     with contextlib.closing(socket.socket()) as s:
+        ...         p.go() # Request shutdown
+        ...         ugly.net.wait_server_down('localhost', 9000)
+        ...         s.bind(('localhost', 9000))
+
+    It will wait for at most one second by default, but the timeout can be
+    changed::
+
+        >>> with ugly.process.Process(target=slow_server) as p:
+        ...     ugly.net.wait_server_up('localhost', 9000)
+        ...     with contextlib.closing(socket.socket()) as s:
+        ...         p.go() # Request shutdown
+        ...         ugly.net.wait_server_down('localhost', 9000, timeout=60)
+        ...         s.bind(('localhost', 9000))
+
+
+The ``Server`` class
+--------------------
+
+``ugly.net.Server`` is a subclass of ``SocketServer.TCPServer`` that only serves
+a string in a specific port::
+
+    >>> import ugly.net
+    >>> server = ugly.net.Server('localhost', 9000, message='my message')
+    >>> import contextlib, socket, time
+    >>> with ugly.process.Process(target=server.handle_request):
+    ...     time.sleep(0.01)
+    ...     with contextlib.closing(socket.socket()) as s:
+    ...         s.connect(('localhost', 9000))
+    ...         s.recv(10)
+    'my message'
+
+However, it is probably best used as a context manager. If given to a ``with``
+statement, the server will be started alone in the background and finished once
+the block is exited::
+
+    >>> with ugly.net.Server('localhost', 9000, message='my message'):
+    ...     time.sleep(0.01)
+    ...     with contextlib.closing(socket.socket()) as s:
+    ...         s.connect(('localhost', 9000))
+    ...         s.recv(10)
+    'my message'
+    >>> with contextlib.closing(socket.socket()) as s:
+    ...     s.connect(('localhost', 9000))
+    Traceback (most recent call last):
+      ...
+    error: [Errno 111] Connection refused
+
 "Ugly Process": running and communicating with a simple processes
 =================================================================
 
@@ -147,146 +286,3 @@ children exceptions would also be raised - but only after the block finishes::
     ZeroDivisionError: float division by zero
     >>> executed
     True
-
-"Ugly Net": quick and dirty network tricks
-==========================================
-
-The module ``ugly.net`` provides tools for easing testing some very simple
-network communication code.
-
-The ``Server`` class
---------------------
-
-For example, it has the ``ugly.net.Server``, a
-subclass of ``SocketServer.TCPServer`` that only serves a string in a specific
-port::
-
-    >>> import ugly.net
-    >>> server = ugly.net.Server('localhost', 9000, message='my message')
-    >>> import contextlib, socket, time
-    >>> with ugly.process.Process(target=server.handle_request):
-    ...     time.sleep(0.01)
-    ...     with contextlib.closing(socket.socket()) as s:
-    ...         s.connect(('localhost', 9000))
-    ...         s.recv(10)
-    'my message'
-
-However, it is probably best used as a context manager. If given to a ``with``
-statement, the server will be started alone in the background and finished once
-the block is exited::
-
-    >>> with ugly.net.Server('localhost', 9000, message='my message'):
-    ...     time.sleep(0.01)
-    ...     with contextlib.closing(socket.socket()) as s:
-    ...         s.connect(('localhost', 9000))
-    ...         s.recv(10)
-    'my message'
-    >>> with contextlib.closing(socket.socket()) as s:
-    ...     s.connect(('localhost', 9000))
-    Traceback (most recent call last):
-      ...
-    error: [Errno 111] Connection refused
-
-Waiter functions
-----------------
-
-To be honest, the ``Server`` class is mostly used to test the reason of the Ugly
-Net: the waiter functions.
-
-These functions wait for a port to be up or down in a specific host. There are
-two of them:
-
-``wait_server_up(host, port)``
-    Blocks until there is a process listening at the given port from the given
-    host. Useful when we want to do something only when a server is already up
-    and running.
-
-    It is not uncommon a server can take a bit of time to start due to resource
-    loading etc. For example, consider the example we saw below. If we remove
-    the waiting time from the second line, it will probably fail::
-
-    >>> with ugly.net.Server('localhost', 9000, message='my message'):
-    ...     time.sleep(0.01)
-    ...     with contextlib.closing(socket.socket()) as s:
-    ...         s.connect(('localhost', 9000))
-    ...         s.recv(10)
-    'my message'
-
-    The problem is, these wait times are wasteful: to ensure the server is up,
-    we wait way more time than it is necessary most of the times. It is
-    unreliable, too, because there will be always a time when the waiting time
-    is not enough.
-
-    With ``wait_server_up()``, the process waits only for the necessary amount
-    of time - and no more::
-
-    >>> start = time.time()
-    >>> with ugly.net.Server('localhost', 9000, message='my message'):
-    ...     ugly.net.wait_server_up('localhost', 9000)
-    ...     time.time() - start < 0.01
-    True
-
-    It has a timeout: by default, it will not wait more than one second and, if
-    the server is not up, an exception is raised. It can be made longer with the
-    ``timeout`` argument::
-
-    >>> start = time.time()
-    >>> with ugly.net.Server('localhost', 9000):
-    ...     ugly.net.wait_server_up('localhost', 9000, timeout=60)
-    ...     time.time() - start < 0.01
-    True
-
-
-``wait_server_down()``
-    Likewise, it is common to have to wait for a server being down on a specific
-    port. Again, it is common to rely on waiting times. Consider the hypotetical
-    server below::
-
-    >>> def slow_server():
-    ...     with ugly.net.Server('localhost', 9000) as server:
-    ...         yield
-    ...         time.sleep(0.01)
-    ...         server.shutdown()
-
-    If we start and shutdown it, and then try to bound to the same port, it will
-    likely fail::
-
-    >>> with ugly.process.Process(target=slow_server) as p:
-    ...     ugly.net.wait_server_up('localhost', 9000)
-    ...     with contextlib.closing(socket.socket()) as s:
-    ...         p.go() # Request shutdown
-    ...         s.bind(('localhost', 9000))
-    Traceback (most recent call last):
-     ...
-    error: [Errno 98] Address already in use
-
-    A common solution is to add some wait time::
-
-    >>> with ugly.process.Process(target=slow_server) as p:
-    ...     ugly.net.wait_server_up('localhost', 9000)
-    ...     with contextlib.closing(socket.socket()) as s:
-    ...         p.go() # Request shutdown
-    ...         time.sleep(0.02)
-    ...         s.bind(('localhost', 9000))
-
-    Again, it is a suboptimal. Generally, the wait time is way larger
-    than needed most of the time, and even in this situation it will fail
-    sometimes.. With ``wait_server_down()``, the client can block itself until
-    the server is not running anymore - and no more::
-
-    >>> with ugly.process.Process(target=slow_server) as p:
-    ...     ugly.net.wait_server_up('localhost', 9000)
-    ...     with contextlib.closing(socket.socket()) as s:
-    ...         p.go() # Request shutdown
-    ...         ugly.net.wait_server_down('localhost', 9000)
-    ...         s.bind(('localhost', 9000))
-
-    It will wait for at most one second by default, but the timeout can be
-    changed::
-
-    >>> with ugly.process.Process(target=slow_server) as p:
-    ...     ugly.net.wait_server_up('localhost', 9000)
-    ...     with contextlib.closing(socket.socket()) as s:
-    ...         p.go() # Request shutdown
-    ...         ugly.net.wait_server_down('localhost', 9000, timeout=60)
-    ...         s.bind(('localhost', 9000))
