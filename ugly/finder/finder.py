@@ -85,23 +85,6 @@ class TestFinder(unittest.TestSuite):
     ...     finder.countTestCases()
     2
 
-    The "dot module"
-    ----------------
-
-    Sometimes, we want the finder to load test cases and doctests from the
-    module it was created. While there are many ways to do it, it can be easly
-    accomplished with the "dot module". Just give it the string ``"."`` and the
-    current module will be scanned::
-
-    >>> code = '''
-    ... from ugly.finder import TestFinder
-    ... finder = TestFinder('.')
-    ... '''
-    >>> with installed_module('t', defs=[SomeTestCase], code=code):
-    ...     finder = TestFinder('t')
-    ...     finder.countTestCases()
-    3
-
     Loading files
     -------------
 
@@ -141,10 +124,8 @@ class TestFinder(unittest.TestSuite):
         caller_module = get_caller_module()
 
         for testable in testables:
-            module = get_module(testable, reference_module=caller_module)
-            doctestable = get_doctestable (
-                testable, reference_module=caller_module
-            )
+            module = get_module(testable)
+            doctestable = get_doctestable(testable)
 
             if module is not None:
                 add_module(self, module)
@@ -196,7 +177,7 @@ class TestFinder(unittest.TestSuite):
         """
         return self
 
-def get_module(testable, reference_module=None):
+def get_module(testable):
     """
     ``get_module()`` can receive a module or a string. If it receives a module,
     the module is returned::
@@ -212,67 +193,21 @@ def get_module(testable, reference_module=None):
 
     >>> get_module('ugly.net.test') # doctest: +ELLIPSIS
     <module 'ugly.net.test' ...>
-
-    The "dot module"
-    ----------------
-
-    However, if a string containg only a period (``'.'``) is given to the
-    function, then the function will return the module which called the
-    function::
-
-    >>> get_module('.') # doctest: +ELLIPSIS
-    <module 'ugly.finder.finder' ...>
-
-    The reference module
-    --------------------
-
-    Sometimes, however, you many want to return a different "dot module." For
-    example, consider the function below::
-
-    >>> def get_current_module():
-    ...     return get_module('.')
-
-    If it is imported called from a module ``m1``, it will return its original
-    module::
-
-    >>> from ugly.module import installed_module
-    >>> code = 'print get_current_module()'
-    >>> with installed_module('m', defs=[get_current_module], code=code) as m:
-    ...     pass # doctest: +ELLIPSIS
-    <module 'ugly.finder.finder' ...>
-
-    What we want, however, is the module where ``get_current_module()`` was
-    called. In this case, can pass it as the ``reference_module`` argument::
-
-    >>> def get_current_module():
-    ...     module = get_caller_module(1)
-    ...     return get_module('.', reference_module=module)
-
-    Now it should work::
-
-    >>> with installed_module('m', defs=[get_current_module], code=code) as m:
-    ...     pass # doctest: +ELLIPSIS
-    <module 'm' ...>
     """
-    if reference_module is None:
-        reference_module = get_caller_module()
 
     module = None
 
     if inspect.ismodule(testable):
         module = testable
     elif isinstance(testable, basestring):
-        if testable == '.':
-            module = reference_module
-        else:
-            try:
-                module = importlib.import_module(testable)
-            except (ImportError, TypeError):
-                module = None
+        try:
+            module = importlib.import_module(testable)
+        except (ImportError, TypeError):
+            module = None
 
     return module
 
-def get_doctestable(testable, reference_module=None):
+def get_doctestable(testable):
     """
     Given a "testable" argument, returns something that can be run by
     ``doctest`` - a "doctestable."
@@ -298,44 +233,6 @@ def get_doctestable(testable, reference_module=None):
     ...     get_doctestable('m') # doctest: +ELLIPSIS
     <module 'm' ...>
 
-    The "dot module"
-    ----------------
-
-    The function can also receive the string ``"."``. In this case, it will
-    return the module that called it::
-
-    >>> code = "print get_doctestable('.')"
-    >>> with installed_module('m', code=code, defs=[get_doctestable]) as m:
-    ...     pass # doctest: +ELLIPSIS
-    <module 'm' ...>
-
-    However, if the function is called from another function, it may not be the
-    desired outcome. For example, consider de function below::
-
-    >>> def current_doctestable():
-    ...     return get_doctestable('.')
-
-    Were it called inside a module, one would expect it to return the calling
-    module, but this does not happen::
-
-    >>> code = "print current_doctestable()"
-    >>> with installed_module('m', code=code, defs=[current_doctestable])\\
-    ...         as m:
-    ...     pass # doctest: +ELLIPSIS
-    <module 'ugly.finder.finder' ...>
-
-    The new function adds a new call to the frame stack, so the module where
-    ``current_doctestable()`` is defined ends up being returned. If we want the
-    dot module to return a different module, we have a solution,
-    however: just set the ``reference_module`` argument::
-
-    >>> def current_doctestable():
-    ...     module = get_caller_module(1)
-    ...     return get_doctestable('.', reference_module=module)
-    >>> with installed_module('m', code=code, defs=[current_doctestable]) as m:
-    ...     pass # doctest: +ELLIPSIS
-    <module 'm' ...>
-
     Retrieving files
     ----------------
 
@@ -355,9 +252,6 @@ def get_doctestable(testable, reference_module=None):
     >>> get_doctestable('/tmp/doctest.txt')
     '/tmp/doctest.txt'
     """
-    if reference_module is None:
-        reference_module = get_caller_module()
-
     doctestable = None
 
     if inspect.ismodule(testable):
@@ -365,12 +259,9 @@ def get_doctestable(testable, reference_module=None):
     elif isinstance(testable, file):
         doctestable = testable.name
     elif isinstance(testable, basestring):
-        if testable == '.':
-            doctestable = reference_module
-        else:
-            doctestable = get_module(testable, reference_module)
-            if doctestable is None:
-                doctestable = testable
+        doctestable = get_module(testable)
+        if doctestable is None:
+            doctestable = testable
 
     return doctestable
 
