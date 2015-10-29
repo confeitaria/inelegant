@@ -74,9 +74,7 @@ def create_module(name, code='', scope=None, defs=()):
     5
     """
     scope = scope if scope is not None else {}
-    if isinstance(code, basestring) and code[:1] == '\n':
-        code = code[1:]
-    code = textwrap.dedent(code)
+    code = dedent(code)
 
     module = imp.new_module(name)
     adopt(module, *defs)
@@ -378,3 +376,25 @@ def get_caller_module(index=1):
     frame = sys._getframe(index+1)
 
     return importlib.import_module(frame.f_globals['__name__'])
+
+def dedent(code):
+    """
+    Remove any consistent indentation found in a string. For example, consider
+    the block below::
+
+    >>> a = '''
+    ...         for i in range(10):
+    ...             print i
+    ... '''
+    >>> a
+    '\\n        for i in range(10):\\n            print i\\n'
+
+    When dendented, it will look like this::
+
+    >>> dedent(a)
+    'for i in range(10):\\n    print i\\n'
+    """
+    if isinstance(code, basestring) and code.startswith('\n'):
+        code = code.replace('\n', '', 1)
+
+    return textwrap.dedent(code)
