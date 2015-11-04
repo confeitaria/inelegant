@@ -4,9 +4,9 @@ Ugly, a directory of weird helpers for tests
 
 or
 
-===================================================
-Ugly: it is better to be inelegant than unavailable
-===================================================
+=======================================
+Ugly: rather inelegant than unavailable
+=======================================
 
 Ugly groups a series of tools that are very useful for automating tests. Most of
 them are unreliable or costly "in the wild" (while they may be unusually
@@ -14,8 +14,8 @@ reliable and efficient on tests).
 
 Right now there are four modules in this project.
 
-"Ugly Process": running and communicating with a simple processes
-=================================================================
+"Ugly Process" - running and communicating with a simple processes
+==================================================================
 
 This module contains the class ``ugly.process.Process``. This class extends
 ``multiprocessing.Process`` so one can easily recover information sent
@@ -148,8 +148,8 @@ children exceptions would also be raised - but only after the block finishes::
     >>> executed
     True
 
-"Ugly Net": quick and dirty network tricks
-==========================================
+"Ugly Net" - quick and dirty network tricks
+===========================================
 
 The module ``ugly.net`` provides tools for easing testing some very simple
 network communication code.
@@ -157,9 +157,8 @@ network communication code.
 The ``Server`` class
 --------------------
 
-For example, it has the ``ugly.net.Server``, a
-subclass of ``SocketServer.TCPServer`` that only serves a string in a specific
-port::
+For example, it has the ``ugly.net.Server``, a subclass of
+``SocketServer.TCPServer`` that only serves a string in a specific port::
 
     >>> import ugly.net
     >>> server = ugly.net.Server('localhost', 9000, message='my message')
@@ -290,3 +289,97 @@ two of them:
     ...         p.go() # Request shutdown
     ...         ugly.net.wait_server_down('localhost', 9000, timeout=60)
     ...         s.bind(('localhost', 9000))
+
+"Ugly Module" - creating modules
+================================
+
+With ``ugly.module`` one can create and import modules at runtime, without
+needing to write a file.
+
+The ``create_module()`` function
+--------------------------------
+
+To create a module, one can use the ``create_module()`` function. The function
+has a mandatory argument, the module name::
+
+    >>> import ugly.module
+    >>> ugly.module.create_module('m') # doctest: +ELLIPSIS
+    <module 'm' ...>
+
+A nice thing about ``create_module()`` is that the module will be available to
+be imported once it is created::
+
+    >>> import m
+    >>> m # doctest: +ELLIPSIS
+    <module 'm' ...>
+
+Giving scope, definitions and code to the module
+------------------------------------------------
+
+An empty module is not very useful, so ``create_module()`` provides some ways
+of putting stuff on it. She simplest one is probably the ``scope`` argument. It
+should be a dictionary, and every value from it will be attributed to a variable
+whose name is its key::
+
+    >>> m = ugly.module.create_module('m', scope={'x': 3})
+    >>> m.x
+    3
+
+Modules can also define classes and functions. Such entities, when defined on a
+module, will have a ``__module__`` attribute set. If one passes these entities
+through the scopes dict, however, the module name will not have it set::
+
+    >>> def f():
+    ...     pass
+    >>> m = ugly.module.create_module('m', scope={'f': f})
+    >>> m.f.__module__ == 'm'
+    False
+
+ One should pass them through the ``defs`` argument (which should be iterable)
+ to have the classes and functions "adopted" by the module::
+
+    >>> def f():pass
+    >>> m = ugly.module.create_module('m', defs=[f])
+    >>> m.f.__module__
+    'm'
+
+Finally, sometimes it is more practical to just pass a bunch of code to be
+executed as the module source. In these cases, the ``code`` attribute should be
+used::
+
+    >>> m = ugly.module.create_module('m', scope={'x': 3}, code="""
+    ...     y = x+1
+    ... """)
+    >>> m.x
+    3
+    >>> m.y
+    4
+
+As you can see, the values from the scope dict are available to the code being
+executed.
+
+The ``installed_module()`` context manager
+------------------------------------------
+
+While it is practical to have the module available for importing once it is
+created, it may lead to confusio in tests. If many modules are created, it is
+feasible that some names may be repeated. To avoid any issue, we can use the
+``installed_module()`` functions. It receives exactly the same arguments from
+``create_module()`` but returns a context manager. If given to a ``with``
+statement, the module will be available for importing...
+
+    ::
+
+    >>> with ugly.module.installed_module('some_module', scope={'x': 3}) as m:
+    ...     import some_module
+    ...     m == some_module
+    True
+
+ ...but only inside the ``with`` block::
+
+    >>> import some_module
+    Traceback (most recent call last):
+      ...
+    ImportError: No module named some_module
+
+
