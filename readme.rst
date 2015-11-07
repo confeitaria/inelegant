@@ -329,18 +329,17 @@ Modules can also define classes and functions. Such entities, when defined on a
 module, will have a ``__module__`` attribute set. If one passes these entities
 through the scopes dict, however, the module name will not have it set::
 
-    >>> def f():
+    >>> class Class(object):
     ...     pass
-    >>> m = ugly.module.create_module('m', scope={'f': f})
-    >>> m.f.__module__ == 'm'
+    >>> m = ugly.module.create_module('m', scope={'Class': Class})
+    >>> m.Class.__module__ == 'm'
     False
 
  One should pass them through the ``defs`` argument (which should be iterable)
  to have the classes and functions "adopted" by the module::
 
-    >>> def f():pass
-    >>> m = ugly.module.create_module('m', defs=[f])
-    >>> m.f.__module__
+    >>> m = ugly.module.create_module('m', defs=[Class])
+    >>> m.Class.__module__
     'm'
 
 Finally, sometimes it is more practical to just pass a bunch of code to be
