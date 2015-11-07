@@ -148,13 +148,39 @@ def adopt(module, *entities):
         raise AdoptException(*unadoptable)
 
     for entity in entities:
+        entity = get_adoptable_value(entity)
+
         if inspect.isclass(entity):
             for a in get_adoptable_attrs(entity):
                 adopt(module, a)
-        elif inspect.ismethod(entity):
-            entity = entity.im_func
 
         entity.__module__ = module.__name__
+
+def get_adoptable_value(obj):
+    """
+    Methods by themselves are not adoptable, but their functions are. This
+    function will check whether an object is a method. If it is not, it will
+    return the object itself::
+
+    >>> class Class(object):
+    ...     def m(self):
+    ...         pass
+    >>> get_adoptable_value(Class)
+    <class 'ugly.module.module.Class'>
+    >>> def f():
+    ...     pass
+    >>> get_adoptable_value(f) # doctest: +ELLIPSIS
+    <function f at ...>
+
+    If it is a method, however, it will return the function "enveloped" by it::
+
+    >>> get_adoptable_value(Class.m) # doctest: +ELLIPSIS
+    <function m at ...>
+    """
+    if inspect.ismethod(obj):
+        return obj.im_func
+    else:
+        return obj
 
 def get_adoptable_attrs(obj):
     """
@@ -188,8 +214,11 @@ def get_adoptable_attrs(obj):
 
 def is_adoptable(obj):
     """
-    Checks whether an object is adoptable. Adoptable objects are basically
-    classes and functions::
+    Checks whether an object is adoptable - i.e., whether such an object can
+    have its ``__module__`` attribute set.
+
+    To be adoptable, an object should have a ``__module__`` attribute. In
+    general, functions and classes satisfies these criteria::
 
     >>> class Example(object): pass
     >>> def f(a): pass
@@ -197,37 +226,47 @@ def is_adoptable(obj):
     True
     >>> is_adoptable(f)
     True
-    >>> is_adoptable(Example())
+    >>> is_adoptable(3)
     False
 
-    Built-in classes and functions are not adoptable, though::
+    Any object with these properites, however, would be adoptable::
+
+    >>> e = Example()
+    >>> e.__module__ = ''
+    >>> is_adoptable(e)
+    True
+
+    Some classes and functions have read-only ``__module__`` attributes. Those
+    are not adoptable::
 
     >>> is_adoptable(dict)
     False
     """
-    return is_adoptable_type(obj) and not is_builtin(obj)
+    obj = get_adoptable_value(obj)
 
-def is_adoptable_type(obj):
+    conditions = [
+        hasattr(obj, '__module__'),
+        is_module_rewritable(obj)
+    ]
+
+    return all(conditions)
+
+def is_module_rewritable(obj):
     """
-    Checks whether an object is of an adoptable type - a class, a function or a
-    method::
+    Checks whether the ``__module__`` attribute of the object is rewritable::
 
-    >>> class Example(object):
-    ...     def method(self):
-    ...         pass
-    >>> def f(a): pass
-    >>> is_adoptable_type(Example)
+    >>> def f():
+    ...     pass
+    >>> is_module_rewritable(f)
     True
-    >>> is_adoptable_type(Example.method)
-    True
-    >>> is_adoptable_type(f)
-    True
-    >>> is_adoptable_type(Example())
+    >>> is_module_rewritable(dict)
     False
     """
-    return (
-        inspect.isclass(obj) or inspect.isfunction(obj) or inspect.ismethod(obj)
-    )
+    try:
+        obj.__module__ = obj.__module__
+        return True
+    except:
+        return False
 
 def is_builtin(obj):
     """
@@ -253,7 +292,7 @@ class AdoptException(ValueError):
     ...     adopt(m, 3)
     Traceback (most recent call last):
         ...
-    AdoptException: 'int' values such as 3 are not adoptable.
+    AdoptException: 3 has no __module__ attribute.
 
     ...or a built-in function::
 
@@ -261,7 +300,7 @@ class AdoptException(ValueError):
     ...     adopt(m, dict)
     Traceback (most recent call last):
         ...
-    AdoptException: 'dict' is not adoptable because it is a builtin.
+    AdoptException: <type 'dict'> __module__ attribute is ready-only.
 
     It can also receive more than one value::
 
@@ -269,30 +308,26 @@ class AdoptException(ValueError):
     ...     adopt(m, dict, 3)
     Traceback (most recent call last):
         ...
-    AdoptException: 'dict' is not adoptable because it is a builtin.
-        'int' values such as 3 are not adoptable.
+    AdoptException: <type 'dict'> __module__ attribute is ready-only.
+        3 has no __module__ attribute.
     """
 
     def __init__(self, *objs):
         messages = []
         for obj in objs:
-            if not is_adoptable_type(obj):
+            if not hasattr(obj, '__module__'):
                 messages.append(
-                    "'{0}' values such as {1} are not adoptable.".format(
-                        type(obj).__name__, str(obj)
-                    )
+                    "{0} has no __module__ attribute.".format(repr(obj))
                 )
-            elif is_builtin(obj):
+            elif not is_module_rewritable(obj):
                 messages.append(
-                    "'{0}' is not adoptable because it is a builtin.".format(
-                        obj.__name__
-                    )
+                    "{0} __module__ attribute is ready-only.".format(repr(obj))
                 )
 
-            if messages:
-                Exception.__init__(self, "\n    ".join(messages))
-            else:
-                Exception.__init__(self)
+        if messages:
+            Exception.__init__(self, "\n    ".join(messages))
+        else:
+            Exception.__init__(self)
 
 
 def get_caller_module(index=1):
