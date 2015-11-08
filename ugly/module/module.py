@@ -123,7 +123,8 @@ def adopt(module, *entities):
     ...     def method(self):
     ...         pass
 
-    Then it will have its ``__module__`` values set to the name of the modul ebelow
+    Then it will have its ``__module__`` values set to the name of the module
+    below::
 
     >>> with installed_module('example') as m:
     ...     adopt(m, Example)
@@ -142,6 +143,41 @@ def adopt(module, *entities):
     ...     function.__module__
     'example'
     'example'
+
+    The main reason for adopting classes and functions is to run their doctests.
+
+    ::
+
+    >>> import doctest, unittest
+    >>> class Adopted(object):
+    ...     '''
+    ...     >>> 3+3
+    ...     6
+    ...     '''
+    >>> class NonAdopted(object):
+    ...     '''
+    ...     >>> 3+3
+    ...     FAIL
+    ...     '''
+
+    If a module is given to ``doctest.DocTestSuite``, only docstrings from the
+    classes and routines from the given module are going to be executed. By
+    adopting entities from other modules, a module tiven to ``DocTestSuite``
+    will have these foreign entities' doctests executed as well::
+
+    >>> with installed_module('m') as m:
+    ...     m.Adopted = Adopted
+    ...     m.NonAdopted = NonAdopted
+    ...     adopt(m, Adopted)
+    ...     suite = doctest.DocTestSuite(m)
+    ...     result = unittest.TestResult()
+    ...     result = suite.run(result)
+    ...     result.testsRun
+    ...     len(result.failures)
+    ...     len(result.errors)
+    1
+    0
+    0
     """
     unadoptable = [e for e in entities if not is_adoptable(e)]
     if unadoptable:
