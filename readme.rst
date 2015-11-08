@@ -367,7 +367,7 @@ feasible that some names may be repeated. To avoid any issue, we can use the
 ``create_module()`` but returns a context manager. If given to a ``with``
 statement, the module will be available for importing...
 
-    ::
+::
 
     >>> with ugly.module.installed_module('some_module', scope={'x': 3}) as m:
     ...     import some_module
