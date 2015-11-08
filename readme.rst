@@ -400,7 +400,7 @@ since it is the module calling ``f()``::
     ...     pass # doctest: +ELLIPSIS
     <module 'm2' ...>
 
-As we like to put it, ``get_caller_module()`` would explain itself this way::
+As we like to put it, ``get_caller_module()`` would explain itself this way:
 
     I don't tell you who you are - you already know that. I tell you who is
     calling you.
