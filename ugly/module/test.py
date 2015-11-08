@@ -145,10 +145,10 @@ class TestModule(unittest.TestCase):
             self.assertEquals(m.Class, Class)
             self.assertEquals(m.function, function)
 
-    def test_adopt_fails_on_builtins(self):
+    def test_adopt_fails_on_read_only_module(self):
         """
-        ``ugly.module.adopt()`` raises an exception if required to adopt a
-        builtin.
+        ``ugly.module.adopt()`` raises an exception if required to adopt an
+        object with read-only ``__module`` attr.
         """
         with installed_module('example') as m:
             with self.assertRaises(AdoptException):
@@ -190,10 +190,10 @@ class TestModule(unittest.TestCase):
         with installed_module('m', code='import m') as m:
             pass
 
-    def test_scope_is_already_adopted_on_code_execution(self):
+    def test_defs_are_already_adopted_on_code_execution(self):
         """
-        The adoptable objects from the scope should be already adopted once the
-        code is executed.
+        The objects from the defs list should be already adopted once the code
+        is executed.
         """
         def f():
             pass
