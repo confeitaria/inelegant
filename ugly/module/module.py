@@ -411,7 +411,7 @@ def get_caller_module(index=1):
     The index, however, is optional: ``get_caller_module()`` by default uses the
     index 1.
 
-    It may be counterintuitive at first - why not zero?. But it is a more useful
+    It may be counterintuitive at first - why not zero? But it is a more useful
     default. The function will rarely be called to discover in which module it
     is being called because _it is already there_. Most of the time one will
     want to discover where _the function which called ``get_caller_module()``
@@ -430,6 +430,12 @@ def get_caller_module(index=1):
     >>> with installed_module('m', code='print_current_module()', scope=scope):
     ...     pass # doctest: +ELLIPSIS
     <module 'm' ...>
+
+    If ``get_caller_module()`` could explain its default index to its calling
+    module itself, it would say:
+
+        I don't tell you who you are - you already know that. I tell you who
+        is calling you ;)
     """
     frame = sys._getframe(index+1)
 

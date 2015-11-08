@@ -381,4 +381,26 @@ statement, the module will be available for importing...
       ...
     ImportError: No module named some_module
 
+The ``get_caller_module()`` function
+------------------------------------
 
+Finally, ``ugly.module`` provides the ``get_caller_module()`` function. It
+basically returns the module from where the current function was called.
+
+For example, suppose we have a module ``m1`` with a function ``f()``::
+
+    >>> def f():
+    ...     print ugly.module.get_caller_module()
+
+``m2`` imports ``m1`` and call it. What will it return? It will return ``m2``
+since it is the module calling ``f()``::
+
+    >>> with ugly.module.installed_module('m1', defs=[f]),\
+    ...         ugly.module.installed_module('m2', code='import m1; m1.f()'):
+    ...     pass # doctest: +ELLIPSIS
+    <module 'm2' ...>
+
+As we like to put it, ``get_caller_module()`` would explain itself this way::
+
+    I don't tell you who you are - you already know that. I tell you who is
+    calling you.
