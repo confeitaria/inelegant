@@ -374,7 +374,7 @@ statement, the module will be available for importing...
     ...     m == some_module
     True
 
- ...but only inside the ``with`` block::
+...but only inside the ``with`` block::
 
     >>> import some_module
     Traceback (most recent call last):
