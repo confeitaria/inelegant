@@ -268,19 +268,6 @@ def is_module_rewritable(obj):
     except:
         return False
 
-def is_builtin(obj):
-    """
-    Checks whether an object is built-in - either is a built-in function or
-    belongs to the ``builtin`` module::
-
-    >>> class Example(object): pass
-    >>> is_builtin(Example)
-    False
-    >>> is_builtin(dict)
-    True
-    """
-    return inspect.isbuiltin(obj) or obj.__module__ == '__builtin__'
-
 class AdoptException(ValueError):
     """
     Exception raised when trying to make a module to adopt an unadoptable
