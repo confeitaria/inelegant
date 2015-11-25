@@ -400,7 +400,19 @@ since it is the module calling ``f()``::
     ...     pass # doctest: +ELLIPSIS
     <module 'm2' ...>
 
-As we like to put it, ``get_caller_module()`` would explain itself this way:
+As we like to put it, ``get_caller_modul from modules and files by itself.
 
-    I don't tell you who you are - you already know that. I tell you who is
-    calling you.
+One just needs to pass modules e()`` doesn't tell you who you are - you
+already know that. I tell you who is calling you.
+
+That said, ``get_caller_module()`` accepts an index as its argument. In this
+case, it will return the n-th module from the frame stack, being 0 the module
+where ``get_caller_module()`` was called. Basically, it means the default value
+of the index is 1::
+
+    >>> def f2():
+    ...     print ugly.module.get_caller_module(1)
+    >>> with ugly.module.installed_module('m1', defs=[f2]),\
+    ...         ugly.module.installed_module('m2', code='import m1; m1.f2()'):
+    ...     pass # doctest: +ELLIPSIS
+    <module 'm2' ...>
