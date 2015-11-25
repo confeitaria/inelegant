@@ -416,3 +416,106 @@ of the index is 1::
     ...         ugly.module.installed_module('m2', code='import m1; m1.f2()'):
     ...     pass # doctest: +ELLIPSIS
     <module 'm2' ...>
+
+"Ugly Finder": straightforward way of finding test cases
+========================================================
+
+Finally, we have ``ugly.finder.TestFinder``, a ``unittest.TestSuite`` subclass
+that finds tests by itself.
+
+Finding tests in modules
+------------------------
+
+``ugly.finder.TestFinder`` can receive an arbitrary number of modules as its
+constructor arguments. The finder will then find every test case from these
+modules, as well as any doctests in docstrings from it.
+
+Consider the definitions below::
+
+    >>> import unittest
+    >>> def add(a, b):
+    ...     """
+    ...     Sums two values:
+    ...
+    ...     >>> add(2, 2)
+    ...     FAIL
+    ...     """
+    ...     return a + b
+    >>> class TestAdd(unittest.TestCase):
+    ...     def test22(self):
+    ...         self.assertEquals(3, add(2, 2))
+
+We can put them on modules and give the modules to test finder. Both the
+doctest and the unit test will be called when the finder suite be executed::
+
+    >>> import ugly.finder
+    >>> with ugly.module.installed_module('a', defs=[add]) as a,\
+    ...         ugly.module.installed_module('ta', defs=[TestAdd]) as ta:
+    ...     finder = ugly.finder.TestFinder(a, ta)
+    ...     import sys
+    ...     runner = unittest.TextTestRunner(stream=sys.stdout)
+    ...     runner.run(finder) # doctest: +ELLIPSIS
+    FF
+    ...
+    Failed example:
+        add(2, 2)
+    Expected:
+        FAIL
+    Got:
+        4
+    ...
+    FAIL: test22 (ta.TestAdd)
+    ...
+    AssertionError: 3 != 4
+    ...
+    <unittest.runner.TextTestResult run=2 errors=0 failures=2>
+
+We do not even need to import the modules - it is possible to just pass their
+names::
+
+    >>> with ugly.module.installed_module('a', defs=[add]),\
+    ...         ugly.module.installed_module('ta', defs=[TestAdd]):
+    ...     finder = ugly.finder.TestFinder('a', 'ta')
+    ...     import os
+    ...     runner = unittest.TextTestRunner(stream=open(os.devnull, 'w'))
+    ...     runner.run(finder) # doctest: +ELLIPSIS
+    <unittest.runner.TextTestResult run=2 errors=0 failures=2>
+
+Loading doctests in files
+-------------------------
+
+The ``ugly.finder.TestFinder`` also accepts file paths (or even file objects)
+as its arguments. In this case, the file is expected to be a text file
+containing doctests (like yours truly, indeed).
+
+Another good example would be the file created below::
+
+    >>> import tempfile
+    >>> _, path = tempfile.mkstemp()
+    >>> with open(path, 'w') as f:
+    ...     f.write('''
+    ...         >>> 2+2
+    ...         3
+    ...     ''')
+
+We just need to give the path to the finder::
+
+    >>> finder = ugly.finder.TestFinder(path)
+    >>> runner = unittest.TextTestRunner(stream=sys.stdout)
+    >>> runner.run(finder) # doctest: +ELLIPSIS
+    F
+    ...
+    File "...", line 2, in ...
+    Failed example:
+        2+2
+    Expected:
+        3
+    Got:
+        4
+    ...
+    FAILED (failures=1)
+    <unittest.runner.TextTestResult run=1 errors=0 failures=1>
+    >>> os.remove(path)
+
+The file path can be either relative or absolute. If it is not absolute, it will
+be relative to the module where ``ugly.finder.TestFinder`` was instantiated.
