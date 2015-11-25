@@ -121,7 +121,10 @@ class TestFinder(unittest.TestSuite):
     def __init__(self, *testables):
         unittest.TestSuite.__init__(self)
 
-        caller_module = get_caller_module()
+        try:
+            caller_module = get_caller_module()
+        except:
+            caller_module = importlib.import_module('__main__')
 
         for testable in testables:
             module = get_module(testable)
