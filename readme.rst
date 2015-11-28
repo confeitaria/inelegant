@@ -9,8 +9,7 @@ Ugly: rather inelegant than unavailable
 =======================================
 
 Ugly groups a series of tools that are very useful for automating tests. Most of
-them are unreliable or costly "in the wild" (while they may be unusually
-reliable and efficient on tests).
+them are unreliable or costly "in the wild" but can be useful enough on tests.
 
 Right now there are four modules in this project.
 
