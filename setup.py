@@ -50,6 +50,7 @@ setup(
 
     For more info, check the project page.
     """,
+    keywords=['test', 'testing'],
     license='LGPLv3',
     url='https://bitbucket.com/brandizzi/ugly',
 
