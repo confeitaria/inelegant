@@ -400,9 +400,7 @@ since it is the module calling ``f()``::
     ...     pass # doctest: +ELLIPSIS
     <module 'm2' ...>
 
-As we like to put it, ``get_caller_modul from modules and files by itself.
-
-One just needs to pass modules e()`` doesn't tell you who you are - you
+As we like to put it, ``get_caller_module()`` doesn't tell you who you are - you
 already know that. I tell you who is calling you.
 
 That said, ``get_caller_module()`` accepts an index as its argument. In this
@@ -519,3 +517,90 @@ We just need to give the path to the finder::
 
 The file path can be either relative or absolute. If it is not absolute, it will
 be relative to the module where ``ugly.finder.TestFinder`` was instantiated.
+
+The ``load_tests()`` method
+---------------------------
+
+Python's ``unittest`` has this nice feature named "`load_tests protocol`__". To
+understand it, one should know that ``TestLoader.loadTestsFromModule()`` looks
+for all subclasses of ``unittest.TestCase`` inside the modules given to it:
+
+__ https://docs.python.org/2/library/unittest.html#load-tests-protocol
+
+::
+
+    >>> class TestCase1(unittest.TestCase):
+    ...     def test1(self):
+    ...         self.assertEquals(1, 1)
+    >>> class TestCase2(unittest.TestCase):
+    ...     def test2(self):
+    ...         self.assertEquals(2, 1)
+    >>> with ugly.module.installed_module('t', defs=[TestCase1,TestCase2]) as t:
+    ...     loader = unittest.TestLoader()
+    ...     suite = loader.loadTestsFromModule(t)
+    ...     runner = unittest.TextTestRunner(stream=open(os.devnull, 'w'))
+    ...     runner.run(suite)
+    <unittest.runner.TextTestResult run=2 errors=0 failures=1>
+
+We can change this default behavior by defining a function called
+``load_tests()`` in the module. This function receives three arguments: an
+``unittest.TestLoader`` instance, a test suite with all tests found in the
+module, and a pattern to match files (only really useful when loading tests
+from packages). ``load_tests()`` should itself return a test suite - and this
+test suite will be the one returned by ``loadTestsFromModule()``. With this, one
+can customize which tests are loaded from the module. For example, the code
+below will only run ``TestCase1``, although there are two test cases in the
+module::
+
+    >>> def load_tests(loader, tests, pattern):
+    ...     # We merely ignore the given tests.
+    ...     suite = unittest.TestSuite()
+    ...     suite.addTest(loader.loadTestsFromTestCase(TestCase1))
+    ...     return suite
+    >>> with ugly.module.installed_module(
+    ...         't', defs=[TestCase1, TestCase2, load_tests]
+    ...     ) as t:
+    ...     loader = unittest.TestLoader()
+    ...     suite = loader.loadTestsFromModule(t)
+    ...     runner = unittest.TextTestRunner(stream=open(os.devnull, 'w'))
+    ...     runner.run(suite)
+    <unittest.runner.TextTestResult run=1 errors=0 failures=0>
+
+For its turn, ``ugly.finder.TestFinder`` has a method called ``load_tests()``
+that merely returns the finder instance itself - also, it accepts the three
+expected arguments. So, if you want the automatic test discoverers (such as
+``unittest.TestLoader.loadTestsFromModule()``) to load all tests found by
+``TestFinder`` in a module, you just need to assign the instance's
+``load_tests()`` method to the ``load_tests`` module variable.
+
+So, consider the function and class defined below::
+
+    >>> def add(a, b):
+    ...     """
+    ...     Sums two values:
+    ...
+    ...     >>> add(2, 2)
+    ...     FAIL
+    ...     """
+    ...     return a + b
+    >>> class TestAdd(unittest.TestCase):
+    ...     def test22(self):
+    ...         self.assertEquals(3, add(2, 2))
+
+We can force a test module to return both the doctests and the unittest by using
+the ``load_tests()`` method::
+
+    >>> with ugly.module.installed_module('a', defs=[add]),\
+    ...         ugly.module.installed_module(
+    ...             'ta', defs=[TestAdd],
+    ...             code="""
+    ...                 import ugly.finder
+    ...                 finder = ugly.finder.TestFinder(__name__, 'a')
+    ...                 load_tests = finder.load_tests
+    ...             """
+    ...         ) as ta:
+    ...     loader = unittest.TestLoader()
+    ...     suite = loader.loadTestsFromModule(ta)
+    ...     runner = unittest.TextTestRunner(stream=open(os.devnull, 'w'))
+    ...     runner.run(suite)
+    <unittest.runner.TextTestResult run=2 errors=0 failures=2>
