@@ -8,6 +8,8 @@ or
 Ugly: rather inelegant than unavailable
 =======================================
 
+.. Copyright 2015, 2016 Adam Victor Brandizzi
+
 Ugly groups a series of tools that are very useful for automating tests. Most of
 them are unreliable or costly "in the wild" but can be useful enough on tests.
 
@@ -603,3 +605,20 @@ the ``load_tests()`` method::
     ...     runner = unittest.TextTestRunner(stream=open(os.devnull, 'w'))
     ...     runner.run(suite)
     <unittest.runner.TextTestResult run=2 errors=0 failures=2>
+
+Licensing
+=========
+
+Ugly is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Ugly is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public License
+along with Ugly.  If not, see <http://www.gnu.org/licenses/>.
+
