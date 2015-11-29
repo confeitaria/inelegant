@@ -1,24 +1,25 @@
-============================================
-Ugly, a directory of weird helpers for tests
-============================================
+=================================================
+Inelegant, a directory of weird helpers for tests
+=================================================
 
 or
 
 =======================================
-Ugly: rather inelegant than unavailable
+Inelegant: better ugly than unavailable
 =======================================
 
 .. Copyright 2015, 2016 Adam Victor Brandizzi
 
-Ugly groups a series of tools that are very useful for automating tests. Most of
-them are unreliable or costly "in the wild" but can be useful enough on tests.
+Inelegant groups a series of tools that are very useful for automating tests.
+Most of them are unreliable or costly "in the wild" but can be useful enough on
+tests.
 
 Right now there are four modules in this project.
 
-"Ugly Process" - running and communicating with a simple processes
-==================================================================
+"Inelegant Process" - running and communicating with a simple processes
+=======================================================================
 
-This module contains the class ``ugly.process.Process``. This class extends
+This module contains the class ``inprocess.Process``. This class extends
 ``multiprocessing.Process`` so one can easily recover information sent
 by the target.
 
@@ -27,10 +28,10 @@ Returned values and exceptions
 
 For example, one can get the returned value::
 
-    >>> import ugly.process
+    >>> import inelegant.process as inprocess
     >>> def invert(n):
     ...     return 1.0/n
-    >>> process = ugly.process.Process(target=invert, args=(2.0,))
+    >>> process = inprocess.Process(target=invert, args=(2.0,))
     >>> process.start()
     >>> process.join() # The value is only available after the process end.
     >>> process.result
@@ -38,7 +39,7 @@ For example, one can get the returned value::
 
 If the process is finished by an exception, it can also be retrieved::
 
-    >>> process = ugly.process.Process(target=invert, args=(0.0,))
+    >>> process = inprocess.Process(target=invert, args=(0.0,))
     >>> process.start()
     >>> process.join()
     >>> process.exception
@@ -57,7 +58,7 @@ if they are useless::
     ...     a = yield
     ...     b = yield
     ...     yield a+b
-    >>> process = ugly.process.Process(target=add)
+    >>> process = inprocess.Process(target=add)
     >>> process.start()
     >>> process.send(1)
     >>> process.send(2)
@@ -75,12 +76,12 @@ The last ``send()`` call can be replaced with the ``go()`` method.
 As a context manager
 --------------------
 
-A very nice feature of ``ugly.process.Process`` is that it is a context manager.
-If one is given to a ``with`` statement, it is guaranteed that it will be
-finished after the block ends. This is useful because it is too easy to forget
-to join a process. If it happens, we have problems::
+A very nice feature of ``inprocess.Process`` is that it is a context
+manager. If one is given to a ``with`` statement, it is guaranteed that it will
+be finished after the block ends. This is useful because it is too easy to
+forget to join a process. If it happens, we have problems::
 
-    >>> process = ugly.process.Process(target=invert, args=(4,))
+    >>> process = inprocess.Process(target=invert, args=(4,))
     >>> process.start()
     >>> process.result + 3 # Oops, the value is not available yet!
     Traceback (most recent call last):
@@ -92,12 +93,12 @@ Using the ``with`` statement it is done automatically and without way less
 clutter. The process starts itself before proceeding and is joined once the
 block ends. The parent process will wait for its child's end after the block::
 
-    >>> with ugly.process.Process(target=invert, args=(4,)) as process:
+    >>> with inprocess.Process(target=invert, args=(4,)) as process:
     ...     pass
     >>> process.result
     0.25
 
-    >>> process = ugly.process.Process(target=invert, args=(0.0,))
+    >>> process = inprocess.Process(target=invert, args=(0.0,))
     >>> process.start()
     >>> process.join()
 
@@ -111,7 +112,7 @@ just kill the process once the ``with`` block is done. Then, just set the
 
     >>> def forever():
     ...     while True: pass
-    >>> with ugly.process.Process(target=forever, terminate=True) as process:
+    >>> with inprocess.Process(target=forever, terminate=True) as process:
     ...     pass
     >>> process.is_alive()
     False
@@ -131,7 +132,7 @@ most of the time. Fortunately, it can be raised again. Just set the
 ``reraise`` argument of the constructor and any exception will be re-raised once
 the subprocess is joined::
 
-    >>> process = ugly.process.Process(target=invert, args=(0.0,), reraise=True)
+    >>> process = inprocess.Process(target=invert, args=(0.0,), reraise=True)
     >>> process.start()
     >>> process.join()
     Traceback (most recent call last):
@@ -141,7 +142,7 @@ the subprocess is joined::
 Since the process is joined after the block if given to a ``with`` statement,
 children exceptions would also be raised - but only after the block finishes::
 
-    >>> with ugly.process.Process(target=invert, args=(0.0,), reraise=True):
+    >>> with inprocess.Process(target=invert, args=(0.0,), reraise=True):
     ...     executed = True
     Traceback (most recent call last):
       ...
@@ -149,23 +150,23 @@ children exceptions would also be raised - but only after the block finishes::
     >>> executed
     True
 
-"Ugly Net" - quick and dirty network tricks
-===========================================
+"Inelegant Net" - quick and dirty network tricks
+================================================
 
-The module ``ugly.net`` provides tools for easing testing some very simple
+The module ``inelegant.net`` provides tools for easing testing some very simple
 network communication code.
 
 The ``Server`` class
 --------------------
 
-For example, it has the ``ugly.net.Server``, a subclass of
+For example, it has the ``innet.Server``, a subclass of
 ``SocketServer.TCPServer`` that only serves a string in a specific port::
 
-    >>> import ugly.net
-    >>> server = ugly.net.Server('localhost', 9000, message='my message')
+    >>> import inelegant.net as innet
+    >>> server = innet.Server('localhost', 9000, message='my message')
     >>> import contextlib, socket, time
-    >>> with ugly.process.Process(target=server.handle_request):
-    ...     time.sleep(0.01)
+    >>> with inprocess.Process(target=server.handle_request):
+    ...     time.sleep(0.1)
     ...     with contextlib.closing(socket.socket()) as s:
     ...         s.connect(('localhost', 9000))
     ...         s.recv(10)
@@ -175,8 +176,8 @@ However, it is probably best used as a context manager. If given to a ``with``
 statement, the server will be started alone in the background and finished once
 the block is exited::
 
-    >>> with ugly.net.Server('localhost', 9000, message='my message'):
-    ...     time.sleep(0.01)
+    >>> with innet.Server('localhost', 9000, message='my message'):
+    ...     time.sleep(0.1)
     ...     with contextlib.closing(socket.socket()) as s:
     ...         s.connect(('localhost', 9000))
     ...         s.recv(10)
@@ -190,8 +191,8 @@ the block is exited::
 Waiter functions
 ----------------
 
-To be honest, the ``Server`` class is mostly used to test the reason of the Ugly
-Net: the waiter functions.
+To be honest, the ``Server`` class is mostly used to test the reason of the
+Inelegant Net: the waiter functions.
 
 These functions wait for a port to be up or down in a specific host. There are
 two of them:
@@ -205,7 +206,7 @@ two of them:
     loading etc. For example, consider the example we saw below. If we remove
     the waiting time from the second line, it will probably fail::
 
-        >>> with ugly.net.Server('localhost', 9000, message='my message'):
+        >>> with innet.Server('localhost', 9000, message='my message'):
         ...     time.sleep(0.01)
         ...     with contextlib.closing(socket.socket()) as s:
         ...         s.connect(('localhost', 9000))
@@ -221,8 +222,8 @@ two of them:
     of time - and no more::
 
         >>> start = time.time()
-        >>> with ugly.net.Server('localhost', 9000, message='my message'):
-        ...     ugly.net.wait_server_up('localhost', 9000)
+        >>> with innet.Server('localhost', 9000, message='my message'):
+        ...     innet.wait_server_up('localhost', 9000)
         ...     time.time() - start < 0.01
         True
 
@@ -231,8 +232,8 @@ two of them:
     ``timeout`` argument::
 
         >>> start = time.time()
-        >>> with ugly.net.Server('localhost', 9000):
-        ...     ugly.net.wait_server_up('localhost', 9000, timeout=60)
+        >>> with innet.Server('localhost', 9000):
+        ...     innet.wait_server_up('localhost', 9000, timeout=60)
         ...     time.time() - start < 0.01
         True
 
@@ -243,7 +244,7 @@ two of them:
     server below::
 
         >>> def slow_server():
-        ...     with ugly.net.Server('localhost', 9000) as server:
+        ...     with innet.Server('localhost', 9000) as server:
         ...         yield
         ...         time.sleep(0.01)
         ...         server.shutdown()
@@ -251,8 +252,8 @@ two of them:
     If we start and shutdown it, and then try to bound to the same port, it will
     likely fail::
 
-        >>> with ugly.process.Process(target=slow_server) as p:
-        ...     ugly.net.wait_server_up('localhost', 9000)
+        >>> with inprocess.Process(target=slow_server) as p:
+        ...     innet.wait_server_up('localhost', 9000)
         ...     with contextlib.closing(socket.socket()) as s:
         ...         p.go() # Request shutdown
         ...         s.bind(('localhost', 9000))
@@ -262,8 +263,8 @@ two of them:
 
     A common solution is to add some wait time::
 
-        >>> with ugly.process.Process(target=slow_server) as p:
-        ...     ugly.net.wait_server_up('localhost', 9000)
+        >>> with inprocess.Process(target=slow_server) as p:
+        ...     innet.wait_server_up('localhost', 9000)
         ...     with contextlib.closing(socket.socket()) as s:
         ...         p.go() # Request shutdown
         ...         time.sleep(0.02)
@@ -274,27 +275,27 @@ two of them:
     sometimes.. With ``wait_server_down()``, the client can block itself until
     the server is not running anymore - and no more::
 
-        >>> with ugly.process.Process(target=slow_server) as p:
-        ...     ugly.net.wait_server_up('localhost', 9000)
+        >>> with inprocess.Process(target=slow_server) as p:
+        ...     innet.wait_server_up('localhost', 9000)
         ...     with contextlib.closing(socket.socket()) as s:
         ...         p.go() # Request shutdown
-        ...         ugly.net.wait_server_down('localhost', 9000)
+        ...         innet.wait_server_down('localhost', 9000)
         ...         s.bind(('localhost', 9000))
 
     It will wait for at most one second by default, but the timeout can be
     changed::
 
-        >>> with ugly.process.Process(target=slow_server) as p:
-        ...     ugly.net.wait_server_up('localhost', 9000)
+        >>> with inprocess.Process(target=slow_server) as p:
+        ...     innet.wait_server_up('localhost', 9000)
         ...     with contextlib.closing(socket.socket()) as s:
         ...         p.go() # Request shutdown
-        ...         ugly.net.wait_server_down('localhost', 9000, timeout=60)
+        ...         innet.wait_server_down('localhost', 9000, timeout=60)
         ...         s.bind(('localhost', 9000))
 
-"Ugly Module" - creating modules
-================================
+"Inelegant Module" - creating modules
+=====================================
 
-With ``ugly.module`` one can create and import modules at runtime, without
+With ``inelegant.module`` one can create and import modules at runtime, without
 needing to write a file.
 
 The ``create_module()`` function
@@ -303,8 +304,8 @@ The ``create_module()`` function
 To create a module, one can use the ``create_module()`` function. The function
 has a mandatory argument, the module name::
 
-    >>> import ugly.module
-    >>> ugly.module.create_module('m') # doctest: +ELLIPSIS
+    >>> import inelegant.module as inmodule
+    >>> inmodule.create_module('m') # doctest: +ELLIPSIS
     <module 'm' ...>
 
 A nice thing about ``create_module()`` is that the module will be available to
@@ -322,7 +323,7 @@ of putting stuff on it. She simplest one is probably the ``scope`` argument. It
 should be a dictionary, and every value from it will be attributed to a variable
 whose name is its key::
 
-    >>> m = ugly.module.create_module('m', scope={'x': 3})
+    >>> m = inmodule.create_module('m', scope={'x': 3})
     >>> m.x
     3
 
@@ -332,14 +333,14 @@ through the scopes dict, however, the module name will not have it set::
 
     >>> class Class(object):
     ...     pass
-    >>> m = ugly.module.create_module('m', scope={'Class': Class})
+    >>> m = inmodule.create_module('m', scope={'Class': Class})
     >>> m.Class.__module__ == 'm'
     False
 
  One should pass them through the ``defs`` argument (which should be iterable)
  to have the classes and functions "adopted" by the module::
 
-    >>> m = ugly.module.create_module('m', defs=[Class])
+    >>> m = inmodule.create_module('m', defs=[Class])
     >>> m.Class.__module__
     'm'
 
@@ -347,7 +348,7 @@ Finally, sometimes it is more practical to just pass a bunch of code to be
 executed as the module source. In these cases, the ``code`` attribute should be
 used::
 
-    >>> m = ugly.module.create_module('m', scope={'x': 3}, code="""
+    >>> m = inmodule.create_module('m', scope={'x': 3}, code="""
     ...     y = x+1
     ... """)
     >>> m.x
@@ -370,7 +371,7 @@ statement, the module will be available for importing...
 
 ::
 
-    >>> with ugly.module.installed_module('some_module', scope={'x': 3}) as m:
+    >>> with inmodule.installed_module('some_module', scope={'x': 3}) as m:
     ...     import some_module
     ...     m == some_module
     True
@@ -385,19 +386,19 @@ statement, the module will be available for importing...
 The ``get_caller_module()`` function
 ------------------------------------
 
-Finally, ``ugly.module`` provides the ``get_caller_module()`` function. It
+Finally, ``inelegant.module`` provides the ``get_caller_module()`` function. It
 basically returns the module from where the current function was called.
 
 For example, suppose we have a module ``m1`` with a function ``f()``::
 
     >>> def f():
-    ...     print ugly.module.get_caller_module()
+    ...     print inmodule.get_caller_module()
 
 ``m2`` imports ``m1`` and call it. What will it return? It will return ``m2``
 since it is the module calling ``f()``::
 
-    >>> with ugly.module.installed_module('m1', defs=[f]),\
-    ...         ugly.module.installed_module('m2', code='import m1; m1.f()'):
+    >>> with inmodule.installed_module('m1', defs=[f]),\
+    ...         inmodule.installed_module('m2', code='import m1; m1.f()'):
     ...     pass # doctest: +ELLIPSIS
     <module 'm2' ...>
 
@@ -410,23 +411,23 @@ where ``get_caller_module()`` was called. Basically, it means the default value
 of the index is 1::
 
     >>> def f2():
-    ...     print ugly.module.get_caller_module(1)
-    >>> with ugly.module.installed_module('m1', defs=[f2]),\
-    ...         ugly.module.installed_module('m2', code='import m1; m1.f2()'):
+    ...     print inmodule.get_caller_module(1)
+    >>> with inmodule.installed_module('m1', defs=[f2]),\
+    ...         inmodule.installed_module('m2', code='import m1; m1.f2()'):
     ...     pass # doctest: +ELLIPSIS
     <module 'm2' ...>
 
-"Ugly Finder": straightforward way of finding test cases
-========================================================
+"Inelegant Finder": straightforward way of finding test cases
+=============================================================
 
-Finally, we have ``ugly.finder.TestFinder``, a ``unittest.TestSuite`` subclass
-that finds tests by itself.
+Finally, we have ``infinder.TestFinder``, a ``unittest.TestSuite``
+subclass that finds tests by itself.
 
 Finding tests in modules
 ------------------------
 
-``ugly.finder.TestFinder`` can receive an arbitrary number of modules as its
-constructor arguments. The finder will then find every test case from these
+``infinder.TestFinder`` can receive an arbitrary number of modules as
+its constructor arguments. The finder will then find every test case from these
 modules, as well as any doctests in docstrings from it.
 
 Consider the definitions below::
@@ -447,10 +448,10 @@ Consider the definitions below::
 We can put them on modules and give the modules to test finder. Both the
 doctest and the unit test will be called when the finder suite be executed::
 
-    >>> import ugly.finder
-    >>> with ugly.module.installed_module('a', defs=[add]) as a,\
-    ...         ugly.module.installed_module('ta', defs=[TestAdd]) as ta:
-    ...     finder = ugly.finder.TestFinder(a, ta)
+    >>> import inelegant.finder as infinder
+    >>> with inmodule.installed_module('a', defs=[add]) as a,\
+    ...         inmodule.installed_module('ta', defs=[TestAdd]) as ta:
+    ...     finder = infinder.TestFinder(a, ta)
     ...     import sys
     ...     runner = unittest.TextTestRunner(stream=sys.stdout)
     ...     runner.run(finder) # doctest: +ELLIPSIS
@@ -472,9 +473,9 @@ doctest and the unit test will be called when the finder suite be executed::
 We do not even need to import the modules - it is possible to just pass their
 names::
 
-    >>> with ugly.module.installed_module('a', defs=[add]),\
-    ...         ugly.module.installed_module('ta', defs=[TestAdd]):
-    ...     finder = ugly.finder.TestFinder('a', 'ta')
+    >>> with inmodule.installed_module('a', defs=[add]),\
+    ...         inmodule.installed_module('ta', defs=[TestAdd]):
+    ...     finder = infinder.TestFinder('a', 'ta')
     ...     import os
     ...     runner = unittest.TextTestRunner(stream=open(os.devnull, 'w'))
     ...     runner.run(finder) # doctest: +ELLIPSIS
@@ -483,8 +484,8 @@ names::
 Loading doctests in files
 -------------------------
 
-The ``ugly.finder.TestFinder`` also accepts file paths (or even file objects)
-as its arguments. In this case, the file is expected to be a text file
+The ``infinder.TestFinder`` also accepts file paths (or even file
+objects) as its arguments. In this case, the file is expected to be a text file
 containing doctests (like yours truly, indeed).
 
 Another good example would be the file created below::
@@ -499,7 +500,7 @@ Another good example would be the file created below::
 
 We just need to give the path to the finder::
 
-    >>> finder = ugly.finder.TestFinder(path)
+    >>> finder = infinder.TestFinder(path)
     >>> runner = unittest.TextTestRunner(stream=sys.stdout)
     >>> runner.run(finder) # doctest: +ELLIPSIS
     F
@@ -517,7 +518,8 @@ We just need to give the path to the finder::
     >>> os.remove(path)
 
 The file path can be either relative or absolute. If it is not absolute, it will
-be relative to the module where ``ugly.finder.TestFinder`` was instantiated.
+be relative to the module where ``infinder.TestFinder`` was
+instantiated.
 
 The ``load_tests()`` method
 ---------------------------
@@ -536,7 +538,7 @@ __ https://docs.python.org/2/library/unittest.html#load-tests-protocol
     >>> class TestCase2(unittest.TestCase):
     ...     def test2(self):
     ...         self.assertEquals(2, 1)
-    >>> with ugly.module.installed_module('t', defs=[TestCase1,TestCase2]) as t:
+    >>> with inmodule.installed_module('t', defs=[TestCase1,TestCase2]) as t:
     ...     loader = unittest.TestLoader()
     ...     suite = loader.loadTestsFromModule(t)
     ...     runner = unittest.TextTestRunner(stream=open(os.devnull, 'w'))
@@ -558,7 +560,7 @@ module::
     ...     suite = unittest.TestSuite()
     ...     suite.addTest(loader.loadTestsFromTestCase(TestCase1))
     ...     return suite
-    >>> with ugly.module.installed_module(
+    >>> with inmodule.installed_module(
     ...         't', defs=[TestCase1, TestCase2, load_tests]
     ...     ) as t:
     ...     loader = unittest.TestLoader()
@@ -567,12 +569,12 @@ module::
     ...     runner.run(suite)
     <unittest.runner.TextTestResult run=1 errors=0 failures=0>
 
-For its turn, ``ugly.finder.TestFinder`` has a method called ``load_tests()``
-that merely returns the finder instance itself - also, it accepts the three
-expected arguments. So, if you want the automatic test discoverers (such as
-``unittest.TestLoader.loadTestsFromModule()``) to load all tests found by
-``TestFinder`` in a module, you just need to assign the instance's
-``load_tests()`` method to the ``load_tests`` module variable.
+For its turn, ``infinder.TestFinder`` has a method called
+``load_tests()`` that merely returns the finder instance itself - also, it
+accepts the three expected arguments. So, if you want the automatic test
+discoverers (such as ``unittest.TestLoader.loadTestsFromModule()``) to load all
+tests found by ``TestFinder`` in a module, you just need to assign the
+instance's ``load_tests()`` method to the ``load_tests`` module variable.
 
 So, consider the function and class defined below::
 
@@ -591,12 +593,12 @@ So, consider the function and class defined below::
 We can force a test module to return both the doctests and the unittest by using
 the ``load_tests()`` method::
 
-    >>> with ugly.module.installed_module('a', defs=[add]),\
-    ...         ugly.module.installed_module(
+    >>> with inmodule.installed_module('a', defs=[add]),\
+    ...         inmodule.installed_module(
     ...             'ta', defs=[TestAdd],
     ...             code="""
-    ...                 import ugly.finder
-    ...                 finder = ugly.finder.TestFinder(__name__, 'a')
+    ...                 import inelegant.finder as infinder
+    ...                 finder = infinder.TestFinder(__name__, 'a')
     ...                 load_tests = finder.load_tests
     ...             """
     ...         ) as ta:
@@ -607,20 +609,20 @@ the ``load_tests()`` method::
     <unittest.runner.TextTestResult run=2 errors=0 failures=2>
 
 Licensing
-=========
+==============
 
-Ugly is free software: you can redistribute it and/or modify
+Inelegant is free software: you can redistribute it and/or modify
 it under the terms of the `GNU Lesser General Public License`__ as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
 __ http://www.gnu.org/licenses/lgpl-3.0.html
 
-Ugly is distributed in the hope that it will be useful,
+Inelegant is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with Ugly.  If not, see <http://www.gnu.org/licenses/>.
+along with Inelegant.  If not, see <http://www.gnu.org/licenses/>.
 

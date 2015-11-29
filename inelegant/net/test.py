@@ -2,20 +2,20 @@
 #
 # Copyright 2015, 2016 Adam Victor Brandizzi
 #
-# This file is part of Ugly.
+# This file is part of Inelegant.
 #
-# Ugly is free software: you can redistribute it and/or modify
+# Inelegant is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# Ugly is distributed in the hope that it will be useful,
+# Inelegant is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Lesser General Public License for more details.
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along with Ugly.  If not, see <http://www.gnu.org/licenses/>.
+# along with Inelegant.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
 
@@ -26,14 +26,14 @@ import contextlib
 import time
 import errno
 
-from ugly.net import Server, wait_server_up, wait_server_down, get_socket
-from ugly.process import Process
+from inelegant.net import Server, wait_server_up, wait_server_down, get_socket
+from inelegant.process import Process
 
 class TestServer(unittest.TestCase):
 
     def test_server(self):
         """
-        ``ugly.net.Server`` is a ` ``SocketServer.TCPServer`` `__ subclass.
+        ``inelegant.net.Server`` is a ` ``SocketServer.TCPServer`` `__ subclass.
         
         __ https://docs.python.org/2/library/socketserver.html
         """
@@ -53,7 +53,7 @@ class TestServer(unittest.TestCase):
 
     def test_with(self):
         """
-        ``ugly.net.Server`` is also a context manager. If given to an ``with``
+        ``inelegant.net.Server`` is also a context manager. If given to an ``with``
         statement, the server will start at the beginning and stop at the end
         of the block.
         """
@@ -236,9 +236,9 @@ class TestWaiters(unittest.TestCase):
 
         self.assertTrue(now - start < timeout)
 
-from ugly.finder import TestFinder
+from inelegant.finder import TestFinder
 
-load_tests = TestFinder(__name__, 'ugly.net.net').load_tests
+load_tests = TestFinder(__name__, 'inelegant.net.net').load_tests
 
 if __name__ == "__main__":
     unittest.main()

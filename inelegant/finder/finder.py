@@ -1,20 +1,20 @@
 #
 # Copyright 2015, 2016 Adam Victor Brandizzi
 #
-# This file is part of Ugly.
+# This file is part of Inelegant.
 #
-# Ugly is free software: you can redistribute it and/or modify
+# Inelegant is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# Ugly is distributed in the hope that it will be useful,
+# Inelegant is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Lesser General Public License for more details.
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along with Ugly.  If not, see <http://www.gnu.org/licenses/>.
+# along with Inelegant.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
 import doctest
@@ -23,7 +23,7 @@ import inspect
 import sys
 import os
 
-from ugly.module import get_caller_module
+from inelegant.module import get_caller_module
 
 class TestFinder(unittest.TestSuite):
     """
@@ -52,7 +52,7 @@ class TestFinder(unittest.TestSuite):
     ...in a module, and the module is given to the finder, then all of these
     tests will be available in the finder::
 
-    >>> from ugly.module import installed_module
+    >>> from inelegant.module import installed_module
     >>> with installed_module('t', scope={'SomeTestCase': SomeTestCase}) as t:
     ...     finder = TestFinder(t)
     ...     finder.countTestCases()
@@ -172,7 +172,7 @@ class TestFinder(unittest.TestSuite):
         the first one and set its bound ``load_tests()`` into the second one,
         then the second module will only "publish" the cases of the first one::
 
-        >>> from ugly.module import installed_module
+        >>> from inelegant.module import installed_module
         >>> with installed_module('t1', defs=[TestCase1]) as t1, \\
         ...        installed_module('t2', defs=[TestCase2]) as t2:
         ...     t2.load_tests = TestFinder(t1).load_tests
@@ -203,17 +203,17 @@ def get_module(testable):
     ``get_module()`` can receive a module or a string. If it receives a module,
     the module is returned::
 
-    >>> import ugly.finder.test
-    >>> get_module(ugly.finder.test) # doctest: +ELLIPSIS
-    <module 'ugly.finder.test' ...>
+    >>> import inelegant.finder.test
+    >>> get_module(inelegant.finder.test) # doctest: +ELLIPSIS
+    <module 'inelegant.finder.test' ...>
 
     If it receives a string, it is supposed to be the name of a module. Then the
     module is returned::
 
     ::
 
-    >>> get_module('ugly.net.test') # doctest: +ELLIPSIS
-    <module 'ugly.net.test' ...>
+    >>> get_module('inelegant.net.test') # doctest: +ELLIPSIS
+    <module 'inelegant.net.test' ...>
     """
 
     module = None
@@ -242,7 +242,7 @@ def get_doctestable(testable):
 
     If the function receives a module, it merely returns the module.
 
-    >>> from ugly.module import installed_module
+    >>> from inelegant.module import installed_module
     >>> with installed_module('m') as m:
     ...     get_doctestable(m) # doctest: +ELLIPSIS
     <module 'm' ...>

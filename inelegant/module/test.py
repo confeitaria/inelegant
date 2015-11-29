@@ -2,31 +2,32 @@
 #
 # Copyright 2015, 2016 Adam Victor Brandizzi
 #
-# This file is part of Ugly.
+# This file is part of Inelegant.
 #
-# Ugly is free software: you can redistribute it and/or modify
+# Inelegant is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# Ugly is distributed in the hope that it will be useful,
+# Inelegant is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Lesser General Public License for more details.
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along with Ugly.  If not, see <http://www.gnu.org/licenses/>.
+# along with Inelegant.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
 import inspect
 
-from ugly.module import create_module, installed_module, adopt, AdoptException
+from inelegant.module import create_module, installed_module, adopt,\
+    AdoptException
 
 class TestModule(unittest.TestCase):
 
     def test_create_module(self):
         """
-        ``ugly.module.create_module()`` should create a module.
+        ``inelegant.module.create_module()`` should create a module.
         """
         m = create_module('example')
 
@@ -35,7 +36,7 @@ class TestModule(unittest.TestCase):
 
     def test_create_module_scope(self):
         """
-        If ``ugly.module.create_module()`` receives a dict as its ``scope``
+        If ``inelegant.module.create_module()`` receives a dict as its ``scope``
         argument, then the values from the dict should be set into the module.
         """
         m = create_module('example', scope={'x': 3})
@@ -44,7 +45,7 @@ class TestModule(unittest.TestCase):
 
     def test_create_module_code(self):
         """
-        If ``ugly.module.create_module()`` receives its ``code`` argument,
+        If ``inelegant.module.create_module()`` receives its ``code`` argument,
         then whatever it creates should be set in the module scope.
         """
         m = create_module('example', code='x = 3')
@@ -53,8 +54,9 @@ class TestModule(unittest.TestCase):
 
     def test_create_module_scope_code(self):
         """
-        ``ugly.module.create_module()`` can receive both ``scope`` and ``code``
-        arguments, in which case ``code`` can use anything from the scope.
+        ``inelegant.module.create_module()`` can receive both ``scope`` and
+        ``code`` arguments, in which case ``code`` can use anything from the
+        scope.
         """
         m = create_module('example', scope={'x': 3}, code='x += 1')
 
@@ -62,7 +64,7 @@ class TestModule(unittest.TestCase):
 
     def test_create_module_installs_module(self):
         """
-        ``ugly.module.create_module()`` adds the created module to
+        ``inelegant.module.create_module()`` adds the created module to
         ``sys.modules`` so it can be imported.
         """
         m = create_module('example', scope={'x': 3})
@@ -72,9 +74,9 @@ class TestModule(unittest.TestCase):
 
     def test_installed_module(self):
         """
-        ``ugly.module.installed_module()`` returns a context manager. One can
-        give it to the ``with`` statement and its result will be a module.
-        ``ugly.module.installed_module()`` accepts the same arguments from
+        ``inelegant.module.installed_module()`` returns a context manager. One
+        can give it to the ``with`` statement and its result will be a module.
+        ``inelegant.module.installed_module()`` accepts the same arguments from
         ``create_module()``.
         """
         with installed_module('example', scope={'x': 3}, code='x += 1') as m:
@@ -82,7 +84,7 @@ class TestModule(unittest.TestCase):
 
     def test_installed_module_uninstalls_module(self):
         """
-        When exiting the ``with`` block, ``ugly.module.installed_module()``
+        When exiting the ``with`` block, ``inelegant.module.installed_module()``
         uninstalls its module from ``sys.modules``.
         """
         with installed_module('example') as m:
@@ -93,11 +95,11 @@ class TestModule(unittest.TestCase):
 
     def test_adopt(self):
         """
-        ``ugly.module.adopt()`` receives two arguments: a module and a "declared
-        entity" (either a class or a function). It sets the ``__module__``
-        attribute of the entity to the module name, if possible. If the class
-        has its own declared methods the ``__module__`` attribute of them is
-        also set.
+        ``inelegant.module.adopt()`` receives two arguments: a module and a
+        "declared entity" (either a class or a function). It sets the
+        ``__module__`` attribute of the entity to the module name, if possible.
+        If the class has its own declared methods the ``__module__`` attribute
+        of them is also set.
         """
         class Class(object):
             def method(self):
@@ -166,7 +168,7 @@ class TestModule(unittest.TestCase):
 
     def test_adopt_fails_on_read_only_module(self):
         """
-        ``ugly.module.adopt()`` raises an exception if required to adopt an
+        ``inelegant.module.adopt()`` raises an exception if required to adopt an
         object with read-only ``__module`` attr.
         """
         with installed_module('example') as m:
@@ -175,8 +177,8 @@ class TestModule(unittest.TestCase):
 
     def test_adopts_internal_class(self):
         """
-        When ``ugly.module.adopt()`` is called on a class, it adopts any other
-        classes defined inside the adoptee.
+        When ``inelegant.module.adopt()`` is called on a class, it adopts any
+        other classes defined inside the adoptee.
         """
         class OuterClass(object):
             pass
@@ -255,9 +257,9 @@ class TestModule(unittest.TestCase):
             self.assertEquals('m', m.function.__module__)
             self.assertEquals('m', m.Class.__module__)
 
-from ugly.finder import TestFinder
+from inelegant.finder import TestFinder
 
-load_tests = TestFinder(__name__, 'ugly.module.module').load_tests
+load_tests = TestFinder(__name__, 'inelegant.module.module').load_tests
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,20 +1,20 @@
 #
 # Copyright 2015, 2016 Adam Victor Brandizzi
 #
-# This file is part of Ugly.
+# This file is part of Inelegant.
 #
-# Ugly is free software: you can redistribute it and/or modify
+# Inelegant is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# Ugly is distributed in the hope that it will be useful,
+# Inelegant is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Lesser General Public License for more details.
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along with Ugly.  If not, see <http://www.gnu.org/licenses/>.
+# along with Inelegant.  If not, see <http://www.gnu.org/licenses/>.
 
 import socket
 import errno
@@ -42,10 +42,10 @@ def wait_server_up(host, port, timeout=1, tries=100):
 
     ::
 
-    >>> import ugly.net, multiprocessing, socket, contextlib, time
+    >>> import inelegant.net, multiprocessing, socket, contextlib, time
     >>> def serve():
     ...     time.sleep(0.05)
-    ...     server = ugly.net.Server('localhost', 9000, message='my message')
+    ...     server = inelegant.net.Server('localhost', 9000, message='my message')
     ...     server.serve_forever()
 
     ...that we start in a different process...
@@ -149,8 +149,8 @@ def wait_server_down(host, port, timeout=1, tries=100):
 
     ::
 
-    >>> import ugly.net, threading, contextlib, socket
-    >>> server = ugly.net.Server('localhost', 9000, message='my message')
+    >>> import inelegant.net, threading, contextlib, socket
+    >>> server = inelegant.net.Server('localhost', 9000, message='my message')
     >>> def serve():
     ...     server.serve_forever() # This only stops the loop
     ...     time.sleep(0.001)
@@ -176,7 +176,7 @@ def wait_server_down(host, port, timeout=1, tries=100):
 
     Now, if we use ``wait_server_down()``, the port will be surely available::
 
-    >>> server = ugly.net.Server('localhost', 9000, message='my message')
+    >>> server = inelegant.net.Server('localhost', 9000, message='my message')
     >>> thread = threading.Thread(target=serve)
     >>> thread.start()
     >>> with contextlib.closing(socket.socket()) as s:
@@ -236,7 +236,7 @@ g from a process outside the tests?
 
 class Server(SocketServer.TCPServer):
     """
-    ``ugly.net.Server`` is a very simple TCP server that only responds with the
+    ``inelegant.net.Server`` is a very simple TCP server that only responds with the
     same message, given to its constructor::
 
     >>> server = Server(

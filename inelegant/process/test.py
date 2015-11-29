@@ -2,20 +2,20 @@
 #
 # Copyright 2015, 2016 Adam Victor Brandizzi
 #
-# This file is part of Ugly.
+# This file is part of Inelegant.
 #
-# Ugly is free software: you can redistribute it and/or modify
+# Inelegant is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# Ugly is distributed in the hope that it will be useful,
+# Inelegant is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Lesser General Public License for more details.
 #
 # You should have received a copy of the GNU Lesser General Public License
-# along with Ugly.  If not, see <http://www.gnu.org/licenses/>.
+# along with Inelegant.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
 
@@ -23,7 +23,7 @@ import contextlib
 import time
 import multiprocessing.connection
 
-from ugly.process import Process
+from inelegant.process import Process
 
 class TestProcess(unittest.TestCase):
 
@@ -200,9 +200,9 @@ class TestProcess(unittest.TestCase):
             p.start()
             p.join()
 
-from ugly.finder import TestFinder
+from inelegant.finder import TestFinder
 
-load_tests = TestFinder(__name__, 'ugly.process.process').load_tests
+load_tests = TestFinder(__name__, 'inelegant.process.process').load_tests
 
 if __name__ == "__main__":
     unittest.main()
