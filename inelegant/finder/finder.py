@@ -327,7 +327,7 @@ def add_module(suite, module, skip=None):
     test_cases = flatten(unittest.defaultTestLoader.loadTestsFromModule(module))
 
     suite.addTests(
-        tc for tc in test_cases if not isinstance(tc, skip)
+        tc for tc in test_cases if tc.__class__ not in skip
     )
 
 def to_tuple(value, up_to=None):
