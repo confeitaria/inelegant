@@ -322,7 +322,7 @@ def add_module(suite, module, skip=None):
     Add all test cases and test suites from the given module into the given
     suite.
     """
-    skip = to_tuple(skip)
+    skip = to_set(skip)
 
     test_cases = flatten(unittest.defaultTestLoader.loadTestsFromModule(module))
 
@@ -330,34 +330,34 @@ def add_module(suite, module, skip=None):
         tc for tc in test_cases if tc.__class__ not in skip
     )
 
-def to_tuple(value, up_to=None):
+def to_set(value):
     """
-    Converts a specific value to a tuple in the following ways:
+    Converts a specific value to a set in the following ways:
 
-    * If the value is ``None``, then returns the empty tuple::
+    * If the value is ``None``, then returns the empty set::
 
-        >>> to_tuple(None)
-        ()
+        >>> to_set(None)
+        set([])
 
-    * If the value is an iterable, creates a tuple with all values from it::
+    * If the value is an iterable, creates a set with all values from it::
 
-        >>> to_tuple(xrange(3))
-        (0, 1, 2)
+        >>> to_set(xrange(3)) == set([0, 1, 2])
+        True
 
-    (Pay attention to never pass a huge or infinite iterator to ``to_tuple()``.)
+    (Pay attention to never pass a huge or infinite iterator to ``to_set()``.)
 
     * Otherwise, returns a tuple containing the given value::
 
-        >>> to_tuple(3)
-        (3,)
+        >>> to_set(3)
+        set([3])
     """
     if value is None:
-        result = ()
+        result = set()
     else:
         try:
-            result = tuple(itertools.islice(value, up_to))
+            result = set(value)
         except TypeError:
-            result = (value,)
+            result = set([value])
 
     return result
 
