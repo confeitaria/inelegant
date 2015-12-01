@@ -68,6 +68,88 @@ class TestFinder(unittest.TestSuite):
 
     All other methods from ``unittest.TestSuite`` are available as well.
 
+
+    Ignoring test cases
+    -------------------
+
+    Sometimes we may not want to load a specific test case. In these cases, we
+    can pass the test case's classes to be ignored to the named-only ``skip``
+    argument::
+
+    >>> class TestCase1(unittest.TestCase):
+    ...     def testFail(self):
+    ...         self.assertEquals(1, 0)
+    >>> class TestCase2(unittest.TestCase):
+    ...     def testError(self):
+    ...         self.assertEquals(1, 1/0)
+    >>> with installed_module('t1', defs=[TestCase1, TestCase2]) as t1:
+    ...     finder = TestFinder(t1)
+    ...     finder.countTestCases()
+    2
+    >>> with installed_module('t1', defs=[TestCase1, TestCase2]) as t1:
+    ...     finder = TestFinder(t1, skip=[TestCase2])
+    ...     finder.countTestCases()
+    1
+
+    If only one class is to be ignored, it can be passed directly
+
+    >>> with installed_module('t1', defs=[TestCase1, TestCase2]) as t1:
+    ...     finder = TestFinder(t1, skip=TestCase2)
+    ...     finder.countTestCases()
+    1
+
+    It is very useful when a base test case is to be extended with necessary
+    methods::
+
+    >>> class TestMultiplier(unittest.TestCase):
+    ...        def test_add(self):
+    ...            m = self.get_multiplier()
+    ...            self.assertEquals(4, m(2, 2))
+
+    This way, it can test different implementations::
+
+    >>> def mul1(a, b):
+    ...        return a*b
+    >>> def mul2(a, b):
+    ...        return sum([a]*b)
+    >>> class TestMul1(TestMultiplier):
+    ...        def get_multiplier(self):
+    ...            return mul1
+    >>> class TestMul2(TestMultiplier):
+    ...        def get_multiplier(self):
+    ...            return mul2
+
+    Naturally, we do not want to run tests from the base class. However, it is
+    usually imported into the modules that are going to extend it, causing
+    errors::
+
+    >>> runner = unittest.TextTestRunner(stream=sys.stdout)
+    >>> with installed_module('tm', defs=[TestMultiplier, TestMul1, TestMul2]):
+    ...     finder = TestFinder('tm')
+    ...     _ = runner.run(finder) # doctest: +ELLIPSIS
+    ..E
+    ======================================================================
+    ERROR: test_add (tm.TestMultiplier)
+    ----------------------------------------------------------------------
+    Traceback (most recent call last):
+      ...
+    AttributeError: 'TestMultiplier' object has no attribute 'get_multiplier'
+    ...
+    Ran 3 tests in ...
+    ...
+    FAILED (errors=1)
+
+    Here the ``skip`` argument helps::
+
+    >>> with installed_module('tm', defs=[TestMultiplier, TestMul1, TestMul2]):
+    ...     finder = TestFinder('tm', skip=[TestMultiplier])
+    ...     _ = runner.run(finder) # doctest: +ELLIPSIS
+    ..
+    ----------------------------------------------------------------------
+    Ran 2 tests in ...
+    <BLANKLINE>
+    OK
+
     Loading docstrings
     ------------------
 
