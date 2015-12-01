@@ -20,6 +20,7 @@ import unittest
 import doctest
 import importlib
 import inspect
+import itertools
 import sys
 import os
 
@@ -136,8 +137,10 @@ class TestFinder(unittest.TestSuite):
     >>> import os
     >>> os.remove(path)
     """
-    def __init__(self, *testables):
+    def __init__(self, *testables, **kwargs):
         unittest.TestSuite.__init__(self)
+
+        skip = kwargs.get('skip', None)
 
         try:
             caller_module = get_caller_module()
@@ -149,7 +152,7 @@ class TestFinder(unittest.TestSuite):
             doctestable = get_doctestable(testable)
 
             if module is not None:
-                add_module(self, module)
+                add_module(self, module, skip=skip)
             if doctestable is not None:
                 add_doctest(self, doctestable, reference_module=caller_module)
 
@@ -314,11 +317,76 @@ def add_doctest(suite, doctestable, reference_module, exclude_empty=False):
 
     suite.addTest(doctest_suite)
 
-def add_module(suite, module):
+def add_module(suite, module, skip=None):
     """
     Add all test cases and test suites from the given module into the given
     suite.
     """
-    suite.addTest(
-        unittest.defaultTestLoader.loadTestsFromModule(module)
+    skip = to_tuple(skip)
+
+    test_cases = flatten(unittest.defaultTestLoader.loadTestsFromModule(module))
+
+    suite.addTests(
+        tc for tc in test_cases if not isinstance(tc, skip)
     )
+
+def to_tuple(value, up_to=None):
+    """
+    Converts a specific value to a tuple in the following ways:
+
+    * If the value is ``None``, then returns the empty tuple::
+
+        >>> to_tuple(None)
+        ()
+
+    * If the value is an iterable, creates a tuple with all values from it::
+
+        >>> to_tuple(xrange(3))
+        (0, 1, 2)
+
+    (Pay attention to never pass a huge or infinite iterator to ``to_tuple()``.)
+
+    * Otherwise, returns a tuple containing the given value::
+
+        >>> to_tuple(3)
+        (3,)
+    """
+    if value is None:
+        result = ()
+    else:
+        try:
+            result = tuple(itertools.islice(value, up_to))
+        except TypeError:
+            result = (value,)
+
+    return result
+
+def flatten(value, ids=None, depth=None):
+    """
+    Flattens an iterator::
+
+        >>> a = [1, [[2, 3, (4, 5, xrange(6, 10)), 10], (11, 12)], [13, 14], 15]
+        >>> list(flatten(a))
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+
+    It prevents infinite loops with recursive iterators::
+
+        >>> b = [1, 2, 3]
+        >>> c = [4, 5, 6, b, 7]
+        >>> b.append(c)
+        >>> list(flatten(b))
+        [1, 2, 3, 4, 5, 6, 7]
+    """
+    if ids is None:
+        ids = set()
+
+    try:
+        for v in value:
+            if id(v) in ids:
+                continue
+            ids.add(id(v))
+
+            for u in flatten(v, ids=ids):
+                yield u
+    except TypeError:
+        yield value
