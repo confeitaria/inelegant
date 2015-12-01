@@ -392,6 +392,31 @@ class TestTestFinder(unittest.TestCase):
             self.assertEquals(1, len(result.failures))
             self.assertEquals(0, len(result.errors))
 
+    def test_do_not_skip_subclass(self):
+        """
+        The ``TestFinder`` test suite should not skip subclasses from a skipped
+        test case.
+        """
+        class BaseTestCase(unittest.TestCase):
+            def test_fail(self):
+                self.fail()
+
+        class TestCase(BaseTestCase):
+            def test_pass(self):
+                pass
+            def test_error(self):
+                raise Exception()
+
+        with installed_module('m1', defs=[BaseTestCase]) as m1, \
+                installed_module('m2', defs=[TestCase]) as m2:
+            result = unittest.TestResult()
+            finder = TestFinder(m1, m2, skip=BaseTestCase)
+            finder.run(result)
+
+            self.assertEquals(3, result.testsRun)
+            self.assertEquals(1, len(result.failures))
+            self.assertEquals(1, len(result.errors))
+
 load_tests = TestFinder(__name__, 'inelegant.finder.finder').load_tests
 
 if __name__ == "__main__":
