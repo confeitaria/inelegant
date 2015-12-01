@@ -340,6 +340,58 @@ class TestTestFinder(unittest.TestCase):
 
         os.remove(path)
 
+    def test_skip_test_case(self):
+        """
+        The ``TestFinder`` test suite should be able to skip a test.
+        """
+        class TestCase1(unittest.TestCase):
+            def test_pass(self):
+                pass
+            def test_fail(self):
+                self.fail()
+
+        class TestCase2(unittest.TestCase):
+            def test_pass(self):
+                pass
+            def test_error(self):
+                raise Exception()
+
+        with installed_module('m1', defs=[TestCase1]) as m1, \
+                installed_module('m2', defs=[TestCase2]) as m2:
+            result = unittest.TestResult()
+            finder = TestFinder(m1, m2, skip=TestCase2)
+            finder.run(result)
+
+            self.assertEquals(2, result.testsRun)
+            self.assertEquals(1, len(result.failures))
+            self.assertEquals(0, len(result.errors))
+
+    def test_skip_test_cases(self):
+        """
+        The ``TestFinder`` test suite should be able to skip a list of tests.
+        """
+        class TestCase1(unittest.TestCase):
+            def test_pass(self):
+                pass
+            def test_fail(self):
+                self.fail()
+
+        class TestCase2(unittest.TestCase):
+            def test_pass(self):
+                pass
+            def test_error(self):
+                raise Exception()
+
+        with installed_module('m1', defs=[TestCase1]) as m1, \
+                installed_module('m2', defs=[TestCase2]) as m2:
+            result = unittest.TestResult()
+            finder = TestFinder(m1, m2, skip=[TestCase2])
+            finder.run(result)
+
+            self.assertEquals(2, result.testsRun)
+            self.assertEquals(1, len(result.failures))
+            self.assertEquals(0, len(result.errors))
+
 load_tests = TestFinder(__name__, 'inelegant.finder.finder').load_tests
 
 if __name__ == "__main__":
