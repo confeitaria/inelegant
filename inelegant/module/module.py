@@ -140,6 +140,110 @@ def installed_module(name, code='', defs=(), scope=None):
 
 @contextlib.contextmanager
 def available_module(name, code='', extension='.py'):
+    """
+    Makes a module available to be imported - but does not import it.
+
+    ``available_module() expects two arguments: the name of the module and its
+    code. The name is mandatory, but the code is optional::
+
+    >>> with available_module(name='m', code='x = 3'):
+    ...     import m
+    ...     m.x
+    3
+
+    Once its context is closed, the module is not available for importing
+    anymore::
+
+    >>> import m
+    Traceback (most recent call last):
+      ...
+    ImportError: No module named m
+
+    Differences from ``inelegant.module.installed_module()``
+    ========================================================
+
+    This function is comparable to ``installed_module()`` but its context does
+    not return the module itself::
+
+    >>> with installed_module('m') as m:
+    ...     m                                               # doctest: +ELLIPSIS
+    <module 'm' ...>
+    >>> with available_module('m') as m:
+    ...     m is None
+    True
+
+    Instead, the user should import the module. Importing the module is
+    supported by ``installed_module()`` but here it is the only way to get the
+    the module::
+
+    >>> with installed_module('m'):
+    ...     import m
+    ...     m                                               # doctest: +ELLIPSIS
+    <module 'm' ...>
+    >>> with available_module('m'):
+    ...     import m
+    ...     m                                               # doctest: +ELLIPSIS
+    <module 'm' ...>
+
+    The argument ``code``
+    =====================
+
+    Another difference between ``installed_module()`` and ``available_module()``
+    is that the latter only accepts the ``code`` argument - there is no
+    ``scope`` or ``defs`` argument.
+
+    Also, the code is not executed when the module is created, but only when
+    it is imported::
+
+    >>> with available_module(name='m', code="print('During importing.')"):
+    ...     print('Before importing.')
+    ...     import m
+    ...     print('After importing.')
+    Before importing.
+    During importing.
+    After importing.
+
+    This contrasts with ``installed_module()``. Since that function returns the
+    module itself, the code that is passed to it should be executed before the
+    importing::
+
+    >>> with installed_module(name='m', code="print('During importing.')"):
+    ...     print('Before importing?')
+    ...     import m
+    ...     print('After importing.')
+    During importing.
+    Before importing?
+    After importing.
+
+    The usefulness with faulting modules
+    ====================================
+
+    This behavior is useful when we need a module that raises an exception when
+    imported, for testing purposes. With ``installed_module()``, the mere call
+    of the function would raise an exception::
+
+    >>> with installed_module(name='m', code="raise Exception()"):
+    ...     print('Is this line even executed?')
+    ...     try:
+    ...         import m
+    ...     except Exception as e:
+    ...         print('The exception was handled.')
+    Traceback (most recent call last):
+      ...
+    Exception
+
+    Now, with ``available_module()``, the exception will only be raised in the
+    importing::
+
+    >>> with available_module(name='m', code="raise Exception()"):
+    ...     print('This line is really executed!')
+    ...     try:
+    ...         import m
+    ...     except Exception as e:
+    ...         print('The exception was handled.')
+    This line is really executed!
+    The exception was handled.
+    """
     tempdir = tempfile.mkdtemp()
     sys.path.append(tempdir)
 
