@@ -283,6 +283,18 @@ class TestModule(unittest.TestCase):
             with self.assertRaises(Exception):
                 import example
 
+    def test_create_module_does_not_register_failed_module(self):
+        """
+        If the code of a module raises an exception, it is not available for
+        importing. Consequently, it should not be in ``sys.modules`` or be
+        importable.
+        """
+        with self.assertRaises(Exception):
+            create_module('m', code='raise Exception()')
+
+        with self.assertRaises(ImportError):
+            import m
+
 from inelegant.finder import TestFinder
 
 load_tests = TestFinder(__name__, 'inelegant.module.module').load_tests
