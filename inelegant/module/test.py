@@ -20,8 +20,8 @@
 import unittest
 import inspect
 
-from inelegant.module import create_module, installed_module, adopt,\
-    AdoptException
+from inelegant.module import create_module, installed_module, \
+    available_module, adopt, AdoptException
 
 class TestModule(unittest.TestCase):
 
@@ -133,7 +133,6 @@ class TestModule(unittest.TestCase):
         self.assertNotEquals(m.__name__, Class.__module__)
         self.assertNotEquals(m.__name__, Class.method.__module__)
         self.assertNotEquals(m.__name__, function.__module__)
-
 
     def test_create_module_adopts_def_entities(self):
         """
@@ -256,6 +255,33 @@ class TestModule(unittest.TestCase):
         with installed_module('m', code=code) as m:
             self.assertEquals('m', m.function.__module__)
             self.assertEquals('m', m.Class.__module__)
+
+    def test_available_module_is_unavailable_after_context(self):
+        """
+        ``inelegant.module.available_module()`` should vanish after its context
+        ends. If an instance of this is still available from a previous import,
+        its behavior is undefined.
+        """
+        with available_module('example', code='x = 3') as p:
+            self.assertEquals(None, p)
+
+            import example
+            self.assertEquals(3, example.x)
+
+        with self.assertRaises(ImportError):
+            import example
+
+    def test_available_module_does_not_raise_exception_from_code(self):
+        """
+        ``inelegant.module.available_module()`` does not import the module by
+        default, which allows us to write modules that raise exceptions only
+        when imported later.
+        """
+        with available_module('example', code='raise Exception()') as p:
+            pass
+
+            with self.assertRaises(Exception):
+                import example
 
 from inelegant.finder import TestFinder
 
