@@ -20,11 +20,13 @@
 import unittest
 import tempfile
 import contextlib
-import os, os.path
+import os
+import os.path
 
 from inelegant.module import installed_module
 
 from inelegant.finder import TestFinder
+
 
 class TestTestFinder(unittest.TestCase):
 
@@ -41,15 +43,20 @@ class TestTestFinder(unittest.TestCase):
         The ``TestFinder`` test suite should find test cases classes from the
         given modules.
         """
+
         class TestCase1(unittest.TestCase):
+
             def test_pass(self):
                 pass
+
             def test_fail(self):
                 self.fail()
 
         class TestCase2(unittest.TestCase):
+
             def test_pass(self):
                 pass
+
             def test_error(self):
                 raise Exception()
 
@@ -68,17 +75,20 @@ class TestTestFinder(unittest.TestCase):
         The ``TestFinder`` test suite load the doctests found at the given
         modules.
         """
+
         class Class(object):
             """
             >>> 2+2
             4
             """
+
             def method(self):
                 """
                 >>> 3+3
                 FAIL
                 """
                 pass
+
         def f(self):
             """
             >>> raise Exception()
@@ -96,25 +106,30 @@ class TestTestFinder(unittest.TestCase):
 
     def test_implement_load_tests(self):
         """
-        One can delegate the ```load_tests()`` protocol`__ to the ``TestFinder``
-        by setting ``load_tests`` to the bound ``TestFinder.load_tests()`` at
-        the module.
+        One can delegate the ```load_tests()`` protocol`__ to the
+        ``TestFinder`` by setting ``load_tests`` to the bound
+        ``TestFinder.load_tests()`` at the module.
 
         __ https://docs.python.org/2/library/unittest.html#load-tests-protocol
         """
+
         class TestCase1(unittest.TestCase):
+
             def test_pass(self):
                 pass
+
             def test_fail(self):
                 self.fail()
 
         class TestCase2(unittest.TestCase):
+
             def test_pass(self):
                 pass
+
             def test_error(self):
                 raise Exception()
 
-        with installed_module('m1',defs=[TestCase1]) as m1, \
+        with installed_module('m1', defs=[TestCase1]) as m1, \
                 installed_module('m2', defs=[TestCase2]) as m2, \
                 installed_module('m3') as m3:
             finder = TestFinder(m1, m2)
@@ -135,11 +150,15 @@ class TestTestFinder(unittest.TestCase):
         will be assumed to be a module name. The module will be imported and
         then the seach will proceed on it.
         """
+
         class TestCase1(unittest.TestCase):
+
             def test_pass(self):
                 pass
+
             def test_fail(self):
                 self.fail()
+
             def test_error(self):
                 raise Exception()
 
@@ -148,6 +167,7 @@ class TestTestFinder(unittest.TestCase):
             >>> 3+3
             6
             """
+
             def method(self):
                 """
                 >>> 2+2
@@ -246,7 +266,8 @@ class TestTestFinder(unittest.TestCase):
     def test_file_relative_to_module(self):
         """
         If a relative path is given to ``TestFinder``, it should be accepted.
-        The path should be relative to the module which created the test finder.
+        The path should be relative to the module which created the test
+        finder.
         """
         content = """
         >>> 2+2
@@ -303,10 +324,12 @@ class TestTestFinder(unittest.TestCase):
             pass
 
         class TestCase1(unittest.TestCase):
+
             def test_fail1(self):
                 self.fail('TestCase1')
 
         class TestCase2(unittest.TestCase):
+
             def test_fail2(self):
                 self.fail('TestCase1')
 
@@ -344,15 +367,20 @@ class TestTestFinder(unittest.TestCase):
         """
         The ``TestFinder`` test suite should be able to skip a test.
         """
+
         class TestCase1(unittest.TestCase):
+
             def test_pass(self):
                 pass
+
             def test_fail(self):
                 self.fail()
 
         class TestCase2(unittest.TestCase):
+
             def test_pass(self):
                 pass
+
             def test_error(self):
                 raise Exception()
 
@@ -370,15 +398,20 @@ class TestTestFinder(unittest.TestCase):
         """
         The ``TestFinder`` test suite should be able to skip a list of tests.
         """
+
         class TestCase1(unittest.TestCase):
+
             def test_pass(self):
                 pass
+
             def test_fail(self):
                 self.fail()
 
         class TestCase2(unittest.TestCase):
+
             def test_pass(self):
                 pass
+
             def test_error(self):
                 raise Exception()
 
@@ -397,13 +430,17 @@ class TestTestFinder(unittest.TestCase):
         The ``TestFinder`` test suite should not skip subclasses from a skipped
         test case.
         """
+
         class BaseTestCase(unittest.TestCase):
+
             def test_fail(self):
                 self.fail()
 
         class TestCase(BaseTestCase):
+
             def test_pass(self):
                 pass
+
             def test_error(self):
                 raise Exception()
 

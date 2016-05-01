@@ -23,6 +23,9 @@ import inspect
 from inelegant.module import create_module, installed_module, \
     available_module, adopt, AdoptException
 
+from inelegant.finder import TestFinder
+
+
 class TestModule(unittest.TestCase):
 
     def test_create_module(self):
@@ -36,8 +39,9 @@ class TestModule(unittest.TestCase):
 
     def test_create_module_scope(self):
         """
-        If ``inelegant.module.create_module()`` receives a dict as its ``scope``
-        argument, then the values from the dict should be set into the module.
+        If ``inelegant.module.create_module()`` receives a dict as its
+        ``scope`` argument, then the values from the dict should be set into
+        the module.
         """
         m = create_module('example', scope={'x': 3})
 
@@ -84,8 +88,9 @@ class TestModule(unittest.TestCase):
 
     def test_installed_module_uninstalls_module(self):
         """
-        When exiting the ``with`` block, ``inelegant.module.installed_module()``
-        uninstalls its module from ``sys.modules``.
+        When exiting the ``with`` block,
+        ``inelegant.module.installed_module()`` uninstalls its module from
+        ``sys.modules``.
         """
         with installed_module('example') as m:
             import example
@@ -101,9 +106,11 @@ class TestModule(unittest.TestCase):
         If the class has its own declared methods the ``__module__`` attribute
         of them is also set.
         """
+
         class Class(object):
             def method(self):
                 pass
+
         def function(a):
             pass
 
@@ -120,9 +127,11 @@ class TestModule(unittest.TestCase):
         All classes and functions from the scope should not be adopted by the
         module made by ``create_module()``.
         """
+
         class Class(object):
             def method(self):
                 pass
+
         def function(a):
             pass
 
@@ -139,9 +148,12 @@ class TestModule(unittest.TestCase):
         All classes and functions from the definition list should be adopted by
         the module made by ``create_module()``.
         """
+
         class Class(object):
+
             def method(self):
                 pass
+
         def function(a):
             pass
 
@@ -153,11 +165,13 @@ class TestModule(unittest.TestCase):
 
     def test_create_module_set_def_entities_in_module(self):
         """
-        The entities at the ``defs`` list should be set into the module as their
-        ``name`` values.
+        The entities at the ``defs`` list should be set into the module as
+        their ``name`` values.
         """
+
         class Class(object):
             pass
+
         def function(a):
             pass
 
@@ -167,8 +181,8 @@ class TestModule(unittest.TestCase):
 
     def test_adopt_fails_on_read_only_module(self):
         """
-        ``inelegant.module.adopt()`` raises an exception if required to adopt an
-        object with read-only ``__module`` attr.
+        ``inelegant.module.adopt()`` raises an exception if required to adopt
+        an object with read-only ``__module`` attr.
         """
         with installed_module('example') as m:
             with self.assertRaises(AdoptException):
@@ -197,8 +211,8 @@ class TestModule(unittest.TestCase):
 
     def test_module_name(self):
         """
-        The value of ``__name__`` for the executd code should be the name of the
-        module.
+        The value of ``__name__`` for the executd code should be the name of
+        the module.
         """
         with installed_module('m', code='value = __name__') as m:
             self.assertEquals('m', m.value)
@@ -294,8 +308,6 @@ class TestModule(unittest.TestCase):
 
         with self.assertRaises(ImportError):
             import m
-
-from inelegant.finder import TestFinder
 
 load_tests = TestFinder(__name__, 'inelegant.module.module').load_tests
 

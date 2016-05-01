@@ -18,7 +18,8 @@
 # along with Inelegant.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
-import os, os.path
+import os
+import os.path
 
 import inelegant.finder.test
 import inelegant.module.test

@@ -23,6 +23,7 @@ import contextlib
 import SocketServer
 import threading
 
+
 def wait_server_up(host, port, timeout=1, tries=100):
     """
     This function blocks the execution until connecting successfully to the
@@ -37,15 +38,18 @@ def wait_server_up(host, port, timeout=1, tries=100):
     wasteful since, to avoid the unreliability, we tend to wait for a larger
     time than the server requires in most situations.
 
-    With ``wait_server_up()`` we can avoid it. It will block only until the port
-    is serving. For example, if we have a "slow server" as the one below...
+    With ``wait_server_up()`` we can avoid it. It will block only until the
+    port is serving. For example, if we have a "slow server" as the one
+    below...
 
     ::
 
     >>> import inelegant.net, multiprocessing, socket, contextlib, time
     >>> def serve():
     ...     time.sleep(0.05)
-    ...     server = inelegant.net.Server('localhost', 9000, message='my message')
+    ...     server = inelegant.net.Server(
+    ...         'localhost', 9000, message='my message'
+    ...     )
     ...     server.serve_forever()
 
     ...that we start in a different process...
@@ -130,6 +134,7 @@ def wait_server_up(host, port, timeout=1, tries=100):
             'Connection to server failed after {0} attempts'.format(tries)
         )
 
+
 def wait_server_down(host, port, timeout=1, tries=100):
     """
     This function blocks until the given port is free at the given address.
@@ -143,9 +148,9 @@ def wait_server_down(host, port, timeout=1, tries=100):
     also wasteful since, to avoid the unreliability, we tend to wait for a
     larger times than the server requires in most situations to shut down.
 
-    With ``wait_server_down()`` we can avoid it. It will block only until nobody
-    is listening the port anymore. For example, if we have a "slow server" as
-    the one below...
+    With ``wait_server_down()`` we can avoid it. It will block only until
+    nobody is listening the port anymore. For example, if we have a "slow
+    server" as the one below...
 
     ::
 
@@ -203,8 +208,8 @@ def wait_server_down(host, port, timeout=1, tries=100):
     ...     wait_server_down('localhost', 9000, timeout=0.05)
     Traceback (most recent call last):
      ...
-    Exception: Server stayed up after 100 connection attempts. May it be runnin\
-g from a process outside the tests?
+    Exception: Server stayed up after 100 connection attempts. May it be runni\
+ng from a process outside the tests?
     >>> 0.05 < time.time() - start < 0.1
     True
     """
@@ -234,10 +239,11 @@ g from a process outside the tests?
             'May it be running from a process outside the tests?'.format(tries)
         )
 
+
 class Server(SocketServer.TCPServer):
     """
-    ``inelegant.net.Server`` is a very simple TCP server that only responds with the
-    same message, given to its constructor::
+    ``inelegant.net.Server`` is a very simple TCP server that only responds
+    with the same message, given to its constructor::
 
     >>> server = Server(
     ...     host='localhost', port=9000, message='My message'
@@ -269,8 +275,8 @@ class Server(SocketServer.TCPServer):
     'My message'
     >>> process.join()
 
-    You may prefer, however, to use it with an ``with`` statement. In this case,
-    the server is started up and shut down automatically::
+    You may prefer, however, to use it with an ``with`` statement. In this
+    case, the server is started up and shut down automatically::
 
     >>> with Server(message='My message'):
     ...     with contextlib.closing(socket.socket()) as s:
@@ -287,8 +293,7 @@ class Server(SocketServer.TCPServer):
 
     def __init__(
             self, host='localhost', port=9000, message='Message sent',
-            wait_for_release=0.001
-        ):
+            wait_for_release=0.001):
         self.host = host
         self.port = port
         self.message = message
@@ -336,16 +341,17 @@ class Server(SocketServer.TCPServer):
         with self.init_lock:
             if not self._is_initialized():
                 SocketServer.TCPServer.__init__(
-                    self, (self.host, self.port), ServerHandler
-                )
+                    self, (self.host, self.port), ServerHandler)
 
     def _is_initialized(self):
         return hasattr(self, 'socket')
+
 
 class ServerHandler(SocketServer.BaseRequestHandler):
 
     def handle(self):
         self.request.sendall(self.server.message+'\0')
+
 
 def get_socket(timeout=None):
     """
@@ -363,4 +369,3 @@ def get_socket(timeout=None):
     s.settimeout(timeout)
 
     return s
-

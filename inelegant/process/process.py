@@ -19,10 +19,11 @@
 import multiprocessing
 import inspect
 
+
 class Process(multiprocessing.Process):
     """
-    ``Process`` is a ``multiprocessing.Process`` sublclass that starts and stops
-    itself automatically::
+    ``Process`` is a ``multiprocessing.Process`` sublclass that starts and
+    stops itself automatically::
 
     >>> import time
     >>> def serve():
@@ -143,17 +144,16 @@ class Process(multiprocessing.Process):
     >>> pc.is_alive()
     False
 
-    In general, it is better used as a last resort debugging feature: if a child
-    process keeps blocking, it can be terminated for easier discovering what is
-    going on. However, nothing impedes a user of using it against a permanent
-    process (e.g. a server that is ``serve_forever()``).
+    In general, it is better used as a last resort debugging feature: if a
+    child process keeps blocking, it can be terminated for easier discovering
+    what is going on. However, nothing impedes a user of using it against a
+    permanent process (e.g. a server that is ``serve_forever()``).
     """
 
     def __init__(
             self, group=None, target=None, name=None, args=None, kwargs=None,
             timeout=1, terminate=False, reraise=False,
-            daemon=True
-        ):
+            daemon=True):
         self.timeout = timeout
         self._terminate = terminate
         self.reraise = reraise
@@ -250,9 +250,8 @@ class Process(multiprocessing.Process):
         ...     value = pc.get()
         Traceback (most recent call last):
           ...
-        ValueError: cannot_send_anything is not a generator function and so can\
-not send values back before returning.
-
+        ValueError: cannot_send_anything is not a generator function and so ca\
+nnot send values back before returning.
         """
         if self.conversation is None:
             raise ValueError(
@@ -289,8 +288,8 @@ not send values back before returning.
         ...     value = pc.send(1)
         Traceback (most recent call last):
           ...
-        ValueError: cannot_receive_anything is not a generator function and so \
-cannot receive values after starting up.
+        ValueError: cannot_receive_anything is not a generator function and so\
+ cannot receive values after starting up.
         """
         if self.conversation is None:
             raise ValueError(
@@ -315,8 +314,8 @@ cannot receive values after starting up.
         ...     value = pc.go()
         Traceback (most recent call last):
           ...
-        ValueError: cannot_go is not a generator function. It cannot be stopped\
- - much less go ahead after stopping.
+        ValueError: cannot_go is not a generator function. It cannot be stoppe\
+d - much less go ahead after stopping.
         """
         if self.conversation is None:
             raise ValueError(
@@ -336,6 +335,7 @@ cannot receive values after starting up.
             self.terminate()
 
         self.join(self.timeout)
+
 
 class Conversation(object):
     """
@@ -377,9 +377,9 @@ class Conversation(object):
     >>> process.join()
 
     **It is mandatory to always get and send a value to each ``yield``
-    statement.** You may note that we send a ``None`` value to the child process
-    before joining the process. If we do not do that, the joined process will
-    be blocked - and the main process as well.
+    statement.** You may note that we send a ``None`` value to the child
+    process before joining the process. If we do not do that, the joined
+    process will be blocked - and the main process as well.
     """
     def __init__(self, function):
         if not inspect.isgeneratorfunction(function):

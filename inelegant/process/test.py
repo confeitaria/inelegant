@@ -25,6 +25,9 @@ import multiprocessing.connection
 
 from inelegant.process import Process
 
+from inelegant.finder import TestFinder
+
+
 class TestProcess(unittest.TestCase):
 
     def test_process_context(self):
@@ -127,7 +130,8 @@ class TestProcess(unittest.TestCase):
         finishes.
         """
         def serve():
-            while True: pass
+            while True:
+                pass
 
         with Process(target=serve, terminate=True) as p:
             pass
@@ -151,8 +155,8 @@ class TestProcess(unittest.TestCase):
 
     def test_send_receive_data_fails_on_non_generator_function(self):
         """
-        If one tries to send to or receive data from a ``Process`` that received
-        a non-generator function, those calls should fail.
+        If one tries to send to or receive data from a ``Process`` that
+        received a non-generator function, those calls should fail.
         """
         def serve():
             time.sleep(0.001)
@@ -166,7 +170,6 @@ class TestProcess(unittest.TestCase):
 
             with self.assertRaises(ValueError):
                 p.go()
-
 
     def test_get_result_after_join(self):
         """
@@ -199,8 +202,6 @@ class TestProcess(unittest.TestCase):
             p = Process(target=serve, reraise=True)
             p.start()
             p.join()
-
-from inelegant.finder import TestFinder
 
 load_tests = TestFinder(__name__, 'inelegant.process.process').load_tests
 

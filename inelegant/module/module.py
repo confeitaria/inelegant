@@ -27,6 +27,7 @@ import os.path
 import shutil
 import tempfile
 
+
 def create_module(name, code='', scope=None, defs=()):
     """
     This function creates a module and adds it to the available ones::
@@ -61,9 +62,9 @@ def create_module(name, code='', scope=None, defs=()):
     Defining classes and functions
     ------------------------------
 
-    Most of the time, one wants to define functions and classes inside a module,
-    but putting them into a block of code can be cumbersome. One can, then,
-    define them externally and pass them as the ``defs`` argument::
+    Most of the time, one wants to define functions and classes inside a
+    module, but putting them into a block of code can be cumbersome. One can,
+    then, define them externally and pass them as the ``defs`` argument::
 
     >>> def function():
     ...     pass
@@ -114,6 +115,7 @@ def create_module(name, code='', scope=None, defs=()):
 
     return module
 
+
 @contextlib.contextmanager
 def installed_module(name, code='', defs=(), scope=None):
     """
@@ -137,6 +139,7 @@ def installed_module(name, code='', defs=(), scope=None):
     """
     yield create_module(name, code=code, defs=defs, scope=scope)
     del sys.modules[name]
+
 
 @contextlib.contextmanager
 def available_module(name, code='', extension='.py'):
@@ -166,7 +169,7 @@ def available_module(name, code='', extension='.py'):
     not return the module itself::
 
     >>> with installed_module('m') as m:
-    ...     m                                               # doctest: +ELLIPSIS
+    ...     m                                           # doctest: +ELLIPSIS
     <module 'm' ...>
     >>> with available_module('m') as m:
     ...     m is None
@@ -178,19 +181,19 @@ def available_module(name, code='', extension='.py'):
 
     >>> with installed_module('m'):
     ...     import m
-    ...     m                                               # doctest: +ELLIPSIS
+    ...     m                                             # doctest: +ELLIPSIS
     <module 'm' ...>
     >>> with available_module('m'):
     ...     import m
-    ...     m                                               # doctest: +ELLIPSIS
+    ...     m                                             # doctest: +ELLIPSIS
     <module 'm' ...>
 
     The argument ``code``
     =====================
 
-    Another difference between ``installed_module()`` and ``available_module()``
-    is that the latter only accepts the ``code`` argument - there is no
-    ``scope`` or ``defs`` argument.
+    Another difference between ``installed_module()`` and
+    ``available_module()`` is that the latter only accepts the ``code``
+    argument - there is no ``scope`` or ``defs`` argument.
 
     Also, the code is not executed when the module is created, but only when
     it is imported::
@@ -260,6 +263,7 @@ def available_module(name, code='', extension='.py'):
     if name in sys.modules:
         del sys.modules[name]
 
+
 def adopt(module, *entities):
     """
     When a module "adopts" a class or a function, the ``__module__`` attribute
@@ -291,7 +295,8 @@ def adopt(module, *entities):
     'example'
     'example'
 
-    The main reason for adopting classes and functions is to run their doctests.
+    The main reason for adopting classes and functions is to run their
+    doctests.
 
     ::
 
@@ -339,6 +344,7 @@ def adopt(module, *entities):
 
         entity.__module__ = module.__name__
 
+
 def get_adoptable_value(obj):
     """
     Methods by themselves are not adoptable, but their functions are. This
@@ -365,6 +371,7 @@ def get_adoptable_value(obj):
     else:
         return obj
 
+
 def get_adoptable_attrs(obj):
     """
     Get all attributes from the object which can be adopted::
@@ -388,12 +395,12 @@ def get_adoptable_attrs(obj):
     >>> Example.value in adoptable
     False
     """
-    attrs = ( getattr(obj, n) for n in dir(obj) )
+    attrs = (getattr(obj, n) for n in dir(obj))
     return (
-        a
-            for a in attrs
-            if is_adoptable(a) and a.__module__ == obj.__module__
+        a for a in attrs
+        if is_adoptable(a) and a.__module__ == obj.__module__
     )
+
 
 def is_adoptable(obj):
     """
@@ -434,6 +441,7 @@ def is_adoptable(obj):
 
     return all(conditions)
 
+
 def is_module_rewritable(obj):
     """
     Checks whether the ``__module__`` attribute of the object is rewritable::
@@ -450,6 +458,7 @@ def is_module_rewritable(obj):
         return True
     except:
         return False
+
 
 class AdoptException(ValueError):
     """
@@ -555,8 +564,8 @@ def get_caller_module(index=1):
     The default index
     -----------------
 
-    The index, however, is optional: ``get_caller_module()`` by default uses the
-    index 1.
+    The index, however, is optional: ``get_caller_module()`` by default uses
+    the index 1.
 
     It may be counterintuitive at first - why not zero? But it is a more useful
     default. The function will rarely be called to discover in which module it
@@ -587,6 +596,7 @@ def get_caller_module(index=1):
     frame = sys._getframe(index+1)
 
     return importlib.import_module(frame.f_globals['__name__'])
+
 
 def dedent(code):
     """

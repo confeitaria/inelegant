@@ -29,16 +29,22 @@ import errno
 from inelegant.net import Server, wait_server_up, wait_server_down, get_socket
 from inelegant.process import Process
 
+from inelegant.finder import TestFinder
+
+
 class TestServer(unittest.TestCase):
 
     def test_server(self):
         """
-        ``inelegant.net.Server`` is a ` ``SocketServer.TCPServer`` `__ subclass.
-        
+        ``inelegant.net.Server`` is a ` ``SocketServer.TCPServer`` `__
+        subclass.
+
         __ https://docs.python.org/2/library/socketserver.html
         """
+
         def serve():
-            server = Server(host='localhost', port=9000, message='Server is up')
+            server = Server(
+                host='localhost', port=9000, message='Server is up')
             server.handle_request()
             server.server_close()
 
@@ -50,11 +56,11 @@ class TestServer(unittest.TestCase):
 
                 self.assertEquals('Server is up', msg)
 
-
     def test_with(self):
         """
-        ``inelegant.net.Server`` is also a context manager. If given to an ``with``
-        statement, the server will start at the beginning and stop at the end
+        ``inelegant.net.Server`` is also a context manager. If given to an
+        ``with`` statement, the server will start at the beginning and stop at
+        the end
         of the block.
         """
         with Server(message='Server is up') as server:
@@ -68,6 +74,7 @@ class TestServer(unittest.TestCase):
             with self.assertRaises(socket.error) as a:
                 s.connect(('localhost', 9000))
                 msg = s.recv(len('Server is up'))
+
 
 class TestWaiters(unittest.TestCase):
 
@@ -87,7 +94,7 @@ class TestWaiters(unittest.TestCase):
             thread = threading.Thread(target=server.serve_forever)
             thread.start()
 
-            yield # Should wait until the assert is done.
+            yield  # Should wait until the assert is done.
             server.shutdown()
             thread.join()
 
@@ -95,7 +102,7 @@ class TestWaiters(unittest.TestCase):
             wait_server_up('localhost', 9000)
             self.assertTrue(time.time() - start > delay)
 
-            pc.go() # Once the assert is done, proceed.
+            pc.go()  # Once the assert is done, proceed.
 
     def test_wait_server_up_does_not_acquire_port(self):
         """
@@ -112,7 +119,7 @@ class TestWaiters(unittest.TestCase):
             thread = threading.Thread(target=server.serve_forever)
             thread.start()
 
-            yield # Wait until asserts are checkd.
+            yield  # Wait until asserts are checkd.
             server.shutdown()
             thread.join()
 
@@ -125,7 +132,7 @@ class TestWaiters(unittest.TestCase):
 
                 self.assertEquals('Server is up', msg)
 
-            pc.go() # Once the asserts were tested, we can shut the server down.
+            pc.go()  # Once asserts are tested, we can shut the server down.
 
     def test_wait_server_down(self):
         """
@@ -138,7 +145,7 @@ class TestWaiters(unittest.TestCase):
 
             thread = threading.Thread(target=server.serve_forever)
             thread.start()
-            yield # Wait until server is up.
+            yield  # Wait until server is up.
 
             time.sleep(delay)
             server.shutdown()
@@ -148,7 +155,7 @@ class TestWaiters(unittest.TestCase):
             wait_server_up('localhost', 9000)
             start = time.time()
 
-            pc.go() # Once server is up, we can proceed with the test.
+            pc.go()  # Once server is up, we can proceed with the test.
 
             wait_server_down('localhost', 9000)
 
@@ -225,8 +232,8 @@ class TestWaiters(unittest.TestCase):
 
     def test_wait_server_up_timeout_unmet(self):
         """
-        ``wait_server_up()`` should not wait for the full timeout if the port is
-        listening earliner.
+        ``wait_server_up()`` should not wait for the full timeout if the port
+        is listening earliner.
         """
         timeout = 1
         with Server():
@@ -236,7 +243,6 @@ class TestWaiters(unittest.TestCase):
 
         self.assertTrue(now - start < timeout)
 
-from inelegant.finder import TestFinder
 
 load_tests = TestFinder(__name__, 'inelegant.net.net').load_tests
 

@@ -26,14 +26,15 @@ import os
 
 from inelegant.module import get_caller_module
 
+
 class TestFinder(unittest.TestSuite):
     """
-    ``TestFinder`` is a subclass of ``unittest.TestSuite``. It receives modules,
-    modules names and file paths as its arguments. It will look for subclasses
-    of ``unittest.TestCase`` and ``unittest.TestSuite`` from each module it
-    receives. It will also look for doctests in the docstrings of the functions
-    and classes from the module. If a file path is given to it, then it will
-    look for doctests inside it.
+    ``TestFinder`` is a subclass of ``unittest.TestSuite``. It receives
+    modules, modules names and file paths as its arguments. It will look for
+    subclasses of ``unittest.TestCase`` and ``unittest.TestSuite`` from each
+    module it receives. It will also look for doctests in the docstrings of the
+    functions and classes from the module. If a file path is given to it, then
+    it will look for doctests inside it.
 
     Loading test cases
     ------------------
@@ -201,15 +202,15 @@ class TestFinder(unittest.TestSuite):
     >>> with open(path, 'w') as f:
     ...     f.write(content)
 
-    ...one just needs to give its path to the finder to have the doctests loaded
-    as test cases::
+    ...one just needs to give its path to the finder to have the doctests
+    loaded as test cases::
 
     >>> finder = TestFinder(path)
     >>> finder.countTestCases()
     1
 
-    The nicest thing of it all, however, is that one can give all these options,
-    to the finder at once::
+    The nicest thing of it all, however, is that one can give all these
+    options, to the finder at once::
 
     >>> with installed_module('t', defs=[SomeTestCase]),\\
     ...         installed_module('point', defs=[Point]) as p:
@@ -283,6 +284,7 @@ class TestFinder(unittest.TestSuite):
         """
         return self
 
+
 def get_module(testable):
     """
     ``get_module()`` can receive a module or a string. If it receives a module,
@@ -292,8 +294,8 @@ def get_module(testable):
     >>> get_module(inelegant.finder.test) # doctest: +ELLIPSIS
     <module 'inelegant.finder.test' ...>
 
-    If it receives a string, it is supposed to be the name of a module. Then the
-    module is returned::
+    If it receives a string, it is supposed to be the name of a module. Then
+    the module is returned::
 
     ::
 
@@ -313,14 +315,15 @@ def get_module(testable):
 
     return module
 
+
 def get_doctestable(testable):
     """
     Given a "testable" argument, returns something that can be run by
     ``doctest`` - a "doctestable."
 
     Doctests can be found in modules (as docstrings) and in text files. This
-    function can receive, then, a module, a string or a file object, and returns
-    either a module or a path to a file.
+    function can receive, then, a module, a string or a file object, and
+    returns either a module or a path to a file.
 
     Retrieving modules
     ------------------
@@ -371,6 +374,7 @@ def get_doctestable(testable):
 
     return doctestable
 
+
 def add_doctest(suite, doctestable, reference_module, exclude_empty=False):
     """
     Given a doctestable, add a test case to run it into the given suite.
@@ -383,7 +387,8 @@ def add_doctest(suite, doctestable, reference_module, exclude_empty=False):
     If the doctestable is a module, a file object or an absolute path, its
     behavior can be very predictable: it will load the docstrings from the
     module or the content of the file. However, if it is a relative path, then
-    the file path is relative to the given module given as ``reference_module``.
+    the file path is relative to the given module given as
+    ``reference_module``.
     """
     if inspect.ismodule(doctestable):
         finder = doctest.DocTestFinder(exclude_empty=exclude_empty)
@@ -399,6 +404,7 @@ def add_doctest(suite, doctestable, reference_module, exclude_empty=False):
 
     suite.addTest(doctest_suite)
 
+
 def add_module(suite, module, skip=None):
     """
     Add all test cases and test suites from the given module into the given
@@ -406,11 +412,13 @@ def add_module(suite, module, skip=None):
     """
     skip = to_set(skip)
 
-    test_cases = flatten(unittest.defaultTestLoader.loadTestsFromModule(module))
+    loaded_suite = unittest.defaultTestLoader.loadTestsFromModule(module)
+    test_cases = flatten(loaded_suite)
 
     suite.addTests(
         tc for tc in test_cases if tc.__class__ not in skip
     )
+
 
 def to_set(value):
     """
@@ -443,13 +451,14 @@ def to_set(value):
 
     return result
 
+
 def flatten(value, ids=None, depth=None):
     """
     Flattens an iterator::
 
-        >>> a = [1, [[2, 3, (4, 5, xrange(6, 10)), 10], (11, 12)], [13, 14], 15]
+        >>> a = [1, [[2, 3, (4, 5, xrange(6, 10)), 10], (11, 12)], [13], 14]
         >>> list(flatten(a))
-        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
 
     It prevents infinite loops with recursive iterators::
 
