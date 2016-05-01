@@ -106,7 +106,11 @@ def create_module(name, code='', scope=None, defs=()):
     for d in defs:
         module.__dict__[d.__name__] = d
 
-    exec code in module.__dict__
+    try:
+        exec code in module.__dict__
+    except:
+        del sys.modules[name]
+        raise
 
     return module
 
