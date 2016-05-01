@@ -23,6 +23,9 @@ import sys
 import inspect
 import textwrap
 import importlib
+import os.path
+import shutil
+import tempfile
 
 def create_module(name, code='', scope=None, defs=()):
     """
@@ -130,6 +133,24 @@ def installed_module(name, code='', defs=(), scope=None):
     """
     yield create_module(name, code=code, defs=defs, scope=scope)
     del sys.modules[name]
+
+@contextlib.contextmanager
+def available_module(name, code='', extension='.py'):
+    tempdir = tempfile.mkdtemp()
+    sys.path.append(tempdir)
+
+    source_name = name + extension
+    source_path = os.path.join(tempdir, source_name)
+
+    with open(source_path, 'w') as source_file:
+        source_file.write(code)
+
+    yield
+
+    sys.path.remove(tempdir)
+    shutil.rmtree(tempdir)
+    if name in sys.modules:
+        del sys.modules[name]
 
 def adopt(module, *entities):
     """
