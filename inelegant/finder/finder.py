@@ -310,7 +310,11 @@ def get_module(testable):
     elif isinstance(testable, basestring):
         try:
             module = importlib.import_module(testable)
-        except (ImportError, TypeError):
+        except ImportError:
+            if len(get_exc_frames()) > 2:
+                raise
+            module = None
+        except TypeError:
             module = None
 
     return module
