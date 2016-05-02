@@ -23,7 +23,7 @@ import contextlib
 import os
 import os.path
 
-from inelegant.module import installed_module
+from inelegant.module import installed_module, available_module
 
 from inelegant.finder import TestFinder
 
@@ -275,7 +275,6 @@ class TestTestFinder(unittest.TestCase):
         >>> 3+3
         'FAIL'
         """
-
         path_dir = os.path.join(
             os.path.dirname(__file__),
             os.pardir
@@ -453,6 +452,15 @@ class TestTestFinder(unittest.TestCase):
             self.assertEquals(3, result.testsRun)
             self.assertEquals(1, len(result.failures))
             self.assertEquals(1, len(result.errors))
+
+    def test_fail_on_import_error_from_scanned_module(self):
+        """
+        If a scanned module raises ``ImportError``, it should fail the entire
+        search.
+        """
+        with available_module('failed', code='raise ImportError()'):
+            with self.assertRaises(ImportError):
+                TestFinder('failed')
 
 load_tests = TestFinder(__name__, 'inelegant.finder.finder').load_tests
 
