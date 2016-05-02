@@ -21,19 +21,19 @@ from setuptools import setup, find_packages
 
 setup(
     name='inelegant',
-    version="0.0.1",
+    version="0.0.3",
     author='Adam Victor Brandizzi',
     author_email='adam@brandizzi.com.br',
     description='Inelegant, a directory of weird helpers for tests.',
     long_description="""
-    "Inelegant" is a set of not very elegant tools to help testing. So far there
-    are four packages:
+    "Inelegant" is a set of not very elegant tools to help testing. So far
+    there are four packages:
 
-    inelegant.net: the most important tools are the waiter functions:
+    inelegant.net: the most important tools are the waiter functions.
     inelegant.net.wait_server_down() will block until a port in a host is not
-    accepting connections anymore, and inelegant.net.wait_server_up() will block
-    until a port in the host will be ready for receiving data. There is also
-    inelegant.net.Server, that sets up a very dumb SocketServer.TCPServer
+    accepting connections anymore, and inelegant.net.wait_server_up() will
+    block until a port in the host will be ready for receiving data. There is
+    also inelegant.net.Server, that sets up a very dumb SocketServer.TCPServer
     subclass for testing.
 
     inelegant.finder: contains the inelegant.finder.TestFinder class. It is a
@@ -46,7 +46,8 @@ setup(
 
     inelegant.process: home of inelegant.process.Process, a nice
     multiprocessing.Process subclass that makes the process of starting,
-    stopping and communicating with a function in another process easier enough.
+    stopping and communicating with a function in another process easier
+    enough.
 
     For more info, check the project page.
     """,
