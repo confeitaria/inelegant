@@ -316,6 +316,17 @@ def get_module(testable):
     return module
 
 
+def get_exc_frames():
+    traceback = sys.exc_info()[2]
+    frame_list = []
+
+    while traceback:
+        frame_list.append(traceback.tb_frame)
+        traceback = traceback.tb_next
+
+    return frame_list
+
+
 def get_doctestable(testable):
     """
     Given a "testable" argument, returns something that can be run by
