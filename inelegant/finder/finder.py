@@ -321,6 +321,27 @@ def get_module(testable):
 
 
 def get_exc_frames():
+    """
+    Return the list of frames that were executed from the raised exception
+    until the current function::
+
+    >>> try:
+    ...     raise Exception()
+    ... except:
+    ...     get_exc_frames()  # doctest: +ELLIPSIS
+    [<frame object at ...>]
+
+    So, if the exception was raised from a function, its frame will be present
+    in the list::
+
+    >>> def raise_exception():
+    ...    raise Exception()
+    >>> try:
+    ...     raise_exception()
+    ... except:
+    ...     get_exc_frames()  # doctest: +ELLIPSIS
+    [<frame object at ...>, <frame object at ...>]
+    """
     traceback = sys.exc_info()[2]
     frame_list = []
 
