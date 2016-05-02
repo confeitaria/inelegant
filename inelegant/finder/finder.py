@@ -433,7 +433,8 @@ def add_doctest(suite, doctestable, reference_module, exclude_empty=False):
         if os.path.isabs(doctestable):
             path = doctestable
         else:
-            module_dir = os.path.dirname(reference_module.__file__)
+            current_path = getattr(reference_module, '__file__', '.')
+            module_dir = os.path.dirname(current_path)
             path = os.path.join(module_dir, doctestable)
 
         doctest_suite = doctest.DocFileSuite(path, module_relative=False)
