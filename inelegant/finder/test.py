@@ -26,7 +26,6 @@ import os.path
 from inelegant.module import installed_module, available_module
 
 from inelegant.finder import TestFinder
-from inelegant.finder.finder import add_doctest
 
 
 class TestTestFinder(unittest.TestCase):
@@ -462,34 +461,6 @@ class TestTestFinder(unittest.TestCase):
         with available_module('failed', code='raise ImportError()'):
             with self.assertRaises(ImportError):
                 TestFinder('failed')
-
-    def test_no_reference_module_path_uses_current_path(self):
-        """
-        If the reference module given to ``add_doctest()`` has no ``__file__``
-        attribute, use the current path to look for files.
-        """
-        content = """
-        >>> 2+2
-        4
-        >>> 3+3
-        6
-        """
-        try:
-            with open('./example', 'w') as f:
-                f.write(content)
-        except IOError:
-            return unittest.skip('Cannot write on {0}'.format(file_path))
-
-        suite = unittest.TestSuite()
-        reference_module = None
-        add_doctest(suite, 'example', reference_module)
-
-        result = unittest.TestResult()
-        suite.run(result)
-
-        self.assertEquals(1, result.testsRun)
-        self.assertEquals(0, len(result.failures))
-        self.assertEquals(0, len(result.errors))
 
 load_tests = TestFinder(__name__, 'inelegant.finder.finder').load_tests
 

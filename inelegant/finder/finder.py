@@ -412,19 +412,89 @@ def get_doctestable(testable):
 
 
 def add_doctest(suite, doctestable, reference_module, exclude_empty=False):
-    """
+    r"""
     Given a doctestable, add a test case to run it into the given suite.
 
     But, what is a doctestable?
 
     Well, a doctestable is an object that can contain doctests. It is either a
-    module, a file or a path to a file.
+    module or a path to a file.
 
-    If the doctestable is a module, a file object or an absolute path, its
-    behavior can be very predictable: it will load the docstrings from the
-    module or the content of the file. However, if it is a relative path, then
-    the file path is relative to the given module given as
-    ``reference_module``.
+    Loading modules
+    ===============
+
+    If the doctestable is a module, it will load the docstrings from the module
+    definitions into the test suite::
+
+    >>> class Test(object):
+    ...     '''
+    ...     >>> 2+2
+    ...     4
+    ...     '''
+    >>> suite = unittest.TestSuite()
+    >>> from inelegant.module import installed_module
+    >>> with installed_module('m', defs=[Test]) as m:
+    ...     add_doctest(suite, m, None)
+    ...     suite.countTestCases()
+    1
+
+    Loading absolute paths
+    ======================
+
+    Paths to files are also valid doctestables. The behavior, however, depends
+    whether the path is absolute or relative. If the doctestable is an absolute
+    path...
+
+    ::
+
+    >>> import tempfile
+    >>> _, docfile = tempfile.mkstemp()
+    >>> os.path.isabs(docfile)
+    True
+    >>> with open(docfile, 'w') as f:
+    ...     f.write('>>> 2+2\n4')
+
+    ...then it will read the content as doctest and add a test running it into
+    the suite::
+
+    >>> suite = unittest.TestSuite()
+    >>> add_doctest(suite, docfile, None)
+    >>> suite.countTestCases()
+    1
+
+    Loading relative paths
+    ======================
+
+    If it is a relative path, then it should be relative to the current path
+    by default::
+
+    >>> curdir = os.getcwd()
+    >>> path = os.path.dirname(docfile)
+    >>> os.chdir(path)
+
+    >>> suite = unittest.TestSuite()
+    >>> add_doctest(suite, docfile, None)
+    >>> suite.countTestCases()
+    1
+
+    >>> os.chdir(curdir)
+    >>> os.remove(docfile)
+
+    It may be useful for quick tests (for example, from the console) but is
+    not that practical for doctests shipped with code. In these cases, we can
+    use the ``reference_module`` argument. The doctest file will the be
+    searched relative to the module given as argument::
+
+    >>> module_dir = os.path.dirname(__file__)
+    >>> with open(os.path.join(module_dir, 'testfile'), 'w') as f:
+    ...     f.write('>>> 2+2\n4')
+
+    >>> suite = unittest.TestSuite()
+    >>> add_doctest(suite, 'testfile', reference_module=sys.modules[__name__])
+    >>> suite.countTestCases()
+    1
+
+    >>> os.remove(os.path.join(module_dir, 'testfile'))
     """
     if inspect.ismodule(doctestable):
         finder = doctest.DocTestFinder(exclude_empty=exclude_empty)
