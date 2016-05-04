@@ -237,7 +237,9 @@ class TestFinder(unittest.TestSuite):
             if module is not None:
                 add_module(self, module, skip=skip)
             if doctestable is not None:
-                add_doctest(self, doctestable, reference_module=caller_module)
+                module_path = getattr(caller_module, '__file__', '.')
+                module_dir = os.path.dirname(module_path)
+                add_doctest(self, doctestable, working_dir=module_dir)
 
     def load_tests(self, loader, tests, pattern):
         """
@@ -411,7 +413,7 @@ def get_doctestable(testable):
     return doctestable
 
 
-def add_doctest(suite, doctestable, reference_module, exclude_empty=False):
+def add_doctest(suite, doctestable, working_dir=None, exclude_empty=False):
     r"""
     Given a doctestable, add a test case to run it into the given suite.
 
@@ -477,24 +479,21 @@ def add_doctest(suite, doctestable, reference_module, exclude_empty=False):
     >>> suite.countTestCases()
     1
 
+    This behavior is useful for quick tests (for example, from the console).
+    Sometimes, however, we may want to specify the path to be used as
+    reference. In these cases, we can use the ``working_dir`` argument. The
+    doctest file will the be searched relative to the given working path::
+
     >>> os.chdir(curdir)
-    >>> os.remove(docfile)
-
-    It may be useful for quick tests (for example, from the console) but is
-    not that practical for doctests shipped with code. In these cases, we can
-    use the ``reference_module`` argument. The doctest file will the be
-    searched relative to the module given as argument::
-
-    >>> module_dir = os.path.dirname(__file__)
-    >>> with open(os.path.join(module_dir, 'testfile'), 'w') as f:
-    ...     f.write('>>> 2+2\n4')
-
     >>> suite = unittest.TestSuite()
-    >>> add_doctest(suite, 'testfile', reference_module=sys.modules[__name__])
+    >>> add_doctest(suite, docfile, working_dir=path)
     >>> suite.countTestCases()
     1
 
-    >>> os.remove(os.path.join(module_dir, 'testfile'))
+    This is specially useful to give the path of the current module to be used.
+    This way, we can ship documentation with the code itself.
+
+    >>> os.remove(docfile)
     """
     if inspect.ismodule(doctestable):
         finder = doctest.DocTestFinder(exclude_empty=exclude_empty)
@@ -503,9 +502,7 @@ def add_doctest(suite, doctestable, reference_module, exclude_empty=False):
         if os.path.isabs(doctestable):
             path = doctestable
         else:
-            current_path = getattr(reference_module, '__file__', '.')
-            module_dir = os.path.dirname(current_path)
-            path = os.path.join(module_dir, doctestable)
+            path = os.path.join(working_dir, doctestable)
 
         doctest_suite = doctest.DocFileSuite(path, module_relative=False)
 
