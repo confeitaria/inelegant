@@ -436,7 +436,7 @@ def add_doctest(suite, doctestable, working_dir=None, exclude_empty=False):
     >>> suite = unittest.TestSuite()
     >>> from inelegant.module import installed_module
     >>> with installed_module('m', defs=[Test]) as m:
-    ...     add_doctest(suite, m, None)
+    ...     add_doctest(suite, m)
     ...     suite.countTestCases()
     1
 
@@ -460,7 +460,7 @@ def add_doctest(suite, doctestable, working_dir=None, exclude_empty=False):
     the suite::
 
     >>> suite = unittest.TestSuite()
-    >>> add_doctest(suite, docfile, None)
+    >>> add_doctest(suite, docfile)
     >>> suite.countTestCases()
     1
 
@@ -475,7 +475,7 @@ def add_doctest(suite, doctestable, working_dir=None, exclude_empty=False):
     >>> os.chdir(path)
 
     >>> suite = unittest.TestSuite()
-    >>> add_doctest(suite, docfile, None)
+    >>> add_doctest(suite, docfile)
     >>> suite.countTestCases()
     1
 
