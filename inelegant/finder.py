@@ -513,6 +513,38 @@ def add_module(suite, module, skip=None):
     """
     Add all test cases and test suites from the given module into the given
     suite.
+
+    Consider the test cases below...
+
+    ::
+
+    >>> class TestCase1(unittest.TestCase):
+    ...     def test1(self):
+    ...         self.assertEquals(1, 1)
+    >>> class TestCase2(unittest.TestCase):
+    ...     def testFail(self):
+    ...         self.assertEquals(1, 0)
+
+    If they are in a module, and we call ``add_module()`` with this module and
+    a suite, the tests will be found in the suite::
+
+    >>> from inelegant.module import installed_module
+    >>> with installed_module('t', defs=[TestCase1, TestCase2]) as t:
+    ...     suite = unittest.TestSuite()
+    ...     add_module(suite, t)
+    ...     suite.countTestCases()
+    2
+
+    The function also accepts an argument, ``skip``. It should be either a test
+    case class or an iterator yielding test case classes. If any of the classes
+    is found in the module, it will not be added to the suite::
+
+    >>> from inelegant.module import installed_module
+    >>> with installed_module('t', defs=[TestCase1, TestCase2]) as t:
+    ...     suite = unittest.TestSuite()
+    ...     add_module(suite, t, skip=TestCase2)
+    ...     suite.countTestCases()
+    1
     """
     skip = to_set(skip)
 
