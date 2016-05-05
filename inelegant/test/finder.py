@@ -462,7 +462,7 @@ class TestTestFinder(unittest.TestCase):
             with self.assertRaises(ImportError):
                 TestFinder('failed')
 
-load_tests = TestFinder(__name__, 'inelegant.finder.finder').load_tests
+load_tests = TestFinder(__name__, 'inelegant.finder').load_tests
 
 if __name__ == "__main__":
     unittest.main()

@@ -309,7 +309,7 @@ class TestModule(unittest.TestCase):
         with self.assertRaises(ImportError):
             import m
 
-load_tests = TestFinder(__name__, 'inelegant.module.module').load_tests
+load_tests = TestFinder(__name__, 'inelegant.module').load_tests
 
 if __name__ == "__main__":
     unittest.main()

@@ -203,7 +203,7 @@ class TestProcess(unittest.TestCase):
             p.start()
             p.join()
 
-load_tests = TestFinder(__name__, 'inelegant.process.process').load_tests
+load_tests = TestFinder(__name__, 'inelegant.process').load_tests
 
 if __name__ == "__main__":
     unittest.main()

@@ -244,7 +244,7 @@ class TestWaiters(unittest.TestCase):
         self.assertTrue(now - start < timeout)
 
 
-load_tests = TestFinder(__name__, 'inelegant.net.net').load_tests
+load_tests = TestFinder(__name__, 'inelegant.net').load_tests
 
 if __name__ == "__main__":
     unittest.main()

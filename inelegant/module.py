@@ -355,7 +355,7 @@ def get_adoptable_value(obj):
     ...     def m(self):
     ...         pass
     >>> get_adoptable_value(Class)
-    <class 'inelegant.module.module.Class'>
+    <class 'inelegant.module.Class'>
     >>> def f():
     ...     pass
     >>> get_adoptable_value(f) # doctest: +ELLIPSIS
