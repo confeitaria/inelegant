@@ -57,5 +57,6 @@ setup(
 
     packages=find_packages(),
 
-    test_suite='inelegant.test'
+    test_suite='inelegant.test',
+    test_loader='unittest:TestLoader'
 )

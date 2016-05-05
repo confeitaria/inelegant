@@ -16,31 +16,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with Inelegant.  If not, see <http://www.gnu.org/licenses/>.
-
 import unittest
-import os
-import os.path
 
-import inelegant.finder.test
-import inelegant.module.test
-import inelegant.net.test
-import inelegant.process.test
-
-from inelegant.finder import TestFinder
-
-readme_path = os.path.join(
-    os.path.dirname(__file__),
-    os.pardir,
-    'readme.rst'
-)
-
-load_tests = TestFinder(
-    readme_path,
-    inelegant.finder.test,
-    inelegant.module.test,
-    inelegant.net.test,
-    inelegant.process.test
-).load_tests
+from __init__ import load_tests
 
 if __name__ == "__main__":
     unittest.main()
+    del load_tests

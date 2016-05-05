@@ -292,17 +292,17 @@ def get_module(testable):
     ``get_module()`` can receive a module or a string. If it receives a module,
     the module is returned::
 
-    >>> import inelegant.finder.test
-    >>> get_module(inelegant.finder.test) # doctest: +ELLIPSIS
-    <module 'inelegant.finder.test' ...>
+    >>> import inelegant.test.finder
+    >>> get_module(inelegant.test.finder) # doctest: +ELLIPSIS
+    <module 'inelegant.test.finder' ...>
 
     If it receives a string, it is supposed to be the name of a module. Then
     the module is returned::
 
     ::
 
-    >>> get_module('inelegant.net.test') # doctest: +ELLIPSIS
-    <module 'inelegant.net.test' ...>
+    >>> get_module('inelegant.test.net') # doctest: +ELLIPSIS
+    <module 'inelegant.test.net' ...>
     """
 
     module = None
