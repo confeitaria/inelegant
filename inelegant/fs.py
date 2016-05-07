@@ -22,6 +22,35 @@ import contextlib
 
 @contextlib.contextmanager
 def cd(path):
+    """
+    ``inelegant.fs.cd()`` is a context manager to change directories.
+
+    In tests, it is somewhat common to have to change directories. It may be a
+    cumbersome process, though, because in general one has to go back to the
+    previous directory even code fails. With cd, it becomes trivial::
+
+    >>> import tempfile
+    >>> tempdir = tempfile.mkdtemp()
+    >>> curdir = os.getcwd()
+    >>> with cd(tempdir):
+    ...     os.getcwd() == curdir
+    ...     os.getcwd() == tempdir
+    False
+    True
+    >>> os.getcwd() == curdir
+    True
+
+    >>> os.rmdir(tempdir)
+
+    It yields the path to which it moved (which is very practical if one wants
+    to give an expression to ``cd()``::
+
+    >>> with cd(tempfile.mkdtemp()) as path:
+    ...     os.getcwd() == path
+    True
+
+    >>> os.rmdir(path)
+    """
     curdir = os.getcwd()
     os.chdir(path)
 
