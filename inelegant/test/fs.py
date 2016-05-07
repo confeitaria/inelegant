@@ -18,24 +18,35 @@
 # along with Inelegant.  If not, see <http://www.gnu.org/licenses/>.
 
 import unittest
+import tempfile
 import os
-import os.path
 
-import inelegant
+from inelegant.fs import cd
 
 from inelegant.finder import TestFinder
 
-readme_path = os.path.join(
-    os.path.abspath(os.path.dirname(inelegant.__file__)),
-    os.pardir,
-    'readme.rst'
-)
 
-load_tests = TestFinder(
-    readme_path,
-    'inelegant.test.finder',
-    'inelegant.test.fs',
-    'inelegant.test.module',
-    'inelegant.test.net',
-    'inelegant.test.process'
-).load_tests
+class TestCd(unittest.TestCase):
+
+    def test_cd_goes_to_dir_and_returns(self):
+        """
+        During the context of ``inelegant.fs.cd()``, it should go to another
+        directory and then return to the current one.
+        """
+        prevdir = os.getcwd()
+        tempdir = tempfile.mkdtemp()
+
+        with cd(tempdir) as p:
+            self.assertEquals(tempdir, os.getcwd())
+            self.assertNotEquals(prevdir, tempdir)
+
+            self.assertEquals(p, tempdir)
+
+        self.assertEquals(prevdir, os.getcwd())
+
+        os.rmdir(tempdir)
+
+load_tests = TestFinder(__name__, 'inelegant.fs').load_tests
+
+if __name__ == "__main__":
+    unittest.main()
