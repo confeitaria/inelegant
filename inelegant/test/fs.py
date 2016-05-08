@@ -90,7 +90,6 @@ class TestTemporaryFile(unittest.TestCase):
         self.assertFalse(os.path.exists(p))
         self.assertFalse(os.path.isfile(p))
 
-
     def test_tempfile_fails_if_exists(self):
         """
         ``inelegant.fs.temporary_file()`` should fail if given a path to an

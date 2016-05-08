@@ -62,6 +62,73 @@ def cd(path):
 
 @contextlib.contextmanager
 def temporary_file(path=None, content=None):
+    """
+    ``inelegant.fs.temporary_file()`` is a context manager to operate on
+    temporary files.
+
+    Introduction
+    ============
+
+    In tests it is quite common to have to create a temporary file. However,
+    the process for doing so is not very straightfoward because one should
+    ensure the file is removed even if operations on it fail.
+
+    With ``temporary_file()``, we can do it very easily. We open a context
+    and use it as its manager. The yielded value will be the path to the
+    temporary file.
+
+    >>> with temporary_file() as p:
+    ...     with open(p, 'w') as f:
+    ...         f.write('test')
+    ...     with open(p, 'r') as f:
+    ...         f.read()
+    'test'
+
+    Once the context is finished, the file is removed::
+
+    >>> open(p, 'r')  # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+      ...
+    IOError: ...
+
+    Giving a path
+    =============
+
+    One can also give the path to the file to be created, if needed::
+
+    >>> tempdir = tempfile.gettempdir()
+    >>> with temporary_file(path=os.path.join(tempdir, 'test')) as p:
+    ...     os.path.basename(p)
+    ...     os.path.dirname(p) == tempdir
+    ...     os.path.exists(p)
+    'test'
+    True
+    True
+
+    Pay attention, however: trying to create an already existing file will
+    result in error, regardless of the permissions of the file::
+
+    >>> with cd(tempdir):
+    ...     with temporary_file(path='test') as p:
+    ...         with temporary_file(path='test'):
+    ...             pass  # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+      ...
+    IOError: File "test" already exists.
+
+    Inserting content
+    =================
+
+    Most of the time, we want to insert some content into the file, naturally.
+    We do not need to open the file manually, however: the funtion has an
+    argument, ``content``, that can receive the content of the file as a
+    string::
+
+    >>> with temporary_file(content='example') as p:
+    ...     with open(p, 'r') as f:
+    ...         f.read()
+    'example'
+    """
     if path is None:
         _, path = tempfile.mkstemp()
     else:
@@ -73,6 +140,7 @@ def temporary_file(path=None, content=None):
         with open(path, 'w') as f:
             f.write(content)
 
-    yield path
-
-    os.remove(path)
+    try:
+        yield path
+    finally:
+        os.remove(path)
