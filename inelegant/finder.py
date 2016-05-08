@@ -191,34 +191,28 @@ class TestFinder(unittest.TestSuite):
     -------------
 
     Doctests can be added to arbitrary text files as well, and ``TestFinder``
-    can also load them. Given a file as the one below::
+    can also load them. Given the example below one just needs to give its path
+    to the finder to have the doctests loaded as test cases::
 
-    >>> import tempfile
+    >>> from inelegant.fs import temporary_file as tempfile
     >>> content = '''
     ...     >>> 3+3
     ...     6
     ... '''
-    >>> _, path = tempfile.mkstemp()
-    >>> with open(path, 'w') as f:
-    ...     f.write(content)
-
-    ...one just needs to give its path to the finder to have the doctests
-    loaded as test cases::
-
-    >>> finder = TestFinder(path)
-    >>> finder.countTestCases()
+    >>> with tempfile(content=content) as path:
+    ...     finder = TestFinder(path)
+    ...     finder.countTestCases()
     1
 
     The nicest thing of it all, however, is that one can give all these
     options, to the finder at once::
 
-    >>> with installed_module('t', defs=[SomeTestCase]),\\
-    ...         installed_module('point', defs=[Point]) as p:
-    ...     finder = TestFinder('t', p, path)
-    ...     finder.countTestCases()
+    >>> with tempfile(content=content) as path:
+    ...     with installed_module('t', defs=[SomeTestCase]),\\
+    ...             installed_module('point', defs=[Point]) as p:
+    ...         finder = TestFinder('t', p, path)
+    ...         finder.countTestCases()
     6
-    >>> import os
-    >>> os.remove(path)
     """
     def __init__(self, *testables, **kwargs):
         unittest.TestSuite.__init__(self)
@@ -386,12 +380,12 @@ def get_doctestable(testable):
     If ``get_doctestable()`` receives a file object, then it will return the
     path to the file::
 
-    >>> import os, os.path,  tempfile
-    >>> _, path = tempfile.mkstemp()
-    >>> doctestable = get_doctestable(open(path))
-    >>> os.path.samefile(path, doctestable)
+    >>> from inelegant.fs import temporary_file as tempfile
+    >>> import os, os.path
+    >>> with tempfile() as path:
+    ...     doctestable = get_doctestable(open(path))
+    ...     os.path.samefile(path, doctestable)
     True
-    >>> os.remove(path)
 
     If it receives a string, and the sting is not a module name, then it is
     assumed to be a file path, so it is returned as well::
@@ -445,23 +439,18 @@ def add_doctest(suite, doctestable, working_dir=None, exclude_empty=False):
 
     Paths to files are also valid doctestables. The behavior, however, depends
     whether the path is absolute or relative. If the doctestable is an absolute
-    path...
+    path, then it will read the content as doctest and add a test running it 
+    into the suite::
 
     ::
 
-    >>> import tempfile
-    >>> _, docfile = tempfile.mkstemp()
-    >>> os.path.isabs(docfile)
+    >>> from inelegant.fs import temporary_file as tempfile
+    >>> with tempfile(content='>>> 2+2\n4') as docfile:
+    ...     os.path.isabs(docfile)
+    ...     suite = unittest.TestSuite()
+    ...     add_doctest(suite, docfile)
+    ...     suite.countTestCases()
     True
-    >>> with open(docfile, 'w') as f:
-    ...     f.write('>>> 2+2\n4')
-
-    ...then it will read the content as doctest and add a test running it into
-    the suite::
-
-    >>> suite = unittest.TestSuite()
-    >>> add_doctest(suite, docfile)
-    >>> suite.countTestCases()
     1
 
     Loading relative paths
@@ -470,13 +459,13 @@ def add_doctest(suite, doctestable, working_dir=None, exclude_empty=False):
     If it is a relative path, then it should be relative to the current path
     by default::
 
-    >>> curdir = os.getcwd()
-    >>> path = os.path.dirname(docfile)
-    >>> os.chdir(path)
-
-    >>> suite = unittest.TestSuite()
-    >>> add_doctest(suite, docfile)
-    >>> suite.countTestCases()
+    >>> from inelegant.fs import change_dir as cd
+    >>> tempdir = os.path.dirname(docfile)
+    >>> with cd(tempdir):
+    ...     with tempfile(path='docfile', content='>>> 2+2\n4'):
+    ...         suite = unittest.TestSuite()
+    ...         add_doctest(suite, 'docfile')
+    ...         suite.countTestCases()
     1
 
     This behavior is useful for quick tests (for example, from the console).
@@ -484,17 +473,19 @@ def add_doctest(suite, doctestable, working_dir=None, exclude_empty=False):
     reference. In these cases, we can use the ``working_dir`` argument. The
     doctest file will the be searched relative to the given working path::
 
-    >>> os.chdir(curdir)
-    >>> suite = unittest.TestSuite()
-    >>> add_doctest(suite, docfile, working_dir=path)
-    >>> suite.countTestCases()
+    >>> path = os.path.join(tempdir, 'docfile')
+    >>> with tempfile(path=path, content='>>> 2+2\n4'):
+    ...     suite = unittest.TestSuite()
+    ...     add_doctest(suite, 'docfile', working_dir=tempdir)
+    ...     suite.countTestCases()
     1
 
     This is specially useful to give the path of the current module to be used.
     This way, we can ship documentation with the code itself.
-
-    >>> os.remove(docfile)
     """
+    if working_dir is None:
+        working_dir = os.getcwd()
+
     if inspect.ismodule(doctestable):
         finder = doctest.DocTestFinder(exclude_empty=exclude_empty)
         doctest_suite = doctest.DocTestSuite(doctestable, test_finder=finder)

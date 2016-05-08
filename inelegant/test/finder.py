@@ -24,6 +24,7 @@ import os
 import os.path
 
 from inelegant.module import installed_module, available_module
+from inelegant.fs import temporary_file as tempfile
 
 from inelegant.finder import TestFinder
 
@@ -198,7 +199,6 @@ class TestTestFinder(unittest.TestCase):
         If a file object is given to ``TestFinder``, these files should be
         loaded as doctests.
         """
-        _, path = tempfile.mkstemp()
         content = """
         >>> 2+2
         4
@@ -206,26 +206,24 @@ class TestTestFinder(unittest.TestCase):
         'FAIL'
         """
 
-        with open(path, 'w') as f:
-            f.write(content)
+        with tempfile(content=content) as path:
+            with open(path, 'w') as f:
+                f.write(content)
 
-        with open(path) as f:
-            result = unittest.TestResult()
-            finder = TestFinder(f)
-            finder.run(result)
+            with open(path) as f:
+                result = unittest.TestResult()
+                finder = TestFinder(f)
+                finder.run(result)
 
-            self.assertEquals(1, result.testsRun)
-            self.assertEquals(1, len(result.failures))
-            self.assertEquals(0, len(result.errors))
-
-        os.remove(path)
+                self.assertEquals(1, result.testsRun)
+                self.assertEquals(1, len(result.failures))
+                self.assertEquals(0, len(result.errors))
 
     def test_accept_file_path(self):
         """
         If a path to a file is given to ``TestFinder``, these files should be
         loaded as doctests.
         """
-        _, path = tempfile.mkstemp()
         content = """
         >>> 2+2
         4
@@ -233,35 +231,31 @@ class TestTestFinder(unittest.TestCase):
         'FAIL'
         """
 
-        with open(path, 'w') as f:
-            f.write(content)
+        with tempfile(content=content) as path:
+            with open(path, 'w') as f:
+                f.write(content)
 
-        result = unittest.TestResult()
-        finder = TestFinder(path)
-        finder.run(result)
+            result = unittest.TestResult()
+            finder = TestFinder(path)
+            finder.run(result)
 
-        self.assertEquals(1, result.testsRun)
-        self.assertEquals(1, len(result.failures))
-        self.assertEquals(0, len(result.errors))
-
-        os.remove(path)
+            self.assertEquals(1, result.testsRun)
+            self.assertEquals(1, len(result.failures))
+            self.assertEquals(0, len(result.errors))
 
     def test_empty_file_no_error(self):
         """
         If the given file is empty, it should not result in error when trying
         to load the doctests.
         """
-        _, path = tempfile.mkstemp()
+        with tempfile() as path:
+            result = unittest.TestResult()
+            finder = TestFinder(path)
+            finder.run(result)
 
-        result = unittest.TestResult()
-        finder = TestFinder(path)
-        finder.run(result)
-
-        self.assertEquals(1, result.testsRun)
-        self.assertEquals(0, len(result.failures))
-        self.assertEquals(0, len(result.errors))
-
-        os.remove(path)
+            self.assertEquals(1, result.testsRun)
+            self.assertEquals(0, len(result.failures))
+            self.assertEquals(0, len(result.errors))
 
     def test_file_relative_to_module(self):
         """
@@ -279,25 +273,23 @@ class TestTestFinder(unittest.TestCase):
             os.path.dirname(__file__),
             os.pardir
         )
-        _, file_path = tempfile.mkstemp(dir=path_dir)
 
-        try:
-            with open(file_path, 'w') as f:
-                f.write(content)
-        except IOError:
-            return unittest.skip('Cannot write on {0}'.format(file_path))
+        with tempfile(dir=path_dir) as path:
+            try:
+                with open(path, 'w') as f:
+                    f.write(content)
+            except IOError:
+                return unittest.skip('Cannot write on {0}'.format(path))
 
-        file_name = os.path.basename(file_path)
+            name = os.path.basename(path)
 
-        result = unittest.TestResult()
-        finder = TestFinder(os.path.join(os.pardir, file_name))
-        finder.run(result)
+            result = unittest.TestResult()
+            finder = TestFinder(os.path.join(os.pardir, name))
+            finder.run(result)
 
-        self.assertEquals(1, result.testsRun)
-        self.assertEquals(1, len(result.failures))
-        self.assertEquals(0, len(result.errors))
-
-        os.remove(file_path)
+            self.assertEquals(1, result.testsRun)
+            self.assertEquals(1, len(result.failures))
+            self.assertEquals(0, len(result.errors))
 
     def test_get_test_loader(self):
         """
@@ -306,61 +298,59 @@ class TestTestFinder(unittest.TestCase):
 
         __ https://docs.python.org/2/library/unittest.html#load-tests-protocol
         """
-        _, path = tempfile.mkstemp()
         content = """
         >>> 2+2
         FAIL doctest file
         """
 
-        with open(path, 'w') as f:
-            f.write(content)
+        with tempfile(content=content) as path:
+            with open(path, 'w') as f:
+                f.write(content)
 
-        class Class:
-            """
-            >>> 3+3
-            FAIL docstring
-            """
-            pass
+            class Class:
+                """
+                >>> 3+3
+                FAIL docstring
+                """
+                pass
 
-        class TestCase1(unittest.TestCase):
+            class TestCase1(unittest.TestCase):
 
-            def test_fail1(self):
-                self.fail('TestCase1')
+                def test_fail1(self):
+                    self.fail('TestCase1')
 
-        class TestCase2(unittest.TestCase):
+            class TestCase2(unittest.TestCase):
 
-            def test_fail2(self):
-                self.fail('TestCase1')
+                def test_fail2(self):
+                    self.fail('TestCase1')
 
-        with installed_module('m', defs=[Class]) as m, \
-                installed_module('t1', defs=[TestCase1]) as t1, \
-                installed_module('t2', defs=[TestCase2]) as t2:
-            t2.load_tests = TestFinder(t1, m, path).load_tests
+            with installed_module('m', defs=[Class]) as m, \
+                    installed_module('t1', defs=[TestCase1]) as t1, \
+                    installed_module('t2', defs=[TestCase2]) as t2:
+                t2.load_tests = TestFinder(t1, m, path).load_tests
 
-            loader = unittest.TestLoader()
-            suite = loader.loadTestsFromModule(t2)
-            result = unittest.TestResult()
-            suite.run(result)
+                loader = unittest.TestLoader()
+                suite = loader.loadTestsFromModule(t2)
+                result = unittest.TestResult()
+                suite.run(result)
 
-            test_cases = {t[0] for t in result.failures}
+                test_cases = {t[0] for t in result.failures}
 
-            self.assertEquals(3, result.testsRun)
-            self.assertEquals(3, len(result.failures))
-            self.assertEquals(0, len(result.errors))
+                self.assertEquals(3, result.testsRun)
+                self.assertEquals(3, len(result.failures))
+                self.assertEquals(0, len(result.errors))
 
-            method_names = {tc._testMethodName for tc in test_cases}
+                method_names = {tc._testMethodName for tc in test_cases}
 
-            self.assertIn('test_fail1', method_names)
-            self.assertNotIn('test_fail2', method_names)
+                self.assertIn('test_fail1', method_names)
+                self.assertNotIn('test_fail2', method_names)
 
-            class_names = {tc.__class__.__name__ for tc in test_cases}
+                class_names = {tc.__class__.__name__ for tc in test_cases}
 
-            self.assertIn('TestCase1', class_names)
-            self.assertIn('DocTestCase', class_names)
-            self.assertIn('DocFileCase', class_names)
-            self.assertNotIn('TestCase2', method_names)
-
-        os.remove(path)
+                self.assertIn('TestCase1', class_names)
+                self.assertIn('DocTestCase', class_names)
+                self.assertIn('DocFileCase', class_names)
+                self.assertNotIn('TestCase2', method_names)
 
     def test_skip_test_case(self):
         """
