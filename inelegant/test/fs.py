@@ -21,12 +21,12 @@ import unittest
 import tempfile
 import os
 
-from inelegant.fs import cd, temporary_file
+from inelegant.fs import change_dir as cd, temporary_file
 
 from inelegant.finder import TestFinder
 
 
-class TestCd(unittest.TestCase):
+class TestChangeDir(unittest.TestCase):
 
     def test_cd_goes_to_dir_and_returns(self):
         """
