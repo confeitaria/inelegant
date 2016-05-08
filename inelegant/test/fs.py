@@ -46,6 +46,20 @@ class TestCd(unittest.TestCase):
 
         os.rmdir(tempdir)
 
+    def test_cd_returns_even_after_error(self):
+        """
+        If something happens during the execution of the context, it should
+        not affect the returning to the original directory.
+        """
+        prevdir = os.getcwd()
+        tempdir = tempfile.mkdtemp()
+
+        with self.assertRaises(Exception):
+            with cd(tempdir) as p:
+                raise Exception()
+
+        self.assertEquals(prevdir, os.getcwd())
+
 
 class TestTemporaryFile(unittest.TestCase):
 

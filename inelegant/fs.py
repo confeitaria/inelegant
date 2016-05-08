@@ -55,9 +55,10 @@ def cd(path):
     curdir = os.getcwd()
     os.chdir(path)
 
-    yield path
-
-    os.chdir(curdir)
+    try:
+        yield path
+    finally:
+        os.chdir(curdir)
 
 
 @contextlib.contextmanager
