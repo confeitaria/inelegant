@@ -63,7 +63,7 @@ def change_dir(path):
 
 
 @contextlib.contextmanager
-def temporary_file(path=None, content=None):
+def temporary_file(path=None, content=None, dir=None):
     """
     ``inelegant.fs.temporary_file()`` is a context manager to operate on
     temporary files.
@@ -118,6 +118,18 @@ def temporary_file(path=None, content=None):
       ...
     IOError: File "test" already exists.
 
+    Choosing directory
+    ==================
+
+    If you do not care about the file name but wants it to be created in a
+    specific directory, you can use the ``dir`` argument::
+
+    >>> with temporary_file(dir=tempfile.gettempdir()) as p:
+    ...     os.path.dirname(p) == tempfile.gettempdir()
+    ...     os.path.exists(p)
+    True
+    True
+
     Inserting content
     =================
 
@@ -132,7 +144,7 @@ def temporary_file(path=None, content=None):
     'example'
     """
     if path is None:
-        _, path = tempfile.mkstemp()
+        _, path = tempfile.mkstemp(dir=dir)
     else:
         if os.path.exists(path):
             raise IOError('File "{0}" already exists.'.format(path))
