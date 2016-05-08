@@ -17,6 +17,7 @@
 # along with Inelegant.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import tempfile
 import contextlib
 
 
@@ -57,3 +58,21 @@ def cd(path):
     yield path
 
     os.chdir(curdir)
+
+
+@contextlib.contextmanager
+def temporary_file(path=None, content=None):
+    if path is None:
+        _, path = tempfile.mkstemp()
+    else:
+        if os.path.exists(path):
+            raise IOError('File "{0}" already exists.'.format(path))
+        open(path, 'a').close()
+
+    if content is not None:
+        with open(path, 'w') as f:
+            f.write(content)
+
+    yield path
+
+    os.remove(path)
