@@ -21,7 +21,7 @@ import unittest
 import tempfile
 import os
 
-from inelegant.fs import cd
+from inelegant.fs import cd, temporary_file
 
 from inelegant.finder import TestFinder
 
@@ -45,6 +45,69 @@ class TestCd(unittest.TestCase):
         self.assertEquals(prevdir, os.getcwd())
 
         os.rmdir(tempdir)
+
+
+class TestTemporaryFile(unittest.TestCase):
+
+    def test_tempfile_create_file_yield_path_and_remove(self):
+        """
+        The ``inelegant.fs.temporary_file()`` context manager creates a
+        temporary file, yields its path and, once the context is gone, removes
+        the file.
+        """
+        with temporary_file() as p:
+            self.assertTrue(os.path.exists(p))
+            self.assertTrue(os.path.isfile(p))
+
+        self.assertFalse(os.path.exists(p))
+        self.assertFalse(os.path.isfile(p))
+
+    def test_tempfile_accepts_path(self):
+        """
+        ``inelegant.fs.temporary_file()`` accepts a path to a file.
+        """
+        path = os.path.join(tempfile.gettempdir(), 'myfile')
+
+        with temporary_file(path) as p:
+            self.assertEquals(path, p)
+            self.assertTrue(os.path.exists(path))
+            self.assertTrue(os.path.isfile(path))
+
+        self.assertFalse(os.path.exists(path))
+        self.assertFalse(os.path.isfile(path))
+
+    def test_tempfile_accepts_content(self):
+        """
+        ``inelegant.fs.temporary_file()`` has an argument, ``content``, which
+        can be a string. This string will be written to the file.
+        """
+        path = os.path.join(tempfile.gettempdir(), 'myfile')
+
+        with temporary_file(content='Test') as p:
+            with open(p) as f:
+                self.assertEquals('Test', f.read())
+
+        self.assertFalse(os.path.exists(p))
+        self.assertFalse(os.path.isfile(p))
+
+
+    def test_tempfile_fails_if_exists(self):
+        """
+        ``inelegant.fs.temporary_file()`` should fail if given a path to an
+        existing file
+        """
+        path = os.path.join(tempfile.gettempdir(), 'myfile')
+
+        with temporary_file() as p:
+            with self.assertRaises(IOError):
+                with temporary_file(p):
+                    pass
+            self.assertTrue(os.path.exists(p))
+            self.assertTrue(os.path.isfile(p))
+
+        self.assertFalse(os.path.exists(p))
+        self.assertFalse(os.path.isfile(p))
+
 
 load_tests = TestFinder(__name__, 'inelegant.fs').load_tests
 
