@@ -159,6 +159,49 @@ def temporary_file(path=None, content=None, dir=None):
 
 @contextlib.contextmanager
 def temporary_directory(cd=False):
+    """
+    ``temporary_directory()`` is a context manager to create temporary
+    directories.
+
+    Introduction
+    ============
+
+    In tests it is quite common to have to create a temporary directory.
+    However, the process for doing so is not very straightfoward because one
+    should ensure the directory is removed even if operations on it fail.
+
+    With ``temporary_directory()``, we can do it very easily. We open a context
+    and use it as its manager. The yielded value will be the path to the
+    temporary directory::
+
+    >>> with temporary_directory() as p:
+    ...     os.path.isdir(p)
+    True
+
+    Once the context is done, the directory is gone::
+
+    >>> os.path.isdir(p)
+    False
+
+    Changing the working directory
+    ==============================
+
+    In many cases, we want to change the current directory to the temporary
+    one. In this case, we just need to make the ``cd`` argument true::
+
+    >>> with temporary_directory(cd=True) as p:
+    ...     os.getcwd() == p
+    True
+
+    Again, once the context is closed, we are back to the previous directory::
+
+    >>> curdir = os.getcwd()
+    >>> with temporary_directory(cd=True) as p:
+    ...     os.getcwd() == curdir
+    False
+    >>> os.getcwd() == curdir
+    True
+    """
     origin = os.getcwd()
     path = tempfile.mkdtemp()
 
