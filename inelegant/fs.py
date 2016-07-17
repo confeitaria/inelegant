@@ -33,7 +33,7 @@ def change_dir(path):
     trivial::
 
     >>> curdir = os.getcwd()
-    >>> with temporary_directory() as tempdir:
+    >>> with temp_dir() as tempdir:
     ...     with change_dir(tempdir):
     ...         os.getcwd() == curdir
     ...         os.getcwd() == tempdir
@@ -45,7 +45,7 @@ def change_dir(path):
     It yields the path to which it moved (which is very practical if one wants
     to give an expression to ``change_dir()``::
 
-    >>> with temporary_directory() as tempdir:
+    >>> with temp_dir() as tempdir:
     ...     with change_dir(tempdir) as path:
     ...         os.getcwd() == path
     True
@@ -60,10 +60,10 @@ def change_dir(path):
 
 
 @contextlib.contextmanager
-def temporary_file(path=None, content=None, dir=None):
+def temp_file(path=None, content=None, dir=None):
     """
-    ``inelegant.fs.temporary_file()`` is a context manager to operate on
-    temporary files.
+    ``inelegant.fs.temp_file()`` is a context manager to operate on temporary
+    files.
 
     Introduction
     ============
@@ -72,11 +72,11 @@ def temporary_file(path=None, content=None, dir=None):
     the process for doing so is not very straightfoward because one should
     ensure the file is removed even if operations on it fail.
 
-    With ``temporary_file()``, we can do it very easily. We open a context
-    and use it as its manager. The yielded value will be the path to the
-    temporary file.
+    With ``temp_file()``, we can do it very easily. We open a context and use
+    it as its manager. The yielded value will be the path to the temporary
+    file::
 
-    >>> with temporary_file() as p:
+    >>> with temp_file() as p:
     ...     with open(p, 'w') as f:
     ...         f.write('test')
     ...     with open(p, 'r') as f:
@@ -95,8 +95,8 @@ def temporary_file(path=None, content=None, dir=None):
 
     One can also give the path to the file to be created, if needed::
 
-    >>> with temporary_directory() as tempdir:
-    ...     with temporary_file(path=os.path.join(tempdir, 'test')) as p:
+    >>> with temp_dir() as tempdir:
+    ...     with temp_file(path=os.path.join(tempdir, 'test')) as p:
     ...         os.path.basename(p)
     ...         os.path.dirname(p) == tempdir
     ...         os.path.exists(p)
@@ -107,9 +107,9 @@ def temporary_file(path=None, content=None, dir=None):
     Pay attention, however: trying to create an already existing file will
     result in error, regardless of the permissions of the file::
 
-    >>> with temporary_directory(cd=True) as tempdir:
-    ...     with temporary_file(path='test') as p:
-    ...         with temporary_file(path='test'):
+    >>> with temp_dir(cd=True) as tempdir:
+    ...     with temp_file(path='test') as p:
+    ...         with temp_file(path='test'):
     ...             pass  # doctest: +ELLIPSIS
     Traceback (most recent call last):
       ...
@@ -121,7 +121,7 @@ def temporary_file(path=None, content=None, dir=None):
     If you do not care about the file name but wants it to be created in a
     specific directory, you can use the ``dir`` argument::
 
-    >>> with temporary_file(dir=tempfile.gettempdir()) as p:
+    >>> with temp_file(dir=tempfile.gettempdir()) as p:
     ...     os.path.dirname(p) == tempfile.gettempdir()
     ...     os.path.exists(p)
     True
@@ -135,7 +135,7 @@ def temporary_file(path=None, content=None, dir=None):
     argument, ``content``, that can receive the content of the file as a
     string::
 
-    >>> with temporary_file(content='example') as p:
+    >>> with temp_file(content='example') as p:
     ...     with open(p, 'r') as f:
     ...         f.read()
     'example'
@@ -158,10 +158,9 @@ def temporary_file(path=None, content=None, dir=None):
 
 
 @contextlib.contextmanager
-def temporary_directory(cd=False):
+def temp_dir(cd=False):
     """
-    ``temporary_directory()`` is a context manager to create temporary
-    directories.
+    ``temp_dir()`` is a context manager to create temporary directories.
 
     Introduction
     ============
@@ -170,11 +169,11 @@ def temporary_directory(cd=False):
     However, the process for doing so is not very straightfoward because one
     should ensure the directory is removed even if operations on it fail.
 
-    With ``temporary_directory()``, we can do it very easily. We open a context
-    and use it as its manager. The yielded value will be the path to the
-    temporary directory::
+    With ``temp_dir()``, we can do it very easily. We open a context and use it
+    as its manager. The yielded value will be the path to the temporary
+    directory::
 
-    >>> with temporary_directory() as p:
+    >>> with temp_dir() as p:
     ...     os.path.isdir(p)
     True
 
@@ -189,14 +188,14 @@ def temporary_directory(cd=False):
     In many cases, we want to change the current directory to the temporary
     one. In this case, we just need to make the ``cd`` argument true::
 
-    >>> with temporary_directory(cd=True) as p:
+    >>> with temp_dir(cd=True) as p:
     ...     os.getcwd() == p
     True
 
     Again, once the context is closed, we are back to the previous directory::
 
     >>> curdir = os.getcwd()
-    >>> with temporary_directory(cd=True) as p:
+    >>> with temp_dir(cd=True) as p:
     ...     os.getcwd() == curdir
     False
     >>> os.getcwd() == curdir

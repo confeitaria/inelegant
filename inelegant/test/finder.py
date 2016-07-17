@@ -24,7 +24,7 @@ import os
 import os.path
 
 from inelegant.module import installed_module, available_module
-from inelegant.fs import temporary_file as tempfile
+from inelegant.fs import temp_file as tempfile
 
 from inelegant.finder import TestFinder
 

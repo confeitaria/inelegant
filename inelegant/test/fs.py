@@ -21,7 +21,7 @@ import unittest
 import tempfile
 import os
 
-from inelegant.fs import change_dir as cd, temporary_file, temporary_directory
+from inelegant.fs import change_dir as cd, temp_file, temp_dir
 
 from inelegant.finder import TestFinder
 
@@ -65,11 +65,11 @@ class TestTemporaryFile(unittest.TestCase):
 
     def test_tempfile_create_file_yield_path_and_remove(self):
         """
-        The ``inelegant.fs.temporary_file()`` context manager creates a
+        The ``inelegant.fs.temp_file()`` context manager creates a
         temporary file, yields its path and, once the context is gone, removes
         the file.
         """
-        with temporary_file() as p:
+        with temp_file() as p:
             self.assertTrue(os.path.exists(p))
             self.assertTrue(os.path.isfile(p))
 
@@ -78,11 +78,11 @@ class TestTemporaryFile(unittest.TestCase):
 
     def test_tempfile_accepts_path(self):
         """
-        ``inelegant.fs.temporary_file()`` accepts a path to a file.
+        ``inelegant.fs.temp_file()`` accepts a path to a file.
         """
         path = os.path.join(tempfile.gettempdir(), 'myfile')
 
-        with temporary_file(path) as p:
+        with temp_file(path) as p:
             self.assertEquals(path, p)
             self.assertTrue(os.path.exists(path))
             self.assertTrue(os.path.isfile(path))
@@ -92,10 +92,10 @@ class TestTemporaryFile(unittest.TestCase):
 
     def test_tempfile_accepts_dir(self):
         """
-        ``inelegant.fs.temporary_file()`` can use an arbitrary directory given
+        ``inelegant.fs.temp_file()`` can use an arbitrary directory given
         by the user.
         """
-        with temporary_file(dir=tempfile.gettempdir()) as p:
+        with temp_file(dir=tempfile.gettempdir()) as p:
             self.assertEquals(tempfile.gettempdir(), os.path.dirname(p))
             self.assertTrue(os.path.exists(p))
             self.assertTrue(os.path.isfile(p))
@@ -105,12 +105,12 @@ class TestTemporaryFile(unittest.TestCase):
 
     def test_tempfile_accepts_content(self):
         """
-        ``inelegant.fs.temporary_file()`` has an argument, ``content``, which
+        ``inelegant.fs.temp_file()`` has an argument, ``content``, which
         can be a string. This string will be written to the file.
         """
         path = os.path.join(tempfile.gettempdir(), 'myfile')
 
-        with temporary_file(content='Test') as p:
+        with temp_file(content='Test') as p:
             with open(p) as f:
                 self.assertEquals('Test', f.read())
 
@@ -119,14 +119,14 @@ class TestTemporaryFile(unittest.TestCase):
 
     def test_tempfile_fails_if_exists(self):
         """
-        ``inelegant.fs.temporary_file()`` should fail if given a path to an
+        ``inelegant.fs.temp_file()`` should fail if given a path to an
         existing file
         """
         path = os.path.join(tempfile.gettempdir(), 'myfile')
 
-        with temporary_file() as p:
+        with temp_file() as p:
             with self.assertRaises(IOError):
-                with temporary_file(p):
+                with temp_file(p):
                     pass
             self.assertTrue(os.path.exists(p))
             self.assertTrue(os.path.isfile(p))
@@ -139,11 +139,11 @@ class TestTemporaryDirectory(unittest.TestCase):
 
     def test_tempdir_create_dir_yield_path_and_remove(self):
         """
-        The ``inelegant.fs.temporary_directory()`` context manager creates a
-        temporary directory, yields its path and, once the context is gone,
-        deletes the directory.
+        The ``inelegant.fs.temp_dir()`` context manager creates a temporary
+        directory, yields its path and, once the context is gone, deletes the
+        directory.
         """
-        with temporary_directory() as p:
+        with temp_dir() as p:
             self.assertTrue(os.path.exists(p))
             self.assertTrue(os.path.isdir(p))
 
@@ -151,12 +151,12 @@ class TestTemporaryDirectory(unittest.TestCase):
 
     def test_tempdir_auto_cd(self):
         """
-        ``inelegant.fs.temporary_directory()`` will change the current
-        directory to the new temporary one the argument ``cd`` is true.
+        ``inelegant.fs.temp_dir()`` will change the current directory to the
+        new temporary one the argument ``cd`` is true.
         """
         origin = os.getcwd()
 
-        with temporary_directory(cd=True) as p:
+        with temp_dir(cd=True) as p:
             self.assertNotEquals(origin, os.getcwd())
             self.assertEquals(p, os.getcwd())
 

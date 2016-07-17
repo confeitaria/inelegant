@@ -194,7 +194,7 @@ class TestFinder(unittest.TestSuite):
     can also load them. Given the example below one just needs to give its path
     to the finder to have the doctests loaded as test cases::
 
-    >>> from inelegant.fs import temporary_file as tempfile
+    >>> from inelegant.fs import temp_file as tempfile
     >>> content = '''
     ...     >>> 3+3
     ...     6
@@ -380,7 +380,7 @@ def get_doctestable(testable):
     If ``get_doctestable()`` receives a file object, then it will return the
     path to the file::
 
-    >>> from inelegant.fs import temporary_file as tempfile
+    >>> from inelegant.fs import temp_file as tempfile
     >>> import os, os.path
     >>> with tempfile() as path:
     ...     doctestable = get_doctestable(open(path))
@@ -444,7 +444,7 @@ def add_doctest(suite, doctestable, working_dir=None, exclude_empty=False):
 
     ::
 
-    >>> from inelegant.fs import temporary_file as tempfile
+    >>> from inelegant.fs import temp_file as tempfile
     >>> with tempfile(content='>>> 2+2\n4') as docfile:
     ...     os.path.isabs(docfile)
     ...     suite = unittest.TestSuite()
