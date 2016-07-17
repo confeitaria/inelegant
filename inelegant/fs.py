@@ -162,10 +162,13 @@ def temporary_file(path=None, content=None, dir=None):
 
 
 @contextlib.contextmanager
-def temporary_directory():
+def temporary_directory(cd=False):
+    origin = os.getcwd()
     path = tempfile.mkdtemp()
 
     try:
+        os.chdir(path)
         yield path
     finally:
+        os.chdir(origin)
         shutil.rmtree(path)
