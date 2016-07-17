@@ -32,27 +32,23 @@ def change_dir(path):
     previous directory even code fails. With ``change_dir()``, it becomes
     trivial::
 
-    >>> import tempfile
-    >>> tempdir = tempfile.mkdtemp()
     >>> curdir = os.getcwd()
-    >>> with change_dir(tempdir):
-    ...     os.getcwd() == curdir
-    ...     os.getcwd() == tempdir
+    >>> with temporary_directory() as tempdir:
+    ...     with change_dir(tempdir):
+    ...         os.getcwd() == curdir
+    ...         os.getcwd() == tempdir
     False
     True
     >>> os.getcwd() == curdir
     True
 
-    >>> os.rmdir(tempdir)
-
     It yields the path to which it moved (which is very practical if one wants
     to give an expression to ``change_dir()``::
 
-    >>> with change_dir(tempfile.mkdtemp()) as path:
-    ...     os.getcwd() == path
+    >>> with temporary_directory() as tempdir:
+    ...     with change_dir(tempdir) as path:
+    ...         os.getcwd() == path
     True
-
-    >>> os.rmdir(path)
     """
     curdir = os.getcwd()
     os.chdir(path)
@@ -99,11 +95,11 @@ def temporary_file(path=None, content=None, dir=None):
 
     One can also give the path to the file to be created, if needed::
 
-    >>> tempdir = tempfile.gettempdir()
-    >>> with temporary_file(path=os.path.join(tempdir, 'test')) as p:
-    ...     os.path.basename(p)
-    ...     os.path.dirname(p) == tempdir
-    ...     os.path.exists(p)
+    >>> with temporary_directory() as tempdir:
+    ...     with temporary_file(path=os.path.join(tempdir, 'test')) as p:
+    ...         os.path.basename(p)
+    ...         os.path.dirname(p) == tempdir
+    ...         os.path.exists(p)
     'test'
     True
     True
@@ -111,7 +107,7 @@ def temporary_file(path=None, content=None, dir=None):
     Pay attention, however: trying to create an already existing file will
     result in error, regardless of the permissions of the file::
 
-    >>> with change_dir(tempdir):
+    >>> with temporary_directory(cd=True) as tempdir:
     ...     with temporary_file(path='test') as p:
     ...         with temporary_file(path='test'):
     ...             pass  # doctest: +ELLIPSIS
