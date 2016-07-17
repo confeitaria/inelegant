@@ -27,7 +27,7 @@ setup(
     description='Inelegant, a directory of weird helpers for tests.',
     long_description="""
     "Inelegant" is a set of not very elegant tools to help testing. So far
-    there are four packages:
+    there are five packages:
 
     inelegant.net: the most important tools are the waiter functions.
     inelegant.net.wait_server_down() will block until a port in a host is not
@@ -48,6 +48,12 @@ setup(
     multiprocessing.Process subclass that makes the process of starting,
     stopping and communicating with a function in another process easier
     enough.
+
+    inelegant.fs: tools for file system operations. Most notably, context
+    managers to make such operations reverted. So, now once can "cd" into a
+    directory and be back to the original one, create a temporary file and have
+    it automatically deleted after the context, and the same with temporary
+    directories.
 
     For more info, check the project page.
     """,
