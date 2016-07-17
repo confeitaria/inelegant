@@ -21,7 +21,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='inelegant',
-    version="0.0.3",
+    version="0.0.4",
     author='Adam Victor Brandizzi',
     author_email='adam@brandizzi.com.br',
     description='Inelegant, a directory of weird helpers for tests.',
