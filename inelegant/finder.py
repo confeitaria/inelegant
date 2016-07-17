@@ -439,7 +439,7 @@ def add_doctest(suite, doctestable, working_dir=None, exclude_empty=False):
 
     Paths to files are also valid doctestables. The behavior, however, depends
     whether the path is absolute or relative. If the doctestable is an absolute
-    path, then it will read the content as doctest and add a test running it 
+    path, then it will read the content as doctest and add a test running it
     into the suite::
 
     ::
