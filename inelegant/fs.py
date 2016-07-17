@@ -18,6 +18,7 @@
 
 import os
 import tempfile
+import shutil
 import contextlib
 
 
@@ -158,3 +159,13 @@ def temporary_file(path=None, content=None, dir=None):
         yield path
     finally:
         os.remove(path)
+
+
+@contextlib.contextmanager
+def temporary_directory():
+    path = tempfile.mkdtemp()
+
+    try:
+        yield path
+    finally:
+        shutil.rmtree(path)
