@@ -386,6 +386,61 @@ statement, the module will be available for importing...
       ...
     ImportError: No module named some_module
 
+The ``available_module()`` context manager
+------------------------------------------
+
+Makes a module available to be imported - but does not import it.
+
+``available_module() expects two arguments: the name of the module and its
+code. The name is mandatory, but the code is optional::
+
+    >>> from inelegant.module import available_module
+    >>> with available_module(name='m', code='x = 3'):
+    ...     import m
+    ...     m.x
+    3
+
+Once its context is closed, the module is not available for importing
+anymore::
+
+    >>> import m
+    Traceback (most recent call last):
+      ...
+    ImportError: No module named m
+
+It is similar ``installed_module()`` but its context does not return the module
+itself::
+
+    >>> with installed_module('m') as m:
+    ...     m                                           # doctest: +ELLIPSIS
+    <module 'm' ...>
+    >>> with available_module('m') as m:
+    ...     m is None
+    True
+
+Instead, the user should necessarily import the module.
+
+Also, the code is not executed when the module is created, but only when it is
+imported::
+
+    >>> with available_module(name='m', code="print('During importing.')"):
+    ...     print('Before importing.')
+    ...     import m
+    ...     print('After importing.')
+    Before importing.
+    During importing.
+    After importing.
+    >>> with installed_module(name='m', code="print('During importing.')"):
+    ...     print('Before importing?')
+    ...     import m
+    ...     print('After importing.')
+    During importing.
+    Before importing?
+    After importing.
+
+This behavior is useful when we need a module that raises an exception when
+imported.
+
 The ``get_caller_module()`` function
 ------------------------------------
 
