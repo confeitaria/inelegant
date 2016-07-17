@@ -21,7 +21,7 @@ import unittest
 import tempfile
 import os
 
-from inelegant.fs import change_dir as cd, temporary_file
+from inelegant.fs import change_dir as cd, temporary_file, temporary_directory
 
 from inelegant.finder import TestFinder
 
@@ -134,6 +134,20 @@ class TestTemporaryFile(unittest.TestCase):
         self.assertFalse(os.path.exists(p))
         self.assertFalse(os.path.isfile(p))
 
+
+class TestTemporaryDirectory(unittest.TestCase):
+
+    def test_tempdir_create_dir_yield_path_and_remove(self):
+        """
+        The ``inelegant.fs.temporary_directory()`` context manager creates a
+        temporary directory, yields its path and, once the context is gone,
+        deletes the directory.
+        """
+        with temporary_directory() as p:
+            self.assertTrue(os.path.exists(p))
+            self.assertTrue(os.path.isdir(p))
+
+        self.assertFalse(os.path.exists(p))
 
 load_tests = TestFinder(__name__, 'inelegant.fs').load_tests
 
