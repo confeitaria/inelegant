@@ -19,8 +19,8 @@ Right now there are five modules in this project.
 "Inelegant Process" - running and communicating with a simple processes
 =======================================================================
 
-This module contains the class ``inprocess.Process``. This class extends
-``multiprocessing.Process`` so one can easily recover information sent
+This module contains the class ``inelegant.process.Process``. This class
+extends ``multiprocessing.Process`` so one can easily recover information sent
 by the target.
 
 Returned values and exceptions
@@ -28,10 +28,10 @@ Returned values and exceptions
 
 For example, one can get the returned value::
 
-    >>> import inelegant.process as inprocess
+    >>> from inelegant.process import Process
     >>> def invert(n):
     ...     return 1.0/n
-    >>> process = inprocess.Process(target=invert, args=(2.0,))
+    >>> process = Process(target=invert, args=(2.0,))
     >>> process.start()
     >>> process.join() # The value is only available after the process end.
     >>> process.result
@@ -39,7 +39,7 @@ For example, one can get the returned value::
 
 If the process is finished by an exception, it can also be retrieved::
 
-    >>> process = inprocess.Process(target=invert, args=(0.0,))
+    >>> process = Process(target=invert, args=(0.0,))
     >>> process.start()
     >>> process.join()
     >>> process.exception
@@ -58,7 +58,7 @@ if they are useless::
     ...     a = yield
     ...     b = yield
     ...     yield a+b
-    >>> process = inprocess.Process(target=add)
+    >>> process = Process(target=add)
     >>> process.start()
     >>> process.send(1)
     >>> process.send(2)
@@ -76,12 +76,12 @@ The last ``send()`` call can be replaced with the ``go()`` method.
 As a context manager
 --------------------
 
-A very nice feature of ``inprocess.Process`` is that it is a context
+A very nice feature of ``inelegant.process.Process`` is that it is a context
 manager. If one is given to a ``with`` statement, it is guaranteed that it will
 be finished after the block ends. This is useful because it is too easy to
 forget to join a process. If it happens, we have problems::
 
-    >>> process = inprocess.Process(target=invert, args=(4,))
+    >>> process = Process(target=invert, args=(4,))
     >>> process.start()
     >>> process.result + 3 # Oops, the value is not available yet!
     Traceback (most recent call last):
@@ -93,12 +93,12 @@ Using the ``with`` statement it is done automatically and without way less
 clutter. The process starts itself before proceeding and is joined once the
 block ends. The parent process will wait for its child's end after the block::
 
-    >>> with inprocess.Process(target=invert, args=(4,)) as process:
+    >>> with Process(target=invert, args=(4,)) as process:
     ...     pass
     >>> process.result
     0.25
 
-    >>> process = inprocess.Process(target=invert, args=(0.0,))
+    >>> process = Process(target=invert, args=(0.0,))
     >>> process.start()
     >>> process.join()
 
@@ -112,7 +112,7 @@ just kill the process once the ``with`` block is done. Then, just set the
 
     >>> def forever():
     ...     while True: pass
-    >>> with inprocess.Process(target=forever, terminate=True) as process:
+    >>> with Process(target=forever, terminate=True) as process:
     ...     pass
     >>> process.is_alive()
     False
@@ -132,7 +132,7 @@ most of the time. Fortunately, it can be raised again. Just set the
 ``reraise`` argument of the constructor and any exception will be re-raised once
 the subprocess is joined::
 
-    >>> process = inprocess.Process(target=invert, args=(0.0,), reraise=True)
+    >>> process = Process(target=invert, args=(0.0,), reraise=True)
     >>> process.start()
     >>> process.join()
     Traceback (most recent call last):
@@ -142,7 +142,7 @@ the subprocess is joined::
 Since the process is joined after the block if given to a ``with`` statement,
 children exceptions would also be raised - but only after the block finishes::
 
-    >>> with inprocess.Process(target=invert, args=(0.0,), reraise=True):
+    >>> with Process(target=invert, args=(0.0,), reraise=True):
     ...     executed = True
     Traceback (most recent call last):
       ...
@@ -159,13 +159,13 @@ network communication code.
 The ``Server`` class
 --------------------
 
-For example, it has the ``innet.Server``, a subclass of
+For example, it has the ``inelegant.Server``, a subclass of
 ``SocketServer.TCPServer`` that only serves a string in a specific port::
 
-    >>> import inelegant.net as innet
-    >>> server = innet.Server('localhost', 9000, message='my message')
+    >>> from inelegant.net import Server
+    >>> server = Server('localhost', 9000, message='my message')
     >>> import contextlib, socket, time
-    >>> with inprocess.Process(target=server.handle_request):
+    >>> with Process(target=server.handle_request):
     ...     time.sleep(0.1)
     ...     with contextlib.closing(socket.socket()) as s:
     ...         s.connect(('localhost', 9000))
@@ -176,7 +176,7 @@ However, it is probably best used as a context manager. If given to a ``with``
 statement, the server will be started alone in the background and finished once
 the block is exited::
 
-    >>> with innet.Server('localhost', 9000, message='my message'):
+    >>> with Server('localhost', 9000, message='my message'):
     ...     time.sleep(0.1)
     ...     with contextlib.closing(socket.socket()) as s:
     ...         s.connect(('localhost', 9000))
@@ -206,7 +206,7 @@ two of them:
     loading etc. For example, consider the example we saw below. If we remove
     the waiting time from the second line, it will probably fail::
 
-        >>> with innet.Server('localhost', 9000, message='my message'):
+        >>> with Server('localhost', 9000, message='my message'):
         ...     time.sleep(0.01)
         ...     with contextlib.closing(socket.socket()) as s:
         ...         s.connect(('localhost', 9000))
@@ -221,39 +221,40 @@ two of them:
     With ``wait_server_up()``, the process waits only for the necessary amount
     of time - and no more::
 
+        >>> from inelegant.net import wait_server_up
         >>> start = time.time()
-        >>> with innet.Server('localhost', 9000, message='my message'):
-        ...     innet.wait_server_up('localhost', 9000)
+        >>> with Server('localhost', 9000, message='my message'):
+        ...     wait_server_up('localhost', 9000)
         ...     time.time() - start < 0.01
         True
 
     It has a timeout: by default, it will not wait more than one second and, if
-    the server is not up, an exception is raised. It can be made longer with the
-    ``timeout`` argument::
+    the server is not up, an exception is raised. It can be made longer with
+    the ``timeout`` argument::
 
         >>> start = time.time()
-        >>> with innet.Server('localhost', 9000):
-        ...     innet.wait_server_up('localhost', 9000, timeout=60)
+        >>> with Server('localhost', 9000):
+        ...     wait_server_up('localhost', 9000, timeout=60)
         ...     time.time() - start < 0.01
         True
 
 
 ``wait_server_down()``
-    Likewise, it is common to have to wait for a server being down on a specific
-    port. Again, it is common to rely on waiting times. Consider the hypotetical
-    server below::
+    Likewise, it is common to have to wait for a server being down on a
+    specific port. Again, it is common to rely on waiting times. Consider the
+    hypotetical server below::
 
         >>> def slow_server():
-        ...     with innet.Server('localhost', 9000) as server:
+        ...     with Server('localhost', 9000) as server:
         ...         yield
         ...         time.sleep(0.01)
         ...         server.shutdown()
 
-    If we start and shutdown it, and then try to bound to the same port, it will
-    likely fail::
+    If we start and shutdown it, and then try to bound to the same port, it
+    will likely fail::
 
-        >>> with inprocess.Process(target=slow_server) as p:
-        ...     innet.wait_server_up('localhost', 9000)
+        >>> with Process(target=slow_server) as p:
+        ...     wait_server_up('localhost', 9000)
         ...     with contextlib.closing(socket.socket()) as s:
         ...         p.go() # Request shutdown
         ...         s.bind(('localhost', 9000))
@@ -263,8 +264,8 @@ two of them:
 
     A common solution is to add some wait time::
 
-        >>> with inprocess.Process(target=slow_server) as p:
-        ...     innet.wait_server_up('localhost', 9000)
+        >>> with Process(target=slow_server) as p:
+        ...     wait_server_up('localhost', 9000)
         ...     with contextlib.closing(socket.socket()) as s:
         ...         p.go() # Request shutdown
         ...         time.sleep(0.02)
@@ -275,21 +276,22 @@ two of them:
     sometimes.. With ``wait_server_down()``, the client can block itself until
     the server is not running anymore - and no more::
 
-        >>> with inprocess.Process(target=slow_server) as p:
-        ...     innet.wait_server_up('localhost', 9000)
+        >>> from inelegant.net import wait_server_up, wait_server_down
+        >>> with Process(target=slow_server) as p:
+        ...     wait_server_up('localhost', 9000)
         ...     with contextlib.closing(socket.socket()) as s:
         ...         p.go() # Request shutdown
-        ...         innet.wait_server_down('localhost', 9000)
+        ...         wait_server_down('localhost', 9000)
         ...         s.bind(('localhost', 9000))
 
     It will wait for at most one second by default, but the timeout can be
     changed::
 
-        >>> with inprocess.Process(target=slow_server) as p:
-        ...     innet.wait_server_up('localhost', 9000)
+        >>> with Process(target=slow_server) as p:
+        ...     wait_server_up('localhost', 9000)
         ...     with contextlib.closing(socket.socket()) as s:
         ...         p.go() # Request shutdown
-        ...         innet.wait_server_down('localhost', 9000, timeout=60)
+        ...         wait_server_down('localhost', 9000, timeout=60)
         ...         s.bind(('localhost', 9000))
 
 "Inelegant Module" - creating modules
@@ -304,8 +306,8 @@ The ``create_module()`` function
 To create a module, one can use the ``create_module()`` function. The function
 has a mandatory argument, the module name::
 
-    >>> import inelegant.module as inmodule
-    >>> inmodule.create_module('m') # doctest: +ELLIPSIS
+    >>> from inelegant.module import create_module
+    >>> create_module('m') # doctest: +ELLIPSIS
     <module 'm' ...>
 
 A nice thing about ``create_module()`` is that the module will be available to
@@ -323,7 +325,7 @@ of putting stuff on it. She simplest one is probably the ``scope`` argument. It
 should be a dictionary, and every value from it will be attributed to a variable
 whose name is its key::
 
-    >>> m = inmodule.create_module('m', scope={'x': 3})
+    >>> m = create_module('m', scope={'x': 3})
     >>> m.x
     3
 
@@ -333,14 +335,14 @@ through the scopes dict, however, the module name will not have it set::
 
     >>> class Class(object):
     ...     pass
-    >>> m = inmodule.create_module('m', scope={'Class': Class})
+    >>> m = create_module('m', scope={'Class': Class})
     >>> m.Class.__module__ == 'm'
     False
 
  One should pass them through the ``defs`` argument (which should be iterable)
  to have the classes and functions "adopted" by the module::
 
-    >>> m = inmodule.create_module('m', defs=[Class])
+    >>> m = create_module('m', defs=[Class])
     >>> m.Class.__module__
     'm'
 
@@ -348,7 +350,7 @@ Finally, sometimes it is more practical to just pass a bunch of code to be
 executed as the module source. In these cases, the ``code`` attribute should be
 used::
 
-    >>> m = inmodule.create_module('m', scope={'x': 3}, code="""
+    >>> m = create_module('m', scope={'x': 3}, code="""
     ...     y = x+1
     ... """)
     >>> m.x
@@ -371,7 +373,8 @@ statement, the module will be available for importing...
 
 ::
 
-    >>> with inmodule.installed_module('some_module', scope={'x': 3}) as m:
+    >>> from inelegant.module import installed_module
+    >>> with installed_module('some_module', scope={'x': 3}) as m:
     ...     import some_module
     ...     m == some_module
     True
@@ -391,14 +394,15 @@ basically returns the module from where the current function was called.
 
 For example, suppose we have a module ``m1`` with a function ``f()``::
 
+    >>> from inelegant.module import get_caller_module
     >>> def f():
-    ...     print inmodule.get_caller_module()
+    ...     print get_caller_module()
 
 ``m2`` imports ``m1`` and call it. What will it return? It will return ``m2``
 since it is the module calling ``f()``::
 
-    >>> with inmodule.installed_module('m1', defs=[f]),\
-    ...         inmodule.installed_module('m2', code='import m1; m1.f()'):
+    >>> with installed_module('m1', defs=[f]),\
+    ...         installed_module('m2', code='import m1; m1.f()'):
     ...     pass # doctest: +ELLIPSIS
     <module 'm2' ...>
 
@@ -411,24 +415,24 @@ where ``get_caller_module()`` was called. Basically, it means the default value
 of the index is 1::
 
     >>> def f2():
-    ...     print inmodule.get_caller_module(1)
-    >>> with inmodule.installed_module('m1', defs=[f2]),\
-    ...         inmodule.installed_module('m2', code='import m1; m1.f2()'):
+    ...     print get_caller_module(1)
+    >>> with installed_module('m1', defs=[f2]),\
+    ...         installed_module('m2', code='import m1; m1.f2()'):
     ...     pass # doctest: +ELLIPSIS
     <module 'm2' ...>
 
 "Inelegant Finder": straightforward way of finding test cases
 =============================================================
 
-Finally, we have ``infinder.TestFinder``, a ``unittest.TestSuite``
+Finally, we have ``inelegant.finder.TestFinder``, a ``unittest.TestSuite``
 subclass that finds tests by itself.
 
 Finding tests in modules
 ------------------------
 
-``infinder.TestFinder`` can receive an arbitrary number of modules as
-its constructor arguments. The finder will then find every test case from these
-modules, as well as any doctests in docstrings from it.
+``TestFinder`` can receive an arbitrary number of modules as its constructor
+arguments. The finder will then find every test case from these modules, as
+well as any doctests in docstrings from it.
 
 Consider the definitions below::
 
@@ -448,10 +452,10 @@ Consider the definitions below::
 We can put them on modules and give the modules to test finder. Both the
 doctest and the unit test will be called when the finder suite be executed::
 
-    >>> import inelegant.finder as infinder
-    >>> with inmodule.installed_module('a', defs=[add]) as a,\
-    ...         inmodule.installed_module('ta', defs=[TestAdd]) as ta:
-    ...     finder = infinder.TestFinder(a, ta)
+    >>> from inelegant.finder import TestFinder
+    >>> with installed_module('a', defs=[add]) as a,\
+    ...         installed_module('ta', defs=[TestAdd]) as ta:
+    ...     finder = TestFinder(a, ta)
     ...     import sys
     ...     runner = unittest.TextTestRunner(stream=sys.stdout)
     ...     runner.run(finder) # doctest: +ELLIPSIS
@@ -473,9 +477,9 @@ doctest and the unit test will be called when the finder suite be executed::
 We do not even need to import the modules - it is possible to just pass their
 names::
 
-    >>> with inmodule.installed_module('a', defs=[add]),\
-    ...         inmodule.installed_module('ta', defs=[TestAdd]):
-    ...     finder = infinder.TestFinder('a', 'ta')
+    >>> with installed_module('a', defs=[add]),\
+    ...         installed_module('ta', defs=[TestAdd]):
+    ...     finder = TestFinder('a', 'ta')
     ...     import os
     ...     runner = unittest.TextTestRunner(stream=open(os.devnull, 'w'))
     ...     runner.run(finder) # doctest: +ELLIPSIS
@@ -484,9 +488,9 @@ names::
 Loading doctests in files
 -------------------------
 
-The ``infinder.TestFinder`` also accepts file paths (or even file
-objects) as its arguments. In this case, the file is expected to be a text file
-containing doctests (like yours truly, indeed).
+The ``TestFinder`` also accepts file paths (or even file objects) as its
+arguments. In this case, the file is expected to be a text file containing
+doctests (like yours truly, indeed).
 
 Another good example would be the file created below::
 
@@ -500,7 +504,7 @@ Another good example would be the file created below::
 
 We just need to give the path to the finder::
 
-    >>> finder = infinder.TestFinder(path)
+    >>> finder = TestFinder(path)
     >>> runner = unittest.TextTestRunner(stream=sys.stdout)
     >>> runner.run(finder) # doctest: +ELLIPSIS
     F
@@ -517,9 +521,8 @@ We just need to give the path to the finder::
     <unittest.runner.TextTestResult run=1 errors=0 failures=1>
     >>> os.remove(path)
 
-The file path can be either relative or absolute. If it is not absolute, it will
-be relative to the module where ``infinder.TestFinder`` was
-instantiated.
+The file path can be either relative or absolute. If it is not absolute, it
+will be relative to the module where ``TestFinder`` was instantiated.
 
 The ``load_tests()`` method
 ---------------------------
@@ -538,7 +541,7 @@ __ https://docs.python.org/2/library/unittest.html#load-tests-protocol
     >>> class TestCase2(unittest.TestCase):
     ...     def test2(self):
     ...         self.assertEquals(2, 1)
-    >>> with inmodule.installed_module('t', defs=[TestCase1,TestCase2]) as t:
+    >>> with installed_module('t', defs=[TestCase1,TestCase2]) as t:
     ...     loader = unittest.TestLoader()
     ...     suite = loader.loadTestsFromModule(t)
     ...     runner = unittest.TextTestRunner(stream=open(os.devnull, 'w'))
@@ -550,8 +553,8 @@ We can change this default behavior by defining a function called
 ``unittest.TestLoader`` instance, a test suite with all tests found in the
 module, and a pattern to match files (only really useful when loading tests
 from packages). ``load_tests()`` should itself return a test suite - and this
-test suite will be the one returned by ``loadTestsFromModule()``. With this, one
-can customize which tests are loaded from the module. For example, the code
+test suite will be the one returned by ``loadTestsFromModule()``. With this,
+one can customize which tests are loaded from the module. For example, the code
 below will only run ``TestCase1``, although there are two test cases in the
 module::
 
@@ -560,7 +563,7 @@ module::
     ...     suite = unittest.TestSuite()
     ...     suite.addTest(loader.loadTestsFromTestCase(TestCase1))
     ...     return suite
-    >>> with inmodule.installed_module(
+    >>> with installed_module(
     ...         't', defs=[TestCase1, TestCase2, load_tests]
     ...     ) as t:
     ...     loader = unittest.TestLoader()
@@ -569,12 +572,12 @@ module::
     ...     runner.run(suite)
     <unittest.runner.TextTestResult run=1 errors=0 failures=0>
 
-For its turn, ``infinder.TestFinder`` has a method called
-``load_tests()`` that merely returns the finder instance itself - also, it
-accepts the three expected arguments. So, if you want the automatic test
-discoverers (such as ``unittest.TestLoader.loadTestsFromModule()``) to load all
-tests found by ``TestFinder`` in a module, you just need to assign the
-instance's ``load_tests()`` method to the ``load_tests`` module variable.
+For its turn, ``TestFinder`` has a method called ``load_tests()`` that merely
+returns the finder instance itself - also, it accepts the three expected
+arguments. So, if you want the automatic test discoverers (such as
+``unittest.TestLoader.loadTestsFromModule()``) to load all tests found by
+``TestFinder`` in a module, you just need to assign the instance's
+``load_tests()`` method to the ``load_tests`` module variable.
 
 So, consider the function and class defined below::
 
@@ -590,15 +593,15 @@ So, consider the function and class defined below::
     ...     def test22(self):
     ...         self.assertEquals(3, add(2, 2))
 
-We can force a test module to return both the doctests and the unittest by using
-the ``load_tests()`` method::
+We can force a test module to return both the doctests and the unittest by
+using the ``load_tests()`` method::
 
-    >>> with inmodule.installed_module('a', defs=[add]),\
-    ...         inmodule.installed_module(
+    >>> with installed_module('a', defs=[add]),\
+    ...         installed_module(
     ...             'ta', defs=[TestAdd],
     ...             code="""
-    ...                 import inelegant.finder as infinder
-    ...                 finder = infinder.TestFinder(__name__, 'a')
+    ...                 from inelegant.finder import TestFinder
+    ...                 finder = TestFinder(__name__, 'a')
     ...                 load_tests = finder.load_tests
     ...             """
     ...         ) as ta:
