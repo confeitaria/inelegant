@@ -722,7 +722,7 @@ Once the context is finished, the file is removed::
 One can also give the path to the file to be created::
 
     >>> with temp_dir() as tempdir:
-    ...     with temp_file(path=os.path.join(tempdir, 'test')) as p:
+    ...     with temp_file(dir=tempdir, name='test') as p:
     ...         os.path.basename(p)
     ...         os.path.dirname(p) == tempdir
     ...         os.path.exists(p)
