@@ -151,15 +151,14 @@ def temp_file(path=None, content=None, name=None, dir=None):
         dir = tempfile.gettempdir()
 
     fid = None
+
     if path is None:
         if name is None:
             fid, path = tempfile.mkstemp(dir=dir)
         else:
             path = os.path.join(dir, name)
-            if os.path.exists(path):
-                raise IOError('File "{0}" already exists.'.format(path))
-            open(path, 'a').close()
-    else:
+
+    if fid is None:
         if os.path.exists(path):
             raise IOError('File "{0}" already exists.'.format(path))
         open(path, 'a').close()
