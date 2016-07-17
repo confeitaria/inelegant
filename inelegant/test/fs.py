@@ -90,6 +90,19 @@ class TestTemporaryFile(unittest.TestCase):
         self.assertFalse(os.path.exists(path))
         self.assertFalse(os.path.isfile(path))
 
+    def test_tempfile_accepts_name(self):
+        """
+        ``inelegant.fs.temp_file()`` can use an arbitrary name given by the
+        user.
+        """
+        with temp_file(name='test') as p:
+            self.assertEquals('test', os.path.basename(p))
+            self.assertTrue(os.path.exists(p))
+            self.assertTrue(os.path.isfile(p))
+
+        self.assertFalse(os.path.exists(p))
+        self.assertFalse(os.path.isfile(p))
+
     def test_tempfile_accepts_dir(self):
         """
         ``inelegant.fs.temp_file()`` can use an arbitrary directory given
@@ -102,6 +115,21 @@ class TestTemporaryFile(unittest.TestCase):
 
         self.assertFalse(os.path.exists(p))
         self.assertFalse(os.path.isfile(p))
+
+
+    def test_tempfile_accepts_name_and_dir(self):
+        """
+        ``inelegant.fs.temp_file()`` can use both ``name`` and ``dir``
+        together.
+        """
+        with temp_dir() as tmpdir:
+            with temp_file(name='test', dir=tmpdir) as p:
+                self.assertEquals(os.path.join(tmpdir, 'test'), p)
+                self.assertTrue(os.path.exists(p))
+                self.assertTrue(os.path.isfile(p))
+
+            self.assertFalse(os.path.exists(p))
+            self.assertFalse(os.path.isfile(p))
 
     def test_tempfile_accepts_content(self):
         """
