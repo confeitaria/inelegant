@@ -14,7 +14,7 @@ Inelegant groups a series of tools that are very useful for automating tests.
 Most of them are unreliable or costly "in the wild" but can be useful enough on
 tests.
 
-Right now there are four modules in this project.
+Right now there are five modules in this project.
 
 "Inelegant Process" - running and communicating with a simple processes
 =======================================================================
@@ -363,7 +363,7 @@ The ``installed_module()`` context manager
 ------------------------------------------
 
 While it is practical to have the module available for importing once it is
-created, it may lead to confusio in tests. If many modules are created, it is
+created, it may lead to confusion in tests. If many modules are created, it is
 feasible that some names may be repeated. To avoid any issue, we can use the
 ``installed_module()`` functions. It receives exactly the same arguments from
 ``create_module()`` but returns a context manager. If given to a ``with``
@@ -607,6 +607,118 @@ the ``load_tests()`` method::
     ...     runner = unittest.TextTestRunner(stream=open(os.devnull, 'w'))
     ...     runner.run(suite)
     <unittest.runner.TextTestResult run=2 errors=0 failures=2>
+
+"Inelegant FS" - quick-and-dirty filesystem operations
+======================================================
+
+The module ``inelegant.fs`` contains tools to some common file system
+operation. Notably, we have some context managers that ensure such operations
+are reverted.
+
+Changing working directory
+--------------------------
+
+``inelegant.fs.change_dir()`` is a context manager to change directories. While
+the context manager is executed, we will be at the given directory; after that,
+we will be back to the original one::
+
+>>> from inelegant.fs import temp_dir, change_dir as cd
+>>> curdir = os.getcwd()
+>>> with temp_dir() as tempdir:
+...     with cd(tempdir):
+...         os.getcwd() == curdir
+...         os.getcwd() == tempdir
+False
+True
+>>> os.getcwd() == curdir
+True
+
+It yields the path to which it moved (which is very practical if one wants
+to give an expression to ``change_dir()``)::
+
+>>> with cd(tempfile.gettempdir()) as path:
+...     os.getcwd() == path
+True
+
+Creating temporary files
+------------------------
+
+``inelegant.fs.temp_file()`` is a context manager that creates temporary
+files::
+
+>>> from inelegant.fs import temp_file
+>>> with temp_file() as p:
+...     with open(p, 'w') as f:
+...         f.write('test')
+...     with open(p, 'r') as f:
+...         f.read()
+'test'
+
+Once the context is finished, the file is removed::
+
+>>> open(p, 'r')  # doctest: +ELLIPSIS
+Traceback (most recent call last):
+  ...
+IOError: ...
+
+One can also give the path to the file to be created::
+
+>>> with temp_dir() as tempdir:
+...     with temp_file(path=os.path.join(tempdir, 'test')) as p:
+...         os.path.basename(p)
+...         os.path.dirname(p) == tempdir
+...         os.path.exists(p)
+'test'
+True
+True
+
+If you do not care about the file name but wants it to be created in a
+specific directory, you can use the ``dir`` argument::
+
+>>> with temp_file(dir=tempfile.gettempdir()) as p:
+...     os.path.dirname(p) == tempfile.gettempdir()
+...     os.path.exists(p)
+True
+True
+
+To put some content inside the file, use the ``content`` argument, which can
+receive a string::
+
+>>> with temp_file(content='example') as p:
+...     with open(p, 'r') as f:
+...         f.read()
+'example'
+
+Creating temporary directories
+------------------------------
+
+``temp_dir()`` is a context manager to create temporary directories. The
+yielded value will be the path to the temporary directory::
+
+>>> with temp_dir() as p:
+...     os.path.isdir(p)
+True
+
+Once the context is done, the directory is deleted::
+
+>>> os.path.isdir(p)
+False
+
+To use the temporary directory as the working one, make the ``cd`` argument
+true::
+
+>>> with temp_dir(cd=True) as p:
+...     os.getcwd() == p
+True
+
+Once the context is closed, we are back to the previous directory::
+
+>>> curdir = os.getcwd()
+>>> with temp_dir(cd=True) as p:
+...     os.getcwd() == curdir
+False
+>>> os.getcwd() == curdir
+True
 
 Licensing
 ==============
