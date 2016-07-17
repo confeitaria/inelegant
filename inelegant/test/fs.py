@@ -116,7 +116,6 @@ class TestTemporaryFile(unittest.TestCase):
         self.assertFalse(os.path.exists(p))
         self.assertFalse(os.path.isfile(p))
 
-
     def test_tempfile_accepts_name_and_dir(self):
         """
         ``inelegant.fs.temp_file()`` can use both ``name`` and ``dir``

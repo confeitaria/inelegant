@@ -163,8 +163,6 @@ def temp_file(path=None, content=None, name=None, dir=None):
             raise IOError('File "{0}" already exists.'.format(path))
         open(path, 'a').close()
 
-
-
     if content is not None:
         with open(path, 'w') as f:
             f.write(content)
