@@ -60,7 +60,7 @@ def change_dir(path):
 
 
 @contextlib.contextmanager
-def temp_file(path=None, content=None, dir=None):
+def temp_file(path=None, content=None, name=None, dir=None):
     """
     ``inelegant.fs.temp_file()`` is a context manager to operate on temporary
     files.
@@ -107,25 +107,32 @@ def temp_file(path=None, content=None, dir=None):
     Pay attention, however: trying to create an already existing file will
     result in error, regardless of the permissions of the file::
 
-    >>> with temp_dir(cd=True) as tempdir:
-    ...     with temp_file(path='test') as p:
-    ...         with temp_file(path='test'):
-    ...             pass  # doctest: +ELLIPSIS
+    >>> with temp_file() as p:
+    ...     with temp_file(path=p):
+    ...         pass  # doctest: +ELLIPSIS
     Traceback (most recent call last):
       ...
-    IOError: File "test" already exists.
+    IOError: File "..." already exists.
 
-    Choosing directory
-    ==================
+    Choosing directory and name
+    ===========================
 
     If you do not care about the file name but wants it to be created in a
     specific directory, you can use the ``dir`` argument::
 
-    >>> with temp_file(dir=tempfile.gettempdir()) as p:
-    ...     os.path.dirname(p) == tempfile.gettempdir()
-    ...     os.path.exists(p)
+    >>> with temp_dir() as tempdir:
+    ...     with temp_file(dir=tempdir) as p:
+    ...         os.path.dirname(p) == tempdir
+    ...         os.path.exists(p)
     True
     True
+
+    If you care about the name, but not the path, you can use the ``name``
+    argument::
+
+    >>> with temp_file(name='test') as p:
+    ...     os.path.basename(p)
+    'test'
 
     Inserting content
     =================
@@ -140,12 +147,24 @@ def temp_file(path=None, content=None, dir=None):
     ...         f.read()
     'example'
     """
+    if dir is None:
+        dir = tempfile.gettempdir()
+
+    fid = None
     if path is None:
-        _, path = tempfile.mkstemp(dir=dir)
+        if name is None:
+            fid, path = tempfile.mkstemp(dir=dir)
+        else:
+            path = os.path.join(dir, name)
+            if os.path.exists(path):
+                raise IOError('File "{0}" already exists.'.format(path))
+            open(path, 'a').close()
     else:
         if os.path.exists(path):
             raise IOError('File "{0}" already exists.'.format(path))
         open(path, 'a').close()
+
+
 
     if content is not None:
         with open(path, 'w') as f:
