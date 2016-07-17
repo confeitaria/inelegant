@@ -149,6 +149,20 @@ class TestTemporaryDirectory(unittest.TestCase):
 
         self.assertFalse(os.path.exists(p))
 
+    def test_tempdir_auto_cd(self):
+        """
+        ``inelegant.fs.temporary_directory()`` will change the current
+        directory to the new temporary one the argument ``cd`` is true.
+        """
+        origin = os.getcwd()
+
+        with temporary_directory(cd=True) as p:
+            self.assertNotEquals(origin, os.getcwd())
+            self.assertEquals(p, os.getcwd())
+
+        self.assertEquals(origin, os.getcwd())
+        self.assertFalse(os.path.exists(p))
+
 load_tests = TestFinder(__name__, 'inelegant.fs').load_tests
 
 if __name__ == "__main__":
