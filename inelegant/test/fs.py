@@ -199,7 +199,7 @@ class TestTemporaryDirectory(unittest.TestCase):
 
             with temp_dir(where=p1) as p2:
                 self.assertTrue(os.path.isdir(p2))
-                self.assertTrue(p2.startswith(p1))
+                self.assertEquals(p1, os.path.dirname(p2))
 
             self.assertFalse(os.path.exists(p2))
             self.assertTrue(os.path.exists(p1))

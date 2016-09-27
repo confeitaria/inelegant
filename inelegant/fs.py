@@ -225,7 +225,7 @@ def temp_dir(cd=False, where=None):
 
     >>> with temp_dir() as p1, temp_dir(where=p1) as p2:
     ...     os.path.isdir(p2)
-    ...     p2.startswith(p1)
+    ...     os.path.dirname(p2) == p1
     True
     True
     """
