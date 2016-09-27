@@ -217,8 +217,8 @@ def temp_dir(cd=False, where=None, name=None):
     >>> os.getcwd() == curdir
     True
 
-    Choosing where to create the directory
-    ======================================
+    Choosing the parent and the name
+    =================================
 
     You can say where the temporary directory should be created with the
     ``where`` argument::
@@ -228,6 +228,12 @@ def temp_dir(cd=False, where=None, name=None):
     ...     os.path.dirname(p2) == p1
     True
     True
+
+    It is also possible to choose the name of the directory::
+
+    >>> with temp_dir(name='example') as p:
+    ...     os.path.basename(p)
+    'example'
     """
     origin = os.getcwd()
 
