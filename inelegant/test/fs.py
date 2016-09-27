@@ -217,6 +217,40 @@ class TestTemporaryDirectory(unittest.TestCase):
 
         self.assertFalse(os.path.exists(p))
 
+    def test_tempdir_accepts_name_directory(self):
+        """
+        ``inelegant.fs.temp_dir()`` can choose both which name to use in the
+        new directory and where to create it.
+        """
+        with temp_dir() as p1:
+
+            with temp_dir(where=p1, name='example') as p2:
+                self.assertTrue(os.path.isdir(p2))
+                self.assertEquals(p1, os.path.dirname(p2))
+                self.assertEquals('example', os.path.basename(p2))
+
+            self.assertFalse(os.path.exists(p2))
+            self.assertTrue(os.path.exists(p1))
+
+        self.assertFalse(os.path.exists(p1))
+
+    def test_tempdir_name_can_be_path(self):
+        """
+        ``inelegant.fs.temp_dir()`` can receive a path as a name, and will
+        create all directories in it.
+        """
+        with temp_dir(name='a/b/c') as p:
+            self.assertTrue(os.path.isdir(p))
+
+            self.assertEquals('c', os.path.basename(p))
+
+            parent_dir = os.path.dirname(p)
+            self.assertEquals('b', os.path.basename(parent_dir))
+
+            grandparent_dir = os.path.dirname(parent_dir)
+            self.assertEquals('a', os.path.basename(grandparent_dir))
+
+        self.assertFalse(os.path.exists(p))
 
 load_tests = TestFinder(__name__, 'inelegant.fs').load_tests
 
