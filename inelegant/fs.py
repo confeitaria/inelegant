@@ -216,6 +216,18 @@ def temp_dir(cd=False, where=None):
     False
     >>> os.getcwd() == curdir
     True
+
+    Choosing where to create the directory
+    ======================================
+
+    You can say where the temporary directory should be created with the
+    ``where`` argument::
+
+    >>> with temp_dir() as p1, temp_dir(where=p1) as p2:
+    ...     os.path.isdir(p2)
+    ...     p2.startswith(p1)
+    True
+    True
     """
     origin = os.getcwd()
     path = tempfile.mkdtemp(dir=where)
