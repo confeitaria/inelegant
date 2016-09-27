@@ -174,7 +174,7 @@ def temp_file(path=None, content=None, name=None, dir=None):
 
 
 @contextlib.contextmanager
-def temp_dir(cd=False):
+def temp_dir(cd=False, where=None):
     """
     ``temp_dir()`` is a context manager to create temporary directories.
 
@@ -218,7 +218,7 @@ def temp_dir(cd=False):
     True
     """
     origin = os.getcwd()
-    path = tempfile.mkdtemp()
+    path = tempfile.mkdtemp(dir=where)
 
     try:
         os.chdir(path)
