@@ -103,7 +103,7 @@ class TestTemporaryFile(unittest.TestCase):
         self.assertFalse(os.path.exists(p))
         self.assertFalse(os.path.isfile(p))
 
-    def test_tempfile_accepts_dir(self):
+    def test_tempfile_accepts_where(self):
         """
         ``inelegant.fs.temp_file()`` can use an arbitrary directory given
         by the user.
@@ -115,6 +115,20 @@ class TestTemporaryFile(unittest.TestCase):
 
         self.assertFalse(os.path.exists(p))
         self.assertFalse(os.path.isfile(p))
+
+    def test_tempfile_accepts_dir(self):
+        """
+        ``inelegant.fs.temp_file()`` can use an arbitrary directory given
+        by the user via the deprecated ``dir`` argument.
+        """
+        with temp_file(dir=tempfile.gettempdir()) as p:
+            self.assertEquals(tempfile.gettempdir(), os.path.dirname(p))
+            self.assertTrue(os.path.exists(p))
+            self.assertTrue(os.path.isfile(p))
+
+        self.assertFalse(os.path.exists(p))
+        self.assertFalse(os.path.isfile(p))
+
 
     def test_tempfile_accepts_name_and_dir(self):
         """
