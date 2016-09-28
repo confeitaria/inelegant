@@ -60,7 +60,7 @@ def change_dir(path):
 
 
 @contextlib.contextmanager
-def temp_file(path=None, content=None, name=None, dir=None):
+def temp_file(path=None, content=None, name=None, where=None):
     """
     ``inelegant.fs.temp_file()`` is a context manager to operate on temporary
     files.
@@ -118,10 +118,10 @@ def temp_file(path=None, content=None, name=None, dir=None):
     ===========================
 
     If you do not care about the file name but wants it to be created in a
-    specific directory, you can use the ``dir`` argument::
+    specific directory, you can use the ``where`` argument::
 
     >>> with temp_dir() as tempdir:
-    ...     with temp_file(dir=tempdir) as p:
+    ...     with temp_file(where=tempdir) as p:
     ...         os.path.dirname(p) == tempdir
     ...         os.path.exists(p)
     True
@@ -147,16 +147,16 @@ def temp_file(path=None, content=None, name=None, dir=None):
     ...         f.read()
     'example'
     """
-    if dir is None:
-        dir = tempfile.gettempdir()
+    if where is None:
+        where = tempfile.gettempdir()
 
     fid = None
 
     if path is None:
         if name is None:
-            fid, path = tempfile.mkstemp(dir=dir)
+            fid, path = tempfile.mkstemp(dir=where)
         else:
-            path = os.path.join(dir, name)
+            path = os.path.join(where, name)
 
     if fid is None:
         if os.path.exists(path):

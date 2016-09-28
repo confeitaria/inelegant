@@ -274,7 +274,7 @@ class TestTestFinder(unittest.TestCase):
             os.pardir
         )
 
-        with tempfile(dir=path_dir) as path:
+        with tempfile(where=path_dir) as path:
             try:
                 with open(path, 'w') as f:
                     f.write(content)
