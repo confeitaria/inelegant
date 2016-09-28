@@ -722,7 +722,7 @@ Once the context is finished, the file is removed::
 One can also give the path to the file to be created::
 
     >>> with temp_dir() as tempdir:
-    ...     with temp_file(dir=tempdir, name='test') as p:
+    ...     with temp_file(where=tempdir, name='test') as p:
     ...         os.path.basename(p)
     ...         os.path.dirname(p) == tempdir
     ...         os.path.exists(p)
@@ -731,9 +731,9 @@ One can also give the path to the file to be created::
     True
 
 If you do not care about the file name but wants it to be created in a
-specific directory, you can use the ``dir`` argument::
+specific directory, you can use the ``where`` argument::
 
-    >>> with temp_file(dir=tempfile.gettempdir()) as p:
+    >>> with temp_file(where=tempfile.gettempdir()) as p:
     ...     os.path.dirname(p) == tempfile.gettempdir()
     ...     os.path.exists(p)
     True
@@ -746,6 +746,16 @@ receive a string::
     ...     with open(p, 'r') as f:
     ...         f.read()
     'example'
+
+Remember, however, that choosing the name, path or directory of the temporary
+file can result in errors if one already exists with this name::
+
+    >>> with temp_file(name='example'):
+    ...     with temp_file(name='example'): # doctest: +ELLIPSIS
+    ...         pass
+    Traceback (most recent call last):
+      ...
+    IOError: ...
 
 Creating temporary directories
 ------------------------------
