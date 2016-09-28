@@ -60,7 +60,7 @@ def change_dir(path):
 
 
 @contextlib.contextmanager
-def temp_file(path=None, content=None, name=None, where=None):
+def temp_file(path=None, content=None, name=None, where=None, dir=None):
     """
     ``inelegant.fs.temp_file()`` is a context manager to operate on temporary
     files.
@@ -147,6 +147,10 @@ def temp_file(path=None, content=None, name=None, where=None):
     ...         f.read()
     'example'
     """
+    if where is None:
+        if dir is not None:
+            sys.stderr.write('Do not use dir argument, use where.')
+            where = dir
     if where is None:
         where = tempfile.gettempdir()
 
