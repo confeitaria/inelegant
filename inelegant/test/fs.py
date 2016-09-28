@@ -108,7 +108,7 @@ class TestTemporaryFile(unittest.TestCase):
         ``inelegant.fs.temp_file()`` can use an arbitrary directory given
         by the user.
         """
-        with temp_file(dir=tempfile.gettempdir()) as p:
+        with temp_file(where=tempfile.gettempdir()) as p:
             self.assertEquals(tempfile.gettempdir(), os.path.dirname(p))
             self.assertTrue(os.path.exists(p))
             self.assertTrue(os.path.isfile(p))
@@ -122,7 +122,7 @@ class TestTemporaryFile(unittest.TestCase):
         together.
         """
         with temp_dir() as tmpdir:
-            with temp_file(name='test', dir=tmpdir) as p:
+            with temp_file(name='test', where=tmpdir) as p:
                 self.assertEquals(os.path.join(tmpdir, 'test'), p)
                 self.assertTrue(os.path.exists(p))
                 self.assertTrue(os.path.isfile(p))
