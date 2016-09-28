@@ -246,7 +246,8 @@ def temp_dir(cd=False, where=None, name=None):
         os.makedirs(path)
 
     try:
-        os.chdir(path)
+        if cd:
+            os.chdir(path)
         yield path
     finally:
         os.chdir(origin)
