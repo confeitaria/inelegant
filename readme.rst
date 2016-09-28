@@ -778,6 +778,26 @@ Once the context is closed, we are back to the previous directory::
     >>> os.getcwd() == curdir
     True
 
+Also, you can choose the directory where to create the new one, as well as its
+name::
+
+    >>> with temp_dir() as p1, temp_dir(where=p1) as p2:
+    ...     os.path.dirname(p2) == p1
+    True
+    >>> with temp_dir(name='example') as p:
+    ...     os.path.basename(p)
+    'example'
+
+Note, however, that choosing the name of the temporary directory can result in
+errors if one already exists with this name::
+
+    >>> with temp_dir(name='example'):
+    ...     with temp_dir(name='example'): # doctest: +ELLIPSIS
+    ...         pass
+    Traceback (most recent call last):
+      ...
+    OSError: ...
+
 Licensing
 ==============
 
