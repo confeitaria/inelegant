@@ -441,6 +441,42 @@ imported::
 This behavior is useful when we need a module that raises an exception when
 imported.
 
+The ``available_resource`` function
+-----------------------------------
+
+Another thing we can only do with available modules (for now) is to add
+resource files to them. We do it with the ``available_resource()`` function.
+
+As much as ``available_module()``, ``available_resource()`` is a context
+manager. It expects at least the name of the module and the name of the
+resource file::
+
+    >>> from inelegant.module import available_resource
+    >>> import pkgutil
+    >>> with available_module('m'):
+    ...     with available_resource('m', 'my-file.txt'):
+    ...         pkgutil.get_data('m', 'my-file.txt')
+    ''
+
+Since we want to put content on these resources, we can give it to the function
+with the ``content`` argument::
+
+    >>> with available_module('m'):
+    ...     with available_resource('m', 'my-file.txt', content='example'):
+    ...         pkgutil.get_data('m', 'my-file.txt')
+    'example'
+
+Once the ``available_resource()`` context ends, the resource is not available
+anymore::
+
+    >>> with available_module('m'):
+    ...     with available_resource('m', 'my-file.txt', content='example 2'):
+    ...         assert pkgutil.get_data('m', 'my-file.txt') == 'example 2'
+    ...     pkgutil.get_data('m', 'my-file.txt') # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+      ...
+    IOError: ...
+
 The ``get_caller_module()`` function
 ------------------------------------
 
