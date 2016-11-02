@@ -260,12 +260,13 @@ def available_module(name, code='', extension='.py'):
     with open(source_path, 'w') as source_file:
         source_file.write(code)
 
-    yield
-
-    sys.path.remove(tempdir)
-    shutil.rmtree(tempdir)
-    if name in sys.modules:
-        del sys.modules[name]
+    try:
+        yield
+    finally:
+        sys.path.remove(tempdir)
+        shutil.rmtree(tempdir)
+        if name in sys.modules:
+            del sys.modules[name]
 
 
 @contextlib.contextmanager
