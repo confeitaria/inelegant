@@ -64,13 +64,13 @@ def create_module(name, code='', scope=None, to_adopt=()):
 
     Most of the time, one wants to define functions and classes inside a
     module, but putting them into a block of code can be cumbersome. One can,
-    then, define them externally and pass them as the ``defs`` argument::
+    then, define them externally and pass them as the ``to_adopt`` argument::
 
     >>> def function():
     ...     pass
     >>> class Class(object):
     ...     pass
-    >>> m = create_module('m', defs=[Class, function])
+    >>> m = create_module('m', to_adopt=[Class, function])
     >>> m.Class
     <class 'm.Class'>
     >>> m.function # doctest: +ELLIPSIS
@@ -137,7 +137,7 @@ def installed_module(name, code='', to_adopt=(), scope=None):
       ...
     ImportError: No module named a
     """
-    module = create_module(name, code=code, defs=defs, scope=scope)
+    module = create_module(name, code=code, to_adopt=to_adopt, scope=scope)
 
     try:
         yield module
@@ -197,7 +197,7 @@ def available_module(name, code='', extension='.py'):
 
     Another difference between ``installed_module()`` and
     ``available_module()`` is that the latter only accepts the ``code``
-    argument - there is no ``scope`` or ``defs`` argument.
+    argument - there is no ``scope`` or ``to_adopt`` argument.
 
     Also, the code is not executed when the module is created, but only when
     it is imported::

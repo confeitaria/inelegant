@@ -339,10 +339,10 @@ through the scopes dict, however, the module name will not have it set::
     >>> m.Class.__module__ == 'm'
     False
 
- One should pass them through the ``defs`` argument (which should be iterable)
- to have the classes and functions "adopted" by the module::
+ One should pass them through the ``to_adopt`` argument (which should be
+ iterable) to have the classes and functions "adopted" by the module::
 
-    >>> m = create_module('m', defs=[Class])
+    >>> m = create_module('m', to_adopt=[Class])
     >>> m.Class.__module__
     'm'
 
@@ -492,7 +492,7 @@ For example, suppose we have a module ``m1`` with a function ``f()``::
 ``m2`` imports ``m1`` and call it. What will it return? It will return ``m2``
 since it is the module calling ``f()``::
 
-    >>> with installed_module('m1', defs=[f]),\
+    >>> with installed_module('m1', to_adopt=[f]),\
     ...         installed_module('m2', code='import m1; m1.f()'):
     ...     pass # doctest: +ELLIPSIS
     <module 'm2' ...>
@@ -507,7 +507,7 @@ of the index is 1::
 
     >>> def f2():
     ...     print get_caller_module(1)
-    >>> with installed_module('m1', defs=[f2]),\
+    >>> with installed_module('m1', to_adopt=[f2]),\
     ...         installed_module('m2', code='import m1; m1.f2()'):
     ...     pass # doctest: +ELLIPSIS
     <module 'm2' ...>
@@ -544,8 +544,8 @@ We can put them on modules and give the modules to test finder. Both the
 doctest and the unit test will be called when the finder suite be executed::
 
     >>> from inelegant.finder import TestFinder
-    >>> with installed_module('a', defs=[add]) as a,\
-    ...         installed_module('ta', defs=[TestAdd]) as ta:
+    >>> with installed_module('a', to_adopt=[add]) as a,\
+    ...         installed_module('ta', to_adopt=[TestAdd]) as ta:
     ...     finder = TestFinder(a, ta)
     ...     import sys
     ...     runner = unittest.TextTestRunner(stream=sys.stdout)
@@ -568,8 +568,8 @@ doctest and the unit test will be called when the finder suite be executed::
 We do not even need to import the modules - it is possible to just pass their
 names::
 
-    >>> with installed_module('a', defs=[add]),\
-    ...         installed_module('ta', defs=[TestAdd]):
+    >>> with installed_module('a', to_adopt=[add]),\
+    ...         installed_module('ta', to_adopt=[TestAdd]):
     ...     finder = TestFinder('a', 'ta')
     ...     import os
     ...     runner = unittest.TextTestRunner(stream=open(os.devnull, 'w'))
@@ -632,7 +632,7 @@ __ https://docs.python.org/2/library/unittest.html#load-tests-protocol
     >>> class TestCase2(unittest.TestCase):
     ...     def test2(self):
     ...         self.assertEquals(2, 1)
-    >>> with installed_module('t', defs=[TestCase1,TestCase2]) as t:
+    >>> with installed_module('t', to_adopt=[TestCase1,TestCase2]) as t:
     ...     loader = unittest.TestLoader()
     ...     suite = loader.loadTestsFromModule(t)
     ...     runner = unittest.TextTestRunner(stream=open(os.devnull, 'w'))
@@ -655,7 +655,7 @@ module::
     ...     suite.addTest(loader.loadTestsFromTestCase(TestCase1))
     ...     return suite
     >>> with installed_module(
-    ...         't', defs=[TestCase1, TestCase2, load_tests]
+    ...         't', to_adopt=[TestCase1, TestCase2, load_tests]
     ...     ) as t:
     ...     loader = unittest.TestLoader()
     ...     suite = loader.loadTestsFromModule(t)
@@ -687,9 +687,9 @@ So, consider the function and class defined below::
 We can force a test module to return both the doctests and the unittest by
 using the ``load_tests()`` method::
 
-    >>> with installed_module('a', defs=[add]),\
+    >>> with installed_module('a', to_adopt=[add]),\
     ...         installed_module(
-    ...             'ta', defs=[TestAdd],
+    ...             'ta', to_adopt=[TestAdd],
     ...             code="""
     ...                 from inelegant.finder import TestFinder
     ...                 finder = TestFinder(__name__, 'a')
