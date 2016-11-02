@@ -174,7 +174,7 @@ class TestModule(unittest.TestCase):
         def function(a):
             pass
 
-        m = create_module('example', defs=(Class, function))
+        m = create_module('example', to_adopt=(Class, function))
 
         self.assertEquals(m.__name__, Class.__module__)
         self.assertEquals(m.__name__, Class.method.__module__)
@@ -182,7 +182,7 @@ class TestModule(unittest.TestCase):
 
     def test_create_module_set_def_entities_in_module(self):
         """
-        The entities at the ``defs`` list should be set into the module as
+        The entities at the ``to_adopt`` list should be set into the module as
         their ``name`` values.
         """
 
@@ -192,7 +192,7 @@ class TestModule(unittest.TestCase):
         def function(a):
             pass
 
-        with installed_module('example', defs=(Class, function)) as m:
+        with installed_module('example', to_adopt=(Class, function)) as m:
             self.assertEquals(m.Class, Class)
             self.assertEquals(m.function, function)
 
@@ -219,7 +219,7 @@ class TestModule(unittest.TestCase):
             UnadoptedClass = OuterClass
 
         with installed_module('m1') as m1, \
-                installed_module('m2', defs=[OuterClass]) as m2:
+                installed_module('m2', to_adopt=[OuterClass]) as m2:
             adopt(m1, Class1)
 
             self.assertEquals(m1.__name__, Class1.__module__)
@@ -241,15 +241,15 @@ class TestModule(unittest.TestCase):
         with installed_module('m', code='import m') as m:
             pass
 
-    def test_defs_are_already_adopted_on_code_execution(self):
+    def test_to_adopt_are_already_adopted_on_code_execution(self):
         """
-        The objects from the defs list should be already adopted once the code
-        is executed.
+        The objects from the to-adopt list should be already adopted once the
+        code is executed.
         """
         def f():
             pass
 
-        with installed_module('m', defs=[f], code='v = f.__module__') as m:
+        with installed_module('m', to_adopt=[f], code='v = f.__module__') as m:
             self.assertEquals('m', m.v)
 
     def test_ignore_code_arg_indentation(self):
