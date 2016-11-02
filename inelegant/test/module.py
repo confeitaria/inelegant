@@ -19,9 +19,10 @@
 
 import unittest
 import inspect
+import pkgutil
 
 from inelegant.module import create_module, installed_module, \
-    available_module, adopt, AdoptException
+    available_module, available_resource, adopt, AdoptException
 
 from inelegant.finder import TestFinder
 
@@ -291,11 +292,20 @@ class TestModule(unittest.TestCase):
         default, which allows us to write modules that raise exceptions only
         when imported later.
         """
-        with available_module('example', code='raise Exception()') as p:
+        with available_module('example', code='raise Exception()'):
             pass
 
             with self.assertRaises(Exception):
                 import example
+
+    def test_add_resource(self):
+        """
+        We should be able to add resources to an available module.
+        """
+        with available_module('example'):
+            with available_resource('example', 'test.txt', content='test'):
+                content = pkgutil.get_data('example', 'test.txt')
+                self.assertEquals('test', content)
 
     def test_create_module_does_not_register_failed_module(self):
         """
