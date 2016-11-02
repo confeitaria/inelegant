@@ -137,8 +137,12 @@ def installed_module(name, code='', defs=(), scope=None):
       ...
     ImportError: No module named a
     """
-    yield create_module(name, code=code, defs=defs, scope=scope)
-    del sys.modules[name]
+    module = create_module(name, code=code, defs=defs, scope=scope)
+
+    try:
+        yield module
+    finally:
+        del sys.modules[name]
 
 
 @contextlib.contextmanager
