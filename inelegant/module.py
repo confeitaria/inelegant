@@ -264,6 +264,20 @@ def available_module(name, code='', extension='.py'):
         del sys.modules[name]
 
 
+@contextlib.contextmanager
+def available_resource(module, name, content=''):
+    module = importlib.import_module(module)
+    path = os.path.dirname(module.__file__)
+    filename = os.path.join(path, name)
+
+    with open(filename, 'w') as f:
+        f.write(content)
+
+    yield
+
+    os.remove(filename)
+
+
 def adopt(module, *entities):
     """
     When a module "adopts" a class or a function, the ``__module__`` attribute
