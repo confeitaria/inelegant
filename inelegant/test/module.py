@@ -302,6 +302,20 @@ class TestModule(unittest.TestCase):
         with self.assertRaises(ImportError):
             import example
 
+    def test_available_module_is_unavailable_after_context_exception(self):
+        """
+        ``inelegant.module.available_module()`` should vanish after its context
+        ends, even and especially if an exception was raised from the context.
+        """
+        try:
+            with available_module('example', code='x = 3') as p:
+                raise Exception
+        except:
+            pass
+
+        with self.assertRaises(ImportError):
+            import example
+
     def test_available_module_does_not_raise_exception_from_code(self):
         """
         ``inelegant.module.available_module()`` does not import the module by
