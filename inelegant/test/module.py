@@ -99,6 +99,22 @@ class TestModule(unittest.TestCase):
         with self.assertRaises(ImportError):
             import example
 
+    def test_installed_module_uninstalls_module(self):
+        """
+        When exiting the ``with`` block,
+        ``inelegant.module.installed_module()`` uninstalls its module from
+        ``sys.modules``, even and especially if an exception was raised during
+        the context.
+        """
+        try:
+            with installed_module('example') as m:
+                raise Exception
+        except:
+            pass
+
+        with self.assertRaises(ImportError):
+            import example
+
     def test_adopt(self):
         """
         ``inelegant.module.adopt()`` receives two arguments: a module and a
