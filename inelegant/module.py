@@ -266,6 +266,36 @@ def available_module(name, code='', extension='.py'):
 
 @contextlib.contextmanager
 def available_resource(module, name, content=''):
+    """
+    ``available_resource()`` is a context manager that creates a resource
+    associated with a moduled created by ``available_module()``.
+
+    To create a resource, we need at least a module name' and the name of the
+    resource file::
+
+    >>> import pkgutil
+    >>> with available_module('m'):
+    ...     with available_resource('m', 'test.txt'):
+    ...         pkgutil.get_data('m', 'test.txt')
+    ''
+
+    You can also give the content of the resource::
+
+    >>> with available_module('m'):
+    ...     with available_resource('m', 'test.txt', content='example'):
+    ...         pkgutil.get_data('m', 'test.txt')
+    'example'
+
+    Once the context is done, the resource is gone::
+
+    >>> with available_module('m'):
+    ...     with available_resource('m', 'test.txt'):
+    ...         pass
+    ...     pkgutil.get_data('m', 'test.txt') # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+      ...
+    IOError: ...
+    """
     module = importlib.import_module(module)
     path = os.path.dirname(module.__file__)
     filename = os.path.join(path, name)
