@@ -28,7 +28,7 @@ import shutil
 import tempfile
 
 
-def create_module(name, code='', scope=None, to_adopt=()):
+def create_module(name, code='', scope=None, to_adopt=(), defs=None):
     """
     This function creates a module and adds it to the available ones::
 
@@ -95,6 +95,10 @@ def create_module(name, code='', scope=None, to_adopt=()):
     >>> intricate.z
     5
     """
+    if defs and not to_adopt:
+        sys.stderr.write('Do not use defs argument, use to_adopt.')
+        to_adopt = defs
+
     scope = scope if scope is not None else {}
     code = dedent(code)
 
@@ -117,7 +121,7 @@ def create_module(name, code='', scope=None, to_adopt=()):
 
 
 @contextlib.contextmanager
-def installed_module(name, code='', to_adopt=(), scope=None):
+def installed_module(name, code='', to_adopt=(), scope=None, defs=None):
     """
     This is a context manager to have a module created during a context::
 
@@ -137,6 +141,10 @@ def installed_module(name, code='', to_adopt=(), scope=None):
       ...
     ImportError: No module named a
     """
+    if defs and not to_adopt:
+        sys.stderr.write('Do not use defs argument, use to_adopt.')
+        to_adopt = defs
+
     module = create_module(name, code=code, to_adopt=to_adopt, scope=scope)
 
     try:
