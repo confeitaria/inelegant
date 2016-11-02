@@ -28,7 +28,7 @@ import shutil
 import tempfile
 
 
-def create_module(name, code='', scope=None, defs=()):
+def create_module(name, code='', scope=None, to_adopt=()):
     """
     This function creates a module and adds it to the available ones::
 
@@ -99,12 +99,12 @@ def create_module(name, code='', scope=None, defs=()):
     code = dedent(code)
 
     module = imp.new_module(name)
-    adopt(module, *defs)
+    adopt(module, *to_adopt)
     sys.modules[name] = module
 
     module.__dict__.update(scope)
 
-    for d in defs:
+    for d in to_adopt:
         module.__dict__[d.__name__] = d
 
     try:
@@ -117,7 +117,7 @@ def create_module(name, code='', scope=None, defs=()):
 
 
 @contextlib.contextmanager
-def installed_module(name, code='', defs=(), scope=None):
+def installed_module(name, code='', to_adopt=(), scope=None):
     """
     This is a context manager to have a module created during a context::
 

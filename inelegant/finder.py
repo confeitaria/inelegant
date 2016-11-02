@@ -83,18 +83,18 @@ class TestFinder(unittest.TestSuite):
     >>> class TestCase2(unittest.TestCase):
     ...     def testError(self):
     ...         self.assertEquals(1, 1/0)
-    >>> with installed_module('t1', defs=[TestCase1, TestCase2]) as t1:
+    >>> with installed_module('t1', to_adopt=[TestCase1, TestCase2]) as t1:
     ...     finder = TestFinder(t1)
     ...     finder.countTestCases()
     2
-    >>> with installed_module('t1', defs=[TestCase1, TestCase2]) as t1:
+    >>> with installed_module('t1', to_adopt=[TestCase1, TestCase2]) as t1:
     ...     finder = TestFinder(t1, skip=[TestCase2])
     ...     finder.countTestCases()
     1
 
     If only one class is to be ignored, it can be passed directly
 
-    >>> with installed_module('t1', defs=[TestCase1, TestCase2]) as t1:
+    >>> with installed_module('t1', to_adopt=[TestCase1, TestCase2]) as t1:
     ...     finder = TestFinder(t1, skip=TestCase2)
     ...     finder.countTestCases()
     1
@@ -125,7 +125,8 @@ class TestFinder(unittest.TestSuite):
     errors::
 
     >>> runner = unittest.TextTestRunner(stream=sys.stdout)
-    >>> with installed_module('tm', defs=[TestMultiplier, TestMul1, TestMul2]):
+    >>> with installed_module('tm', to_adopt=[
+    ...         TestMultiplier, TestMul1, TestMul2]):
     ...     finder = TestFinder('tm')
     ...     _ = runner.run(finder) # doctest: +ELLIPSIS
     ..E
@@ -142,7 +143,8 @@ class TestFinder(unittest.TestSuite):
 
     Here the ``skip`` argument helps::
 
-    >>> with installed_module('tm', defs=[TestMultiplier, TestMul1, TestMul2]):
+    >>> with installed_module('tm', to_adopt=[
+    ...         TestMultiplier, TestMul1, TestMul2]):
     ...     finder = TestFinder('tm', skip=[TestMultiplier])
     ...     _ = runner.run(finder) # doctest: +ELLIPSIS
     ..
@@ -182,7 +184,7 @@ class TestFinder(unittest.TestSuite):
     ...and its module is given to the finder, the finder will have two test
     cases - one for the class docstring and other for the method docstring::
 
-    >>> with installed_module('point', defs=[Point]) as p:
+    >>> with installed_module('point', to_adopt=[Point]) as p:
     ...     finder = TestFinder(p)
     ...     finder.countTestCases()
     2
@@ -208,8 +210,8 @@ class TestFinder(unittest.TestSuite):
     options, to the finder at once::
 
     >>> with tempfile(content=content) as path:
-    ...     with installed_module('t', defs=[SomeTestCase]),\\
-    ...             installed_module('point', defs=[Point]) as p:
+    ...     with installed_module('t', to_adopt=[SomeTestCase]),\\
+    ...             installed_module('point', to_adopt=[Point]) as p:
     ...         finder = TestFinder('t', p, path)
     ...         finder.countTestCases()
     6
@@ -255,8 +257,8 @@ class TestFinder(unittest.TestSuite):
         then the second module will only "publish" the cases of the first one::
 
         >>> from inelegant.module import installed_module
-        >>> with installed_module('t1', defs=[TestCase1]) as t1, \\
-        ...        installed_module('t2', defs=[TestCase2]) as t2:
+        >>> with installed_module('t1', to_adopt=[TestCase1]) as t1, \\
+        ...        installed_module('t2', to_adopt=[TestCase2]) as t2:
         ...     t2.load_tests = TestFinder(t1).load_tests
         ...     loader = unittest.TestLoader()
         ...     suite = loader.loadTestsFromModule(t2)
@@ -429,7 +431,7 @@ def add_doctest(suite, doctestable, working_dir=None, exclude_empty=False):
     ...     '''
     >>> suite = unittest.TestSuite()
     >>> from inelegant.module import installed_module
-    >>> with installed_module('m', defs=[Test]) as m:
+    >>> with installed_module('m', to_adopt=[Test]) as m:
     ...     add_doctest(suite, m)
     ...     suite.countTestCases()
     1
@@ -520,7 +522,7 @@ def add_module(suite, module, skip=None):
     a suite, the tests will be found in the suite::
 
     >>> from inelegant.module import installed_module
-    >>> with installed_module('t', defs=[TestCase1, TestCase2]) as t:
+    >>> with installed_module('t', to_adopt=[TestCase1, TestCase2]) as t:
     ...     suite = unittest.TestSuite()
     ...     add_module(suite, t)
     ...     suite.countTestCases()
@@ -531,7 +533,7 @@ def add_module(suite, module, skip=None):
     is found in the module, it will not be added to the suite::
 
     >>> from inelegant.module import installed_module
-    >>> with installed_module('t', defs=[TestCase1, TestCase2]) as t:
+    >>> with installed_module('t', to_adopt=[TestCase1, TestCase2]) as t:
     ...     suite = unittest.TestSuite()
     ...     add_module(suite, t, skip=TestCase2)
     ...     suite.countTestCases()
