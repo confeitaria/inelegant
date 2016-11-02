@@ -129,7 +129,6 @@ class TestTemporaryFile(unittest.TestCase):
         self.assertFalse(os.path.exists(p))
         self.assertFalse(os.path.isfile(p))
 
-
     def test_tempfile_accepts_name_and_dir(self):
         """
         ``inelegant.fs.temp_file()`` can use both ``name`` and ``dir``
@@ -206,8 +205,8 @@ class TestTemporaryDirectory(unittest.TestCase):
 
     def test_tempdir_no_auto_cd(self):
         """
-        ``inelegant.fs.temp_dir()`` will not change the current directory to the
-        new temporary one the argument ``cd`` is ``False`` or not given.
+        ``inelegant.fs.temp_dir()`` will not change the current directory to
+        the new temporary one the argument ``cd`` is ``False`` or not given.
         """
         origin = os.getcwd()
 
