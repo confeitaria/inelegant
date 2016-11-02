@@ -160,7 +160,7 @@ class TestModule(unittest.TestCase):
         self.assertNotEquals(m.__name__, Class.method.__module__)
         self.assertNotEquals(m.__name__, function.__module__)
 
-    def test_create_module_adopts_def_entities(self):
+    def test_create_module_adopts_entities(self):
         """
         All classes and functions from the definition list should be adopted by
         the module made by ``create_module()``.
@@ -179,6 +179,25 @@ class TestModule(unittest.TestCase):
         self.assertEquals(m.__name__, Class.__module__)
         self.assertEquals(m.__name__, Class.method.__module__)
         self.assertEquals(m.__name__, function.__module__)
+        
+    def test_create_module_adopts_entities_with_defs_arguments(self):
+        """
+        ``create_module()`` should accept the deprected ``defs`` argument.
+        """
+
+        class Class(object):
+
+            def method(self):
+                pass
+
+        def function(a):
+            pass
+
+        m = create_module('example', defs=(Class, function))
+
+        self.assertEquals(m.__name__, Class.__module__)
+        self.assertEquals(m.__name__, Class.method.__module__)
+        self.assertEquals(m.__name__, function.__module__)
 
     def test_create_module_set_def_entities_in_module(self):
         """
@@ -193,6 +212,22 @@ class TestModule(unittest.TestCase):
             pass
 
         with installed_module('example', to_adopt=(Class, function)) as m:
+            self.assertEquals(m.Class, Class)
+            self.assertEquals(m.function, function)
+
+    def test_create_module_set_adoptee_entities_in_module_with_def(self):
+        """
+        The ``defs`` argument, although deprecated, should add entities to the
+        module.
+        """
+
+        class Class(object):
+            pass
+
+        def function(a):
+            pass
+
+        with installed_module('example', defs=(Class, function)) as m:
             self.assertEquals(m.Class, Class)
             self.assertEquals(m.function, function)
 
@@ -220,6 +255,28 @@ class TestModule(unittest.TestCase):
 
         with installed_module('m1') as m1, \
                 installed_module('m2', to_adopt=[OuterClass]) as m2:
+            adopt(m1, Class1)
+
+            self.assertEquals(m1.__name__, Class1.__module__)
+            self.assertEquals(m1.__name__, Class1.Class2.__module__)
+            self.assertNotEquals(m1.__name__, Class1.UnadoptedClass.__module__)
+
+    def test_adopts_internal_class_with_defs(self):
+        """
+        When ``inelegant.module.adopt()`` is called on a class, it adopts any
+        other classes defined inside the adoptee, even if the class is given
+        through the ``defs`` argument.
+        """
+        class OuterClass(object):
+            pass
+
+        class Class1(object):
+            class Class2(object):
+                pass
+            UnadoptedClass = OuterClass
+
+        with installed_module('m1') as m1, \
+                installed_module('m2', defs=[OuterClass]) as m2:
             adopt(m1, Class1)
 
             self.assertEquals(m1.__name__, Class1.__module__)
