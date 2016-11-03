@@ -42,7 +42,7 @@ setup(
 
     inelegant.module: with inelegant.module.create_module(), one can create
     fully importable Python modules. inelegant.module.installed_module() will
-    create and remove the importable module.
+    create and remove the importable module. There are other related functions.
 
     inelegant.process: home of inelegant.process.Process, a nice
     multiprocessing.Process subclass that makes the process of starting,
