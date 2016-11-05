@@ -313,12 +313,23 @@ def available_resource(module, name, content=''):
     path = os.path.dirname(module.__file__)
     filename = os.path.join(path, name)
 
+    name_path = os.path.dirname(name)
+    resource_dir = os.path.join(path, name_path)
+    dir_created = False
+
+    if not os.path.isdir(resource_dir):
+        os.makedirs(resource_dir)
+        dir_created = True
+
     with open(filename, 'w') as f:
         f.write(content)
 
     yield
 
     os.remove(filename)
+
+    if dir_created:
+        shutil.rmtree(resource_dir)
 
 
 def adopt(module, *entities):
