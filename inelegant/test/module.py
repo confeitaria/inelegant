@@ -394,6 +394,16 @@ class TestModule(unittest.TestCase):
                 content = pkgutil.get_data('example', 'test.txt')
                 self.assertEquals('test', content)
 
+    def test_add_resource_in_subdir(self):
+        """
+        We should be able add resources to subdirectories of an available
+        module.
+        """
+        with available_module('example'):
+            with available_resource('example', 'a/b/test.txt', content='test'):
+                content = pkgutil.get_data('example', 'a/b/test.txt')
+                self.assertEquals('test', content)
+
     def test_create_module_does_not_register_failed_module(self):
         """
         If the code of a module raises an exception, it is not available for
