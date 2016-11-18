@@ -385,7 +385,7 @@ class TestModule(unittest.TestCase):
             with self.assertRaises(Exception):
                 import example
 
-    def test_add_resource(self):
+    def test_available_resource(self):
         """
         We should be able to add resources to an available module.
         """
@@ -394,7 +394,7 @@ class TestModule(unittest.TestCase):
                 content = pkgutil.get_data('example', 'test.txt')
                 self.assertEquals('test', content)
 
-    def test_add_resource_in_subdir(self):
+    def test_availabe_resource_in_subdir(self):
         """
         We should be able add resources to subdirectories of an available
         module.
