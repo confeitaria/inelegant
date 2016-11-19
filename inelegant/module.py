@@ -30,30 +30,34 @@ import tempfile
 
 def create_module(name, code='', scope=None, to_adopt=(), defs=None):
     """
-    This function creates a module and adds it to the available ones::
+    This function creates a module::
 
-    >>> m = create_module('my_module')
+    >>> create_module('my_module')
+    <module 'my_module' (built-in)>
+
+    It used to add it to the available modules, but it does not happen
+    anymore::
+
     >>> import my_module
-    >>> my_module == m
-    True
+    Traceback (most recent call last):
+      ...
+    ImportError: No module named my_module
 
     Executing code
     --------------
 
     You can give the code of the module to it::
 
-    >>> m = create_module('with_code', code='x = 3')
-    >>> import with_code
+    >>> with_code = create_module('with_code', code='x = 3')
     >>> with_code.x
     3
 
     The block of code can be indented (very much like doctests)::
 
-    >>> m = create_module('with_code', code='''
+    >>> with_code = create_module('with_code', code='''
     ...                                         x = 3
     ...                                         y = x+3
     ... ''')
-    >>> import with_code
     >>> with_code.x
     3
     >>> with_code.y
@@ -82,16 +86,14 @@ def create_module(name, code='', scope=None, to_adopt=(), defs=None):
     It also can receive a dictionary representing a previously set up scope
     (i.e. containing values that will be set in the module)::
 
-    >>> m = create_module('with_scope', scope={'y': 32})
-    >>> import with_scope
+    >>> with_scope = create_module('with_scope', scope={'y': 32})
     >>> with_scope.y
     32
 
     It is possible to give both arguments as well and the code will work over
     the scope::
 
-    >>> m = create_module('intricate', code='z = z+1', scope={'z': 4})
-    >>> import intricate
+    >>> intricate = create_module('intricate', code='z = z+1', scope={'z': 4})
     >>> intricate.z
     5
     """

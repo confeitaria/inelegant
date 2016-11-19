@@ -310,12 +310,13 @@ has a mandatory argument, the module name::
     >>> create_module('m') # doctest: +ELLIPSIS
     <module 'm' ...>
 
-A nice thing about ``create_module()`` is that the module will be available to
-be imported once it is created::
+Note, however, that creating a module does not make it available for
+importing::
 
     >>> import m
-    >>> m # doctest: +ELLIPSIS
-    <module 'm' ...>
+    Traceback (most recent call last):
+      ...
+    ImportError: No module named m
 
 Giving scope, definitions and code to the module
 ------------------------------------------------
@@ -364,9 +365,9 @@ executed.
 The ``installed_module()`` context manager
 ------------------------------------------
 
-While it is practical to have the module available for importing once it is
-created, it may lead to confusion in tests. If many modules are created, it is
-feasible that some names may be repeated. To avoid any issue, we can use the
+While it may be useful to create a module by itself, many times we want to be
+able to import them as well. In tests, we usually want to make it available for
+importing only temporarily. IN this cases, we can use the
 ``installed_module()`` functions. It receives exactly the same arguments from
 ``create_module()`` but returns a context manager. If given to a ``with``
 statement, the module will be available for importing...
