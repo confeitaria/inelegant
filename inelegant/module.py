@@ -278,7 +278,7 @@ def available_module(name, code='', extension='.py'):
 
 
 @contextlib.contextmanager
-def available_resource(module, name, content=''):
+def available_resource(module, name, content='', path=''):
     """
     ``available_resource()`` is a context manager that creates a resource
     associated with a moduled created by ``available_module()``.
@@ -310,11 +310,10 @@ def available_resource(module, name, content=''):
     IOError: ...
     """
     module = importlib.import_module(module)
-    path = os.path.dirname(module.__file__)
-    filename = os.path.join(path, name)
+    module_path = os.path.dirname(module.__file__)
+    filename = os.path.join(module_path, path, name)
 
-    name_path = os.path.dirname(name)
-    resource_dir = os.path.join(path, name_path)
+    resource_dir = os.path.dirname(filename)
     dir_created = False
 
     if not os.path.isdir(resource_dir):
