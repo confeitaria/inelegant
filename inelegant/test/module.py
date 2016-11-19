@@ -27,7 +27,7 @@ from inelegant.module import create_module, installed_module, \
 from inelegant.finder import TestFinder
 
 
-class TestModule(unittest.TestCase):
+class TestCreateModule(unittest.TestCase):
 
     def test_create_module(self):
         """
@@ -77,68 +77,6 @@ class TestModule(unittest.TestCase):
         import example
         self.assertEquals(3, example.x)
 
-    def test_installed_module(self):
-        """
-        ``inelegant.module.installed_module()`` returns a context manager. One
-        can give it to the ``with`` statement and its result will be a module.
-        ``inelegant.module.installed_module()`` accepts the same arguments from
-        ``create_module()``.
-        """
-        with installed_module('example', scope={'x': 3}, code='x += 1') as m:
-            self.assertEquals(4, m.x)
-
-    def test_installed_module_uninstalls_module(self):
-        """
-        When exiting the ``with`` block,
-        ``inelegant.module.installed_module()`` uninstalls its module from
-        ``sys.modules``.
-        """
-        with installed_module('example') as m:
-            import example
-
-        with self.assertRaises(ImportError):
-            import example
-
-    def test_installed_module_uninstalls_module(self):
-        """
-        When exiting the ``with`` block,
-        ``inelegant.module.installed_module()`` uninstalls its module from
-        ``sys.modules``, even and especially if an exception was raised during
-        the context.
-        """
-        try:
-            with installed_module('example') as m:
-                raise Exception
-        except:
-            pass
-
-        with self.assertRaises(ImportError):
-            import example
-
-    def test_adopt(self):
-        """
-        ``inelegant.module.adopt()`` receives two arguments: a module and a
-        "declared entity" (either a class or a function). It sets the
-        ``__module__`` attribute of the entity to the module name, if possible.
-        If the class has its own declared methods the ``__module__`` attribute
-        of them is also set.
-        """
-
-        class Class(object):
-            def method(self):
-                pass
-
-        def function(a):
-            pass
-
-        with installed_module('example') as m:
-            adopt(m, Class)
-            adopt(m, function)
-
-            self.assertEquals(m.__name__, Class.__module__)
-            self.assertEquals(m.__name__, Class.method.__module__)
-            self.assertEquals(m.__name__, function.__module__)
-
     def test_create_module_does_not_adopt_scope_entities(self):
         """
         All classes and functions from the scope should not be adopted by the
@@ -179,7 +117,7 @@ class TestModule(unittest.TestCase):
         self.assertEquals(m.__name__, Class.__module__)
         self.assertEquals(m.__name__, Class.method.__module__)
         self.assertEquals(m.__name__, function.__module__)
-        
+
     def test_create_module_adopts_entities_with_defs_arguments(self):
         """
         ``create_module()`` should accept the deprected ``defs`` argument.
@@ -230,6 +168,121 @@ class TestModule(unittest.TestCase):
         with installed_module('example', defs=(Class, function)) as m:
             self.assertEquals(m.Class, Class)
             self.assertEquals(m.function, function)
+
+    def test_create_module_defines_module_name_in_code(self):
+        """
+        The value of ``__name__`` for the executed code should be the name of
+        the module.
+        """
+        m = create_module('m', code='value = __name__')
+
+        self.assertEquals('m', m.value)
+
+    def test_create_module_ignores_code_arg_indentation(self):
+        """
+        If the string given as the code arg has some indentation not compatible
+        with Python's syntax, it should be ignored provided the indentation is
+        the same in all non-empty lines. Tabs cannot be mixed with spaces.
+        C'mon, just use the four spaces...
+        """
+        code = """
+            def three():
+                return 3
+
+            def a():
+                return 'a'
+        """
+
+        m = create_module('m', code=code)
+
+        self.assertEquals(3, m.three())
+        self.assertEquals('a', m.a())
+
+
+class TestInstalledModule(unittest.TestCase):
+
+    def test_installed_module(self):
+        """
+        ``inelegant.module.installed_module()`` returns a context manager. One
+        can give it to the ``with`` statement and its result will be a module.
+        ``inelegant.module.installed_module()`` accepts the same arguments from
+        ``create_module()``.
+        """
+        with installed_module('example', scope={'x': 3}, code='x += 1') as m:
+            self.assertEquals(4, m.x)
+
+    def test_installed_module_uninstalls_module(self):
+        """
+        When exiting the ``with`` block,
+        ``inelegant.module.installed_module()`` uninstalls its module from
+        ``sys.modules``.
+        """
+        with installed_module('example') as m:
+            import example
+
+        with self.assertRaises(ImportError):
+            import example
+
+    def test_installed_module_uninstalls_module(self):
+        """
+        When exiting the ``with`` block,
+        ``inelegant.module.installed_module()`` uninstalls its module from
+        ``sys.modules``, even and especially if an exception was raised during
+        the context.
+        """
+        try:
+            with installed_module('example') as m:
+                raise Exception
+        except:
+            pass
+
+        with self.assertRaises(ImportError):
+            import example
+
+    def test_installed_module_can_import_itself(self):
+        """
+        A module should be able to import itself if installed.
+        """
+        with installed_module('m', code='import m') as m:
+            pass
+
+    def test_to_adopt_are_already_adopted_on_code_execution(self):
+        """
+        The objects from the to-adopt list should be already adopted once the
+        code is executed.
+        """
+        def f():
+            pass
+
+        with installed_module('m', to_adopt=[f], code='v = f.__module__') as m:
+            self.assertEquals('m', m.v)
+
+
+class TestAdopt(unittest.TestCase):
+
+    def test_adopt(self):
+        """
+        ``inelegant.module.adopt()`` receives two arguments: a module and a
+        "declared entity" (either a class or a function). It sets the
+        ``__module__`` attribute of the entity to the module name, if possible.
+        If the class has its own declared methods the ``__module__`` attribute
+        of them is also set.
+        """
+
+        class Class(object):
+            def method(self):
+                pass
+
+        def function(a):
+            pass
+
+        with installed_module('example') as m:
+            adopt(m, Class)
+            adopt(m, function)
+
+            self.assertEquals(m.__name__, Class.__module__)
+            self.assertEquals(m.__name__, Class.method.__module__)
+            self.assertEquals(m.__name__, function.__module__)
 
     def test_adopt_fails_on_read_only_module(self):
         """
@@ -283,51 +336,6 @@ class TestModule(unittest.TestCase):
             self.assertEquals(m1.__name__, Class1.Class2.__module__)
             self.assertNotEquals(m1.__name__, Class1.UnadoptedClass.__module__)
 
-    def test_module_name(self):
-        """
-        The value of ``__name__`` for the executd code should be the name of
-        the module.
-        """
-        with installed_module('m', code='value = __name__') as m:
-            self.assertEquals('m', m.value)
-
-    def test_import_itself(self):
-        """
-        A module should be able to import itself if installed.
-        """
-        with installed_module('m', code='import m') as m:
-            pass
-
-    def test_to_adopt_are_already_adopted_on_code_execution(self):
-        """
-        The objects from the to-adopt list should be already adopted once the
-        code is executed.
-        """
-        def f():
-            pass
-
-        with installed_module('m', to_adopt=[f], code='v = f.__module__') as m:
-            self.assertEquals('m', m.v)
-
-    def test_ignore_code_arg_indentation(self):
-        """
-        If the string given as the code arg has some indentation not compatible
-        with Python's syntax, it should be ignored provided the indentation is
-        the same in all non-empty lines. Tabs cannot be mixed with spaces.
-        C'mon, just use the four spaces...
-        """
-        code = """
-            def three():
-                return 3
-
-            def a():
-                return 'a'
-        """
-
-        with installed_module('m', code=code) as m:
-            self.assertEquals(3, m.three())
-            self.assertEquals('a', m.a())
-
     def test_adopt_code_defs(self):
         """
         Classes and functions created from the ``code`` arg should be adopted.
@@ -343,6 +351,9 @@ class TestModule(unittest.TestCase):
         with installed_module('m', code=code) as m:
             self.assertEquals('m', m.function.__module__)
             self.assertEquals('m', m.Class.__module__)
+
+
+class TestAvailableModule(unittest.TestCase):
 
     def test_available_module_is_unavailable_after_context(self):
         """
@@ -385,6 +396,9 @@ class TestModule(unittest.TestCase):
             with self.assertRaises(Exception):
                 import example
 
+
+class TestAvailableResource(unittest.TestCase):
+
     def test_available_resource(self):
         """
         We should be able to add resources to an available module.
@@ -426,6 +440,7 @@ class TestModule(unittest.TestCase):
 
         with self.assertRaises(ImportError):
             import m
+
 
 load_tests = TestFinder(__name__, 'inelegant.module').load_tests
 
