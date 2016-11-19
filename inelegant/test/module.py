@@ -67,15 +67,15 @@ class TestCreateModule(unittest.TestCase):
 
         self.assertEquals(4, m.x)
 
-    def test_create_module_installs_module(self):
+    def test_create_module_does_not_install_module(self):
         """
-        ``inelegant.module.create_module()`` adds the created module to
-        ``sys.modules`` so it can be imported.
+        ``inelegant.module.create_module()`` should not add the created module
+        to ``sys.modules`` so it cannot be imported.
         """
-        m = create_module('example', scope={'x': 3})
+        m = create_module('example')
 
-        import example
-        self.assertEquals(3, example.x)
+        with self.assertRaises(ImportError):
+            import example
 
     def test_create_module_does_not_adopt_scope_entities(self):
         """
