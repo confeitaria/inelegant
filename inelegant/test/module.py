@@ -404,6 +404,17 @@ class TestModule(unittest.TestCase):
                 content = pkgutil.get_data('example', 'a/b/test.txt')
                 self.assertEquals('test', content)
 
+    def test_availabe_resource_uses_path(self):
+        """
+        We can give a path to ``available_resource()`` so it creates the file
+        in this path.
+        """
+        with available_module('example'):
+            with available_resource(
+                    'example', 'test.txt', path='a/b', content='test'):
+                content = pkgutil.get_data('example', 'a/b/test.txt')
+                self.assertEquals('test', content)
+
     def test_create_module_does_not_register_failed_module(self):
         """
         If the code of a module raises an exception, it is not available for
