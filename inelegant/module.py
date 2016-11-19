@@ -308,6 +308,14 @@ def available_resource(module, name, content='', path=''):
     Traceback (most recent call last):
       ...
     IOError: ...
+
+    If needed, once can define the directory where the resource will be. One
+    just needs to use the ``path`` argument::
+
+    >>> with available_module('m'):
+    ...     with available_resource('m', 'test.txt', content='test', path='a'):
+    ...         pkgutil.get_data('m', 'a/test.txt')
+    'test'
     """
     module = importlib.import_module(module)
     module_path = os.path.dirname(module.__file__)
