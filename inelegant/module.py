@@ -113,9 +113,9 @@ def create_module(name, code='', scope=None, to_adopt=(), defs=None):
 
     try:
         exec code in module.__dict__
-    except:
-        del sys.modules[name]
-        raise
+    finally:
+        if name in sys.modules:
+            del sys.modules[name]
 
     return module
 
