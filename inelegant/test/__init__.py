@@ -37,5 +37,6 @@ load_tests = TestFinder(
     'inelegant.test.fs',
     'inelegant.test.module',
     'inelegant.test.net',
-    'inelegant.test.process'
+    'inelegant.test.process',
+    'inelegant.test.toggle'
 ).load_tests
