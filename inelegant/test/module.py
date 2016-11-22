@@ -22,7 +22,8 @@ import inspect
 import pkgutil
 
 from inelegant.module import create_module, installed_module, \
-    available_module, available_resource, adopt, AdoptException
+    available_module, available_resource, adopt, AdoptException, \
+    create_module_installs_module
 
 from inelegant.finder import TestFinder
 
@@ -76,6 +77,18 @@ class TestCreateModule(unittest.TestCase):
 
         with self.assertRaises(ImportError):
             import example
+
+    def test_create_module_installs_module_with_toggle(self):
+        """
+        If your code relies in the old behavior of ``create_module()`` where it
+        installs the module for importing, then you can enable this behavior
+        back using the ``inelegant.module.create_module_installs_module``
+        toggle.
+        """
+        with create_module_installs_module:
+            m = create_module('example')
+            import example
+            self.assertEquals(m, example)
 
     def test_create_module_does_not_adopt_scope_entities(self):
         """
