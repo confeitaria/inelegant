@@ -27,6 +27,10 @@ import os.path
 import shutil
 import tempfile
 
+from inelegant.toggle import Toggle
+
+create_module_installs_module = Toggle()
+
 
 def create_module(name, code='', scope=None, to_adopt=(), defs=None):
     """
@@ -118,6 +122,13 @@ def create_module(name, code='', scope=None, to_adopt=(), defs=None):
     finally:
         if name in sys.modules:
             del sys.modules[name]
+
+    if create_module_installs_module.enabled:
+        sys.stderr.write(
+            'Installing modules on creation is deprecated but the behavior '
+            'was enabled by the create_module_installs_module toggle.')
+
+        sys.modules[name] = module
 
     return module
 
