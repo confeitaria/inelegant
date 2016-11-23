@@ -163,12 +163,17 @@ def installed_module(name, code='', to_adopt=(), scope=None, defs=None):
         to_adopt = defs
 
     module = create_module(name, code=code, to_adopt=to_adopt, scope=scope)
+
+    previous_module = sys.modules.get(name)
     sys.modules[name] = module
 
     try:
         yield module
     finally:
-        del sys.modules[name]
+        if previous_module is not None:
+            sys.modules[name] = previous_module
+        else:
+            del sys.modules[name]
 
 
 @contextlib.contextmanager
