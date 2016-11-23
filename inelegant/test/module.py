@@ -239,7 +239,7 @@ class TestInstalledModule(unittest.TestCase):
         with self.assertRaises(ImportError):
             import example
 
-    def test_installed_module_uninstalls_module(self):
+    def test_installed_module_uninstalls_module_after_exception(self):
         """
         When exiting the ``with`` block,
         ``inelegant.module.installed_module()`` uninstalls its module from
