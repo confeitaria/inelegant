@@ -110,6 +110,8 @@ def create_module(name, code='', scope=None, to_adopt=(), defs=None):
 
     module = imp.new_module(name)
     adopt(module, *to_adopt)
+
+    previous_module = sys.modules.get(name)
     sys.modules[name] = module
 
     module.__dict__.update(scope)
@@ -120,7 +122,9 @@ def create_module(name, code='', scope=None, to_adopt=(), defs=None):
     try:
         exec code in module.__dict__
     finally:
-        if name in sys.modules:
+        if previous_module is not None:
+            sys.modules[name] = previous_module
+        else:
             del sys.modules[name]
 
     if create_module_installs_module.enabled:
