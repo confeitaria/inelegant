@@ -20,6 +20,7 @@
 import unittest
 import inspect
 import pkgutil
+import sys
 
 from inelegant.module import create_module, installed_module, \
     available_module, available_resource, adopt, AdoptException, \
@@ -89,6 +90,8 @@ class TestCreateModule(unittest.TestCase):
             m = create_module('example')
             import example
             self.assertEquals(m, example)
+
+            del sys.modules['example']
 
     def test_create_module_does_not_adopt_scope_entities(self):
         """
