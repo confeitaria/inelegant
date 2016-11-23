@@ -285,6 +285,20 @@ class TestInstalledModule(unittest.TestCase):
         with installed_module('m', to_adopt=[f], code='v = f.__module__') as m:
             self.assertEquals('m', m.v)
 
+    def test_installed_module_restore_previous_module(self):
+        """
+        If we call ``installed_module()`` given an already existing module,
+        the existing module should be restored.
+        """
+        with installed_module('m', code='x = 1'):
+
+            with installed_module('m', code='x = 2'):
+                import m
+                self.assertEquals(2, m.x)
+
+            import m
+            self.assertEquals(1, m.x)
+
 
 class TestAdopt(unittest.TestCase):
 
