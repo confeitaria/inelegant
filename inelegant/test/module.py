@@ -79,6 +79,18 @@ class TestCreateModule(unittest.TestCase):
         with self.assertRaises(ImportError):
             import example
 
+    def test_create_module_restore_previous_module(self):
+        """
+        If we create a module with a name already used by other module, the
+        previous module should be available after the module creation.
+        """
+        with installed_module('m', code='x = 1'):
+            m1 = create_module('m', code='x = 2')
+            self.assertEquals(2, m1.x)
+
+            import m
+            self.assertEquals(1, m.x)
+
     def test_create_module_installs_module_with_toggle(self):
         """
         If your code relies in the old behavior of ``create_module()`` where it
