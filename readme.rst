@@ -14,7 +14,7 @@ Inelegant groups a series of tools that are very useful for automating tests.
 Most of them are unreliable or costly "in the wild" but can be useful enough on
 tests.
 
-Right now there are five modules in this project.
+Right now there are six modules in this project.
 
 "Inelegant Process" - running and communicating with a simple processes
 =======================================================================
@@ -844,6 +844,138 @@ errors if one already exists with this name::
     Traceback (most recent call last):
       ...
     OSError: ...
+
+"Inelegant Toggle" - enable and disable a global condition
+==========================================================
+
+``intelegant.toggle`` is home for the ``Toggle`` class, which generate objects
+that can be either disabled or enabled. The main purpose of ``Toggle`` is to
+enable global behaviors - most of the time, deprecated behaviors.
+
+A use case
+----------
+
+For example, suppose we have a function that returns the quotient of two
+numbers. If the divisor is zero, it returns ``float('NaN')``::
+
+
+    >>> def div(dividend, divisor):
+    ...     if divisor != 0:
+    ...         return dividend / divisor
+    ...     else:
+    ...         return float('NaN')
+    >>> div(6, 3)
+    2
+    >>> div(6, 0)
+    nan
+
+So far, so good. Yet the experience proves that it is not the best choice for
+most uses of the function. Developers in general expect the function to raise
+an exception for zero divisors. We decide to change this behavor, then::
+
+    >>> def div(dividend, divisor):
+    ...     return dividend / divisor
+    >>> div(6, 3)
+    2
+    >>> div(6, 0)
+    Traceback (most recent call last):
+      ...
+    ZeroDivisionError: integer division or modulo by zero
+
+The problem is, many programs are already using the function and relying on the
+old behavor. To rewrite all of them at once is not viable. We can then enable
+the old behavior via toggle, giving the option to the developer to update
+later.
+
+First, we create a toggle::
+
+    >>> from inelegant.toggle import Toggle
+    >>> div_returns_nan = Toggle()
+
+Then we rewrite the function to use it. To check if the toggle is enabled, we
+see its ``enabled`` attribute::
+
+    >>> def div(dividend, divisor):
+    ...     try:
+    ...         return dividend / divisor
+    ...     except ZeroDivisionError:
+    ...         if div_returns_nan.enabled:
+    ...             return float('NaN')
+    ...         else:
+    ...             raise
+
+The function will have the new behavior with a disabled toggle (the default
+state)::
+
+    >>> div(6, 0)
+    Traceback (most recent call last):
+      ...
+    ZeroDivisionError: integer division or modulo by zero
+
+Once the toggle is enabled, however, the old behavior will emerge::
+
+    >>> div_returns_nan.enable()
+    >>> div(6, 0)
+    nan
+
+Disabling a togge
+-----------------
+
+You can disable a toggle as well::
+
+    >>> div_returns_nan.disable()
+    >>> div(6, 0)
+    Traceback (most recent call last):
+      ...
+    ZeroDivisionError: integer division or modulo by zero
+
+This, however, is probably not a good idea most of the time. Currently, toggles
+are expected to only be enabled in the very beginning of the Python program and
+to stay thsi way for the rest of it. Crucially, toggles are not thread-safe, so
+enabling and disabling them at will may result in very strange bugs.
+
+Toggles as context managers
+---------------------------
+
+If you are sure there would be no two threads in your program (as we are, since
+our tests are executed synchronously), you can use the toggle as a context
+manager. During its context, the toggle is enabled; after that, it is
+disabled::
+
+    >>> with div_returns_nan:
+    ...     div(6, 0)
+    nan
+    >>> div(6, 0)
+    Traceback (most recent call last):
+      ...
+    ZeroDivisionError: integer division or modulo by zero
+
+A warning for each toogle
+-------------------------
+
+Since toggles are used for enabling deprecated behavior, we think it may be a
+good idea to always add a warning when it is observed as being enabled. This
+way, the developer will be continuously remembered that the program relies in
+deprecated behavior::
+
+    >>> def div(dividend, divisor):
+    ...     try:
+    ...         return dividend / divisor
+    ...     except ZeroDivisionError:
+    ...         if div_returns_nan.enabled:
+    ...             print(
+    ...                 'Returning nan for a zero divisor is deprecated '
+    ...                 'behavior from div.')
+    ...             return float('NaN')
+    ...         else:
+    ...             raise
+
+    >>> with div_returns_nan:
+    ...     div(6, 0)
+    Returning nan for a zero divisor is deprecated behavior from div.
+    nan
+
+(Also, we would rather write it to ``sys.stderr`` but you got the idea.)
 
 Licensing
 ==============
