@@ -33,6 +33,7 @@ readme_path = os.path.join(
 
 load_tests = TestFinder(
     readme_path,
+    'inelegant.test.dict',
     'inelegant.test.finder',
     'inelegant.test.fs',
     'inelegant.test.module',
