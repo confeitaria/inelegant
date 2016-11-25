@@ -27,6 +27,7 @@ import os.path
 import shutil
 import tempfile
 
+from inelegant.dict import temp_key
 from inelegant.toggle import Toggle
 
 create_module_installs_module = Toggle()
@@ -111,21 +112,13 @@ def create_module(name, code='', scope=None, to_adopt=(), defs=None):
     module = imp.new_module(name)
     adopt(module, *to_adopt)
 
-    previous_module = sys.modules.get(name)
-    sys.modules[name] = module
-
     module.__dict__.update(scope)
 
     for d in to_adopt:
         module.__dict__[d.__name__] = d
 
-    try:
+    with temp_key(sys.modules, key=name, value=module):
         exec code in module.__dict__
-    finally:
-        if previous_module is not None:
-            sys.modules[name] = previous_module
-        else:
-            del sys.modules[name]
 
     if create_module_installs_module.enabled:
         sys.stderr.write(
@@ -164,16 +157,8 @@ def installed_module(name, code='', to_adopt=(), scope=None, defs=None):
 
     module = create_module(name, code=code, to_adopt=to_adopt, scope=scope)
 
-    previous_module = sys.modules.get(name)
-    sys.modules[name] = module
-
-    try:
+    with temp_key(sys.modules, key=name, value=module):
         yield module
-    finally:
-        if previous_module is not None:
-            sys.modules[name] = previous_module
-        else:
-            del sys.modules[name]
 
 
 @contextlib.contextmanager
