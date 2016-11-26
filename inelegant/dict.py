@@ -21,6 +21,20 @@ import contextlib
 
 @contextlib.contextmanager
 def temp_key(d, key, value):
+    """
+    ``temp_key()`` is a context manager that adds a key and a value to a dict
+    during its context. Something like this::
+
+    >>> d = {}
+    >>> with temp_key(d, key='a', value=1):
+    ...     d
+    {'a': 1}
+
+    Once the context finishes, the key is gone::
+
+    >>> d
+    {}
+    """
     key_existed, previous_value = False, None
 
     if key in d:
