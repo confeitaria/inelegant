@@ -14,7 +14,7 @@ Inelegant groups a series of tools that are very useful for automating tests.
 Most of them are unreliable or costly "in the wild" but can be useful enough on
 tests.
 
-Right now there are six modules in this project.
+Right now there are seven modules in this project.
 
 "Inelegant Process" - running and communicating with a simple processes
 =======================================================================
@@ -976,6 +976,26 @@ deprecated behavior::
     nan
 
 (Also, we would rather write it to ``sys.stderr`` but you got the idea.)
+
+"Inelegant Dict" - dictionaries idioms
+======================================
+
+Currently, ``inelegant.dict`` has only one utility, ``temp_key()``. It is a
+context manager that adds a key to a dict only during its context. While it is
+a very simple context manager, this is a need we see arising time and time
+again.
+
+Something like this::
+
+    >>> d = {}
+    >>> with temp_key(d, key='a', value=1):
+    ...     d
+    {'a': 1}
+
+Once the context finishes, the key is gone::
+
+    >>> d
+    {}
 
 Licensing
 ==============
