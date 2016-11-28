@@ -987,6 +987,7 @@ again.
 
 Something like this::
 
+    >>> from inelegant.dict import temp_key
     >>> d = {}
     >>> with temp_key(d, key='a', value=1):
     ...     d
