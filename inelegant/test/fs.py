@@ -21,7 +21,7 @@ import unittest
 import tempfile
 import os
 
-from inelegant.fs import change_dir as cd, temp_file, temp_dir
+from inelegant.fs import change_dir as cd, temp_file, temp_dir, existing_dir
 
 from inelegant.finder import TestFinder
 
@@ -281,6 +281,170 @@ class TestTemporaryDirectory(unittest.TestCase):
             self.assertEquals('a', os.path.basename(grandparent_dir))
 
         self.assertFalse(os.path.exists(p))
+
+
+class TestExistingDirectory(unittest.TestCase):
+
+    def test_existing_dir_create_dir_if_it_does_not_exist(self):
+        """
+        The ``inelegant.fs.existing_dir()`` context manager creates a temporary
+        directory, yields its path and, once the context is gone, deletes the
+        directory if it does not exist.
+        """
+        with temp_dir() as where:
+            p = os.path.join(where, 'example')
+            self.assertFalse(os.path.exists(p))
+
+            with existing_dir(path=p) as p1:
+                self.assertEquals(p1, p)
+                self.assertTrue(os.path.exists(p))
+                self.assertTrue(os.path.isdir(p))
+
+            self.assertFalse(os.path.exists(p))
+
+    def test_existing_dir_yield_dir_if_it_exists(self):
+        """
+        The ``inelegant.fs.existing_dir()`` context manager will just yield the
+        dir if it already exists.
+        """
+        with temp_dir() as p:
+            self.assertTrue(os.path.exists(p))
+
+            with existing_dir(path=p) as p1:
+                self.assertEquals(p1, p)
+                self.assertTrue(os.path.exists(p))
+                self.assertTrue(os.path.isdir(p))
+
+        self.assertFalse(os.path.exists(p))
+
+    def test_existing_dir_does_not_delete_existing_dir(self):
+        """
+        The ``inelegant.fs.existing_dir()`` context manager will just yield the
+        dir if it already exists. It will not be deleted.
+        """
+        with temp_dir() as p:
+            self.assertTrue(os.path.exists(p))
+
+            with existing_dir(path=p) as p1:
+                self.assertEquals(p1, p)
+                self.assertTrue(os.path.exists(p))
+                self.assertTrue(os.path.isdir(p))
+
+            self.assertTrue(os.path.exists(p))
+
+    def test_existing_dir_auto_cd(self):
+        """
+        ``inelegant.fs.existing_dir()`` will change the current directory to
+        the new temporary one the argument ``cd`` is ``True``.
+        """
+        origin = os.getcwd()
+
+        with temp_dir() as where:
+            with existing_dir(where=where, name='example', cd=True) as p:
+                self.assertNotEquals(origin, os.getcwd())
+                self.assertEquals(p, os.getcwd())
+
+            self.assertEquals(origin, os.getcwd())
+            self.assertFalse(os.path.exists(p))
+
+    def test_existing_dir_no_auto_cd(self):
+        """
+        ``inelegant.fs.existing_dir()`` will not change the current directory
+        to the new temporary one the argument ``cd`` is ``False`` or not given.
+        """
+        origin = os.getcwd()
+
+        with temp_dir() as where:
+            with existing_dir(where=where, name='example', cd=False) as p:
+                self.assertEquals(origin, os.getcwd())
+                self.assertNotEquals(origin, p)
+
+        with temp_dir() as where:
+            with existing_dir(where=where, name='example', ) as p:
+                self.assertEquals(origin, os.getcwd())
+                self.assertNotEquals(origin, p)
+
+        self.assertEquals(origin, os.getcwd())
+
+    def test_existing_dir_accepts_directory(self):
+        """
+        ``inelegant.fs.existing_dir()`` can choose in which directory to create
+        the new one.
+        """
+        with temp_dir() as where:
+            with existing_dir(where=where, name='example') as p:
+                self.assertTrue(os.path.exists(p))
+                self.assertTrue(os.path.isdir(p))
+
+            self.assertFalse(os.path.exists(p))
+
+    def test_existing_dir_creates_container_directories_from_name(self):
+        """
+        If the ``where`` argument contains both existing and non-exististent
+        directories, ``inelegant.fs.existing_dir()`` will create the needed
+        ones and leave the other ones as-is.
+        """
+        with temp_dir() as where:
+
+            with temp_dir(where=where, name='a') as a:
+
+                self.assertEquals(os.path.join(where, 'a'), a)
+
+                with existing_dir(where=where, name='a/b/example') as p:
+                    self.assertEquals(
+                        os.path.join(where, 'a', 'b', 'example'), p)
+
+                    self.assertTrue(os.path.exists(p))
+                    self.assertTrue(os.path.isdir(p))
+
+                b = os.path.join(where, 'a', 'b')
+
+                self.assertFalse(os.path.exists(p))
+                self.assertFalse(os.path.exists(b))
+                self.assertTrue(os.path.exists(a))
+
+    def test_existing_dir_name_can_be_path(self):
+        """
+        ``inelegant.fs.existing_dir()`` can receive a path as a name, and will
+        create all directories in it. If the path had to be created, it will
+        be removed.
+        """
+        with temp_dir() as where:
+            with existing_dir(where=where, name='a/b/c/example') as p:
+                result = os.path.join(where, 'a', 'b', 'c', 'example')
+
+                self.assertEquals(result, p)
+                self.assertTrue(os.path.exists(p))
+                self.assertTrue(os.path.exists(os.path.join(where, 'a')))
+
+            self.assertFalse(os.path.exists(p))
+            self.assertFalse(os.path.exists(os.path.join(where, 'a')))
+
+    def test_existing_dir_creates_container_directories_from_where(self):
+        """
+        If the ``where`` argument contains both existing and non-exististent
+        directories, ``inelegant.fs.existing_dir()`` will create the needed
+        ones and leave the other ones as-is.
+        """
+        with temp_dir() as where:
+
+            with temp_dir(where=where, name='a') as a:
+
+                self.assertEquals(os.path.join(where, 'a'), a)
+
+                with existing_dir(where=a, name='b/example') as p:
+                    self.assertEquals(
+                        os.path.join(where, 'a', 'b', 'example'), p)
+
+                    self.assertTrue(os.path.exists(p))
+                    self.assertTrue(os.path.isdir(p))
+
+                b = os.path.join(where, 'a', 'b')
+
+                self.assertFalse(os.path.exists(p))
+                self.assertFalse(os.path.exists(b))
+                self.assertTrue(os.path.exists(a))
+
 
 load_tests = TestFinder(__name__, 'inelegant.fs').load_tests
 
