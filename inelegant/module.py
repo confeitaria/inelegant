@@ -107,16 +107,17 @@ def create_module(name, code='', scope=None, to_adopt=(), defs=None):
         sys.stderr.write('Do not use defs argument, use to_adopt.')
         to_adopt = defs
 
-    scope = scope if scope is not None else {}
-    code = dedent(code)
-
     module = imp.new_module(name)
-    adopt(module, *to_adopt)
 
+    scope = scope if scope is not None else {}
     module.__dict__.update(scope)
+
+    adopt(module, *to_adopt)
 
     for d in to_adopt:
         module.__dict__[d.__name__] = d
+
+    code = dedent(code)
 
     with temp_key(sys.modules, key=name, value=module):
         exec code in module.__dict__
