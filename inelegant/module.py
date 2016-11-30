@@ -28,7 +28,7 @@ import shutil
 import tempfile
 
 from inelegant.dict import temp_key
-from inelegant.fs import existing_dir
+from inelegant.fs import existing_dir, temp_file, temp_dir
 from inelegant.toggle import Toggle
 
 create_module_installs_module = Toggle()
@@ -268,22 +268,19 @@ def available_module(name, code='', extension='.py'):
     This line is really executed!
     The exception was handled.
     """
-    tempdir = tempfile.mkdtemp()
-    sys.path.append(tempdir)
-
     source_name = name + extension
-    source_path = os.path.join(tempdir, source_name)
 
-    with open(source_path, 'w') as source_file:
-        source_file.write(code)
+    with temp_dir() as tempdir,\
+            temp_file(where=tempdir, name=source_name, content=code):
 
-    try:
-        yield
-    finally:
-        sys.path.remove(tempdir)
-        shutil.rmtree(tempdir)
-        if name in sys.modules:
-            del sys.modules[name]
+        sys.path.append(tempdir)
+
+        try:
+            yield
+        finally:
+            sys.path.remove(tempdir)
+            if name in sys.modules:
+                del sys.modules[name]
 
 
 @contextlib.contextmanager
@@ -331,12 +328,8 @@ def available_resource(module, name, content='', path=''):
     filename = os.path.join(module_path, path, name)
 
     with existing_dir(os.path.dirname(filename)):
-        with open(filename, 'w') as f:
-            f.write(content)
-
-        yield
-
-        os.remove(filename)
+        with temp_file(path=filename, content=content):
+            yield
 
 
 def adopt(module, *entities):
