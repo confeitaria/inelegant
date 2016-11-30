@@ -28,6 +28,7 @@ import shutil
 import tempfile
 
 from inelegant.dict import temp_key
+from inelegant.fs import existing_dir
 from inelegant.toggle import Toggle
 
 create_module_installs_module = Toggle()
@@ -329,22 +330,13 @@ def available_resource(module, name, content='', path=''):
     module_path = os.path.dirname(module.__file__)
     filename = os.path.join(module_path, path, name)
 
-    resource_dir = os.path.dirname(filename)
-    dir_created = False
+    with existing_dir(os.path.dirname(filename)):
+        with open(filename, 'w') as f:
+            f.write(content)
 
-    if not os.path.isdir(resource_dir):
-        os.makedirs(resource_dir)
-        dir_created = True
+        yield
 
-    with open(filename, 'w') as f:
-        f.write(content)
-
-    yield
-
-    os.remove(filename)
-
-    if dir_created:
-        shutil.rmtree(resource_dir)
+        os.remove(filename)
 
 
 def adopt(module, *entities):
