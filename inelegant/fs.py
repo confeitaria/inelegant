@@ -153,24 +153,21 @@ def temp_file(path=None, content=None, name=None, where=None, dir=None):
         if dir is not None:
             sys.stderr.write('Do not use dir argument, use where.')
             where = dir
-    if where is None:
-        where = tempfile.gettempdir()
 
-    fid = None
+    where = decide_where(where)
+    path = decide_path(path, name, where=where)
 
-    if path is None:
-        if name is None:
-            fid, path = tempfile.mkstemp(dir=where)
-        else:
-            path = os.path.join(where, name)
-
-    if fid is None:
+    if path is not None:
         if os.path.exists(path):
             raise IOError('File "{0}" already exists.'.format(path))
-        open(path, 'a').close()
+
+        f = open(path, 'w')
+    else:
+        f = tempfile.NamedTemporaryFile(dir=where, delete=False)
+        path = f.name
 
     if content is not None:
-        with open(path, 'w') as f:
+        with f:
             f.write(content)
 
     try:
@@ -180,7 +177,7 @@ def temp_file(path=None, content=None, name=None, where=None, dir=None):
 
 
 @contextlib.contextmanager
-def temp_dir(cd=False, where=None, name=None):
+def temp_dir(cd=False, path=None, where=None, name=None):
     """
     ``temp_dir()`` is a context manager to create temporary directories.
 
@@ -241,15 +238,15 @@ def temp_dir(cd=False, where=None, name=None):
     ...     os.path.basename(p)
     'example'
     """
-    origin = os.getcwd()
+    where = decide_where(where)
+    path = decide_path(path, name, where=where)
 
-    if name is None:
+    if path is None:
         path = tempfile.mkdtemp(dir=where)
     else:
-        if where is None:
-            where = tempfile.gettempdir()
-        path = os.path.join(where, name)
         os.makedirs(path)
+
+    origin = os.getcwd()
 
     try:
         if cd:
@@ -262,25 +259,17 @@ def temp_dir(cd=False, where=None, name=None):
 
 @contextlib.contextmanager
 def existing_dir(path=None, where=None, name=None, cd=False):
-    origin = os.getcwd()
-
-    if path is None:
-        if where is None:
-            where = tempfile.gettempdir()
-        path = os.path.join(where, name)
-
-    non_existent = None
-
-    for parent_path in parent_paths(path):
-        if not os.path.exists(parent_path):
-            non_existent = parent_path
-            break
+    where = decide_where(where)
+    path = decide_path(path, name, where)
+    non_existent = missing_parent(path)
 
     try:
         os.makedirs(path)
     except OSError as e:
         if e.errno != errno.EEXIST or not os.path.isdir(path):
             raise
+
+    origin = os.getcwd()
 
     try:
         if cd:
@@ -349,3 +338,93 @@ def root_path(path, platform=None):
         raise Excepton('root_path() does not work on "{0}"'.format(platform))
 
     return root
+
+
+def missing_parent(path):
+    """
+    Given a path, return the first parent of it that does not exist::
+
+    >>> with temp_dir(name='existing') as p:
+    ...     missing = missing_parent(os.path.join(p, 'missing1', 'missing2'))
+    ...     missing == os.path.join(p, 'missing1')
+    True
+
+    If all directories exist, return ``None``:
+
+    >>> with temp_dir(name='existing') as p:
+    ...     missing_parent(p) == None
+    True
+    """
+    for parent in parent_paths(path):
+        if not os.path.exists(parent):
+            return parent
+
+    return None
+
+
+def decide_where(where):
+    """
+    Many functions in ``inelegant.fs`` receive an argument called ``where``.
+    This argument should be a path to a directory _where_ the operations of the
+    function are expected to be done. This argument is optional, so we have to
+    provide a default value if it is not given.
+
+    ``decide_where()`` decides whether to use the given value or the default
+    one. If ``where`` is not ``None``, we have a value! Return it::
+
+    >>> decide_where('/tmp')
+    '/tmp'
+
+    If ``where`` is ``None``, however, we have to use the default, that is
+    given by ``tempfile.gettempdir()``::
+
+    >>> decide_where(None) == tempfile.gettempdir()
+    True
+    """
+    if where is None:
+        where = tempfile.gettempdir()
+
+    return where
+
+
+def decide_path(path, name, where=None):
+    """
+    Many functions in ``inelegant.fs`` are supposed to create or operate on
+    objects (files, directories) in the file system. Many times, these
+    function can either receive a direct path to these objects, or can combine
+    a directory where the object is and the name of this object.
+
+    ``decide_path()`` decides which of those values are to be used. If ``path``
+    is not ``None``, we have a value! Return it::
+
+    >>> decide_path('/tmp/a', 'b', '/tmp')
+    '/tmp/a'
+
+    If ``path`` is ``None`` but ``name`` is not, the generated path will be an
+    object with the given name in the ``where```directory::
+
+    >>> decide_path(None, 'b', '/tmp')
+    '/tmp/b'
+
+    If ``where`` is ``None`` but a name is given, then the path will be an
+    object with the given name at the system's default temporary directory::
+
+    >>> decided_path = decide_path(None, 'b', None)
+    >>> os.path.basename(decided_path)
+    'b'
+    >>> os.path.dirname(decided_path) == tempfile.gettempdir()
+    True
+
+    Finally, if a path is not given and a name is not given, then we cannot
+    reliably generate a path for most purposes and the function returns
+    ``None``::
+
+    >>> decide_path(path=None, name=None, where='/tmp') == None
+    True
+    """
+    where = decide_where(where)
+
+    if path is None and name is not None:
+        path = os.path.join(where, name)
+
+    return path
