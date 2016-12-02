@@ -27,7 +27,7 @@ setup(
     description='Inelegant, a directory of weird helpers for tests.',
     long_description="""
     "Inelegant" is a set of not very elegant tools to help testing. So far
-    there are five packages:
+    there are seven packages:
 
     inelegant.net: the most important tools are the waiter functions.
     inelegant.net.wait_server_down() will block until a port in a host is not
@@ -54,6 +54,13 @@ setup(
     directory and be back to the original one, create a temporary file and have
     it automatically deleted after the context, and the same with temporary
     directories.
+
+    inelegant.dict: it provides the temp_key() context manager. It adds a key
+    to a dictionary and, once its context is done, removes the key.
+
+    inelegant.toggle: it provides the Toggle class. It is used to create
+    flags to enable global behaviors. A toggle is, indeed, something you would
+    rather avoid but may need.
 
     For more info, check the project page.
     """,
