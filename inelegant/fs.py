@@ -21,6 +21,7 @@ import sys
 import tempfile
 import shutil
 import contextlib
+import errno
 
 
 @contextlib.contextmanager
@@ -257,3 +258,94 @@ def temp_dir(cd=False, where=None, name=None):
     finally:
         os.chdir(origin)
         shutil.rmtree(path)
+
+
+@contextlib.contextmanager
+def existing_dir(path=None, where=None, name=None, cd=False):
+    origin = os.getcwd()
+
+    if path is None:
+        if where is None:
+            where = tempfile.gettempdir()
+        path = os.path.join(where, name)
+
+    non_existent = None
+
+    for parent_path in parent_paths(path):
+        if not os.path.exists(parent_path):
+            non_existent = parent_path
+            break
+
+    try:
+        os.makedirs(path)
+    except OSError as e:
+        if e.errno != errno.EEXIST or not os.path.isdir(path):
+            raise
+
+    try:
+        if cd:
+            os.chdir(path)
+        yield path
+    finally:
+        os.chdir(origin)
+
+        if non_existent is not None:
+            shutil.rmtree(non_existent)
+
+
+def parent_paths(path):
+    """
+    Giving a path, returns a generator for all of its parents::
+
+    >>> for sp in parent_paths('/usr/local/bin/sed'):
+    ...     sp
+    '/'
+    '/usr'
+    '/usr/local'
+    '/usr/local/bin'
+    '/usr/local/bin/sed'
+    """
+    components = path.split(os.sep)
+    parent_path = root_path(path)
+
+    for component in components:
+        parent_path = os.path.join(parent_path, component)
+
+        yield parent_path
+
+
+def root_path(path, platform=None):
+    """
+    Returns a "file system root directory." In windows, the "root directory"
+    is expected to bhe the drive of the current directory. In POSIX system, it
+    is expected to be "/"::
+
+    >>> root_path('/usr/local/bin/python', platform="posix")
+    '/'
+
+    On Windows, it would return the path's drive:
+
+    >>> root_path(r'C:\\Program Files\\Python\\python.exe', platform="nt")
+    'C:'
+
+    (Currently, ``root_path()`` only support those two platforms, and does not
+    support network paths, but it can be expanded to support any one that prove
+    itself necessary.)
+
+    The ``platform`` argument is optional. If it is not given, the function
+    will ue the currenct platform's name::
+
+    >>> root_path(os.path.curdir) == root_path(os.path.curdir,platform=os.name)
+    True
+    """
+    if platform is None:
+        platform = os.name
+
+    if platform == "posix":
+        root = "/"
+    elif platform == "nt":
+        root = path.split(':')[0] + ':'
+    else:
+        raise Excepton('root_path() does not work on "{0}"'.format(platform))
+
+    return root
