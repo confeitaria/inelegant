@@ -1,0 +1,23 @@
+2016-12-02  Adam Victor Nazareth Brandizzi <adam@brandizzi.com.br>
+
+    * VERSION 0.1.0
+
+    * [BREAKING] #80 inelegant.module: create_module() does not install module
+      anymore.
+
+    * [DEPRECATED] #80 inelegant.module: Old behavior of create_module() (to
+      add module to syspath) can be enabled with create_module_installs_module
+      toggle.
+
+    * #76 inelegant.fs: available_resource() accepts a "path" argument.
+
+    * #78 inelegant.fs: Created existing_dir(), a context manager that only
+      creates a temporary directory if it does not exist yet.
+
+    * #80 inelegant.toggle:  Created Toggle class for enabling/disabling global
+      behaviors.
+
+    * #81 inelegant.module: installed_module() restores any previous module.
+
+    * #82 inelegant.dict: Created temp_key() context manager. It adds a value
+      to a dictionary during its context, and removes it after that.
