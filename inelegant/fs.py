@@ -259,6 +259,65 @@ def temp_dir(cd=False, path=None, where=None, name=None):
 
 @contextlib.contextmanager
 def existing_dir(path=None, where=None, name=None, cd=False):
+    """
+    ``existing_dir()`` is a context manager that ensures a directory does
+    exist. If it does exist, the function will yield a path to it::
+
+    >>> with temp_dir() as p1:
+    ...     with existing_dir(path=p1) as p2:
+    ...         p1 == p2
+    ...         os.path.exists(p2)
+    True
+    True
+
+    If the directory does not exist, it will be created::
+
+    >>> with temp_dir() as p1:
+    ...     new_dir = os.path.join(p1, 'test')
+    ...     with existing_dir(path=new_dir) as p2:
+    ...         p2 == new_dir
+    ...         os.path.isdir(p2)
+    True
+    True
+
+    In the case the context did not previously exist, the directory will be
+    removed::
+
+    >>> with temp_dir() as p1:
+    ...     new_dir = os.path.join(p1, 'test')
+    ...     with existing_dir(path=new_dir) as p2:
+    ...         os.path.exists(p2)
+    ...     os.path.exists(p2)
+    True
+    False
+
+    If the directory did exist previously, however, it will not be removed::
+
+    >>> with temp_dir() as p1:
+    ...     with existing_dir(path=p1) as p2:
+    ...         os.path.exists(p2)
+    ...     os.path.exists(p2)
+    True
+    True
+
+    The arguments ``path``, ``where`` and ``name``
+    ==============================================
+
+    The contet manager can receive the path to the directory directly via its
+    ``path`` argument. Sometimes, however, we have a path to a directory and
+    the name of a directory we would create in this path. In this case, we can
+    give these values to the context manager via the ``where`` and  ``name``
+    arguments::
+
+    >>> with temp_dir() as p1:
+    ...     with existing_dir(where=p1, name='test') as p2:
+    ...         p2 == os.path.join(p1, 'test')
+    ...         os.path.exists(p2)
+    ...     os.path.exists(p2)
+    True
+    True
+    False
+    """
     where = decide_where(where)
     path = decide_path(path, name, where)
     non_existent = missing_parent(path)
