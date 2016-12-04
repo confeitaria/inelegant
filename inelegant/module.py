@@ -32,6 +32,7 @@ from inelegant.fs import existing_dir, temp_file, temp_dir
 from inelegant.toggle import Toggle
 
 create_module_installs_module = Toggle()
+available_resource_uses_path_as_where = Toggle()
 
 
 def create_module(name, code='', scope=None, to_adopt=(), defs=None):
@@ -324,6 +325,22 @@ def available_resource(module, name=None, where=None, path=None, content=''):
     ...         pkgutil.get_data('m', 'a/test.txt')
     'test'
     """
+    if available_resource_uses_path_as_where.enabled:
+        sys.stderr.write(
+            'Using the "path" argument as a component to be prefixed to the '
+            '"name" argument is deprecated but this behavior was enabled by '
+            'the available_resource_uses_path_as_where toggle.')
+
+        if where is not None:
+            raise TypeError(
+                'available_resource() does not accept "where" argument if it '
+                'is using "path" as component of the file path.')
+
+        if path is None:
+            path = ''
+
+        path = os.path.join(path, name)
+
     if path is None:
         if where is None:
             where = ''
