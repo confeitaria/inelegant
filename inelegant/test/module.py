@@ -483,6 +483,30 @@ class TestAvailableResource(unittest.TestCase):
                 content = pkgutil.get_data('example', 'a/b/test.txt')
                 self.assertEquals('test', content)
 
+    def test_availabe_resource_uses_path_to_entire_file_AAAA(self):
+        """
+        If we give a path argument to ``available_resource()`` it should create
+        the resource in this path
+        """
+        with available_module('example'):
+            with available_resource(
+                    'example', path='a/b/test.txt', content='test'):
+                content = pkgutil.get_data('example', 'a/b/test.txt')
+                self.assertEquals('test', content)
+
+    def test_availabe_resource_accepts_where_plus_name_AAAA(self):
+        """
+        ``available_resource()`` should accept both the arguments ``where`` and
+        ``name``. If it recieves such arguments (and does not recieve ``path``)
+        then the resourced should be named ``name`` and located at the
+        ``where`` subdirectory.
+        """
+        with available_module('example'):
+            with available_resource(
+                    'example', 'test.txt', where='a/b/', content='test'):
+                content = pkgutil.get_data('example', 'a/b/test.txt')
+                self.assertEquals('test', content)
+
 
 load_tests = TestFinder(__name__, 'inelegant.module').load_tests
 
