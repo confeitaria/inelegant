@@ -43,7 +43,7 @@ def temp_key(d, key, value):
     d[key] = value
 
     try:
-        yield
+        yield d
     finally:
         if key_existed:
             d[key] = previous_value
