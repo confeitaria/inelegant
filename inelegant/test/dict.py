@@ -26,6 +26,15 @@ from inelegant.finder import TestFinder
 
 class TestTempKey(unittest.TestCase):
 
+    def test_yield_dict(self):
+        """
+        ``inelegant.dict.temp_key()`` should yield the dict it received.
+        """
+        original = {}
+
+        with temp_key(original, key='a', value=1) as yielded:
+            self.assertIs(original, yielded)
+
     def test_create_key(self):
         """
         ``inelegant.dict.temp_key()`` adds a key to a dict only during its
@@ -38,7 +47,7 @@ class TestTempKey(unittest.TestCase):
 
         self.assertEquals({}, d)
 
-    def test_restorekey(self):
+    def test_restore_key(self):
         """
         ``inelegant.dict.temp_key()`` restores a previous key value if it
         existed.
@@ -66,7 +75,7 @@ class TestTempKey(unittest.TestCase):
 
         self.assertEquals({}, d)
 
-    def test_restorekey_after_exception_in_context(self):
+    def test_restore_key_after_exception_in_context(self):
         """
         ``inelegant.dict.temp_key()`` should restore the key even if an
         exception happened in the context.
