@@ -285,7 +285,7 @@ def available_module(name, code='', extension='.py'):
 
 
 @contextlib.contextmanager
-def available_resource(module, name, content='', path=''):
+def available_resource(module, name=None, where=None, path=None, content=''):
     """
     ``available_resource()`` is a context manager that creates a resource
     associated with a moduled created by ``available_module()``.
@@ -324,9 +324,14 @@ def available_resource(module, name, content='', path=''):
     ...         pkgutil.get_data('m', 'a/test.txt')
     'test'
     """
+    if path is None:
+        if where is None:
+            where = ''
+        path = os.path.join(where, name)
+
     module = importlib.import_module(module)
     module_path = os.path.dirname(module.__file__)
-    filename = os.path.join(module_path, path, name)
+    filename = os.path.join(module_path, path)
 
     with existing_dir(os.path.dirname(filename)):
         with temp_file(path=filename, content=content):

@@ -483,7 +483,7 @@ class TestAvailableResource(unittest.TestCase):
                 content = pkgutil.get_data('example', 'a/b/test.txt')
                 self.assertEquals('test', content)
 
-    def test_availabe_resource_uses_path_to_entire_file_AAAA(self):
+    def test_availabe_resource_uses_path_to_entire_file(self):
         """
         If we give a path argument to ``available_resource()`` it should create
         the resource in this path
@@ -494,7 +494,7 @@ class TestAvailableResource(unittest.TestCase):
                 content = pkgutil.get_data('example', 'a/b/test.txt')
                 self.assertEquals('test', content)
 
-    def test_availabe_resource_accepts_where_plus_name_AAAA(self):
+    def test_availabe_resource_accepts_where_plus_name(self):
         """
         ``available_resource()`` should accept both the arguments ``where`` and
         ``name``. If it recieves such arguments (and does not recieve ``path``)
