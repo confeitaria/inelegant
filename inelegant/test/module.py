@@ -24,7 +24,7 @@ import sys
 
 from inelegant.module import create_module, installed_module, \
     available_module, available_resource, adopt, AdoptException, \
-    create_module_installs_module
+    create_module_installs_module, available_resource_uses_path_as_where
 
 from inelegant.finder import TestFinder
 
@@ -477,11 +477,23 @@ class TestAvailableResource(unittest.TestCase):
         We can give a path to ``available_resource()`` so it creates the file
         in this path.
         """
-        with available_module('example'):
-            with available_resource(
-                    'example', 'test.txt', path='a/b', content='test'):
-                content = pkgutil.get_data('example', 'a/b/test.txt')
-                self.assertEquals('test', content)
+        with available_resource_uses_path_as_where:
+            with available_module('example'):
+                with available_resource(
+                        'example', 'test.txt', path='a/b', content='test'):
+                    content = pkgutil.get_data('example', 'a/b/test.txt')
+                    self.assertEquals('test', content)
+
+    def test_availabe_resource_work_without_path_with_toggle(self):
+        """
+        If ``available_resource_uses_path_as_where`` is enabled, we are not
+        forced to use ``path``.
+        """
+        with available_resource_uses_path_as_where:
+            with available_module('example'):
+                with available_resource('example', 'test.txt', content='test'):
+                    content = pkgutil.get_data('example', 'test.txt')
+                    self.assertEquals('test', content)
 
     def test_availabe_resource_uses_path_to_entire_file(self):
         """
