@@ -42,13 +42,24 @@ def create_module(name, code='', scope=None, to_adopt=(), defs=None):
     >>> create_module('my_module')
     <module 'my_module' (built-in)>
 
-    It used to add it to the available modules, but it does not happen
-    anymore::
+        **Note**: Up to inelegant 0.9.0, the function used to make the module
+        importable. It is not the case anymore::
 
-    >>> import my_module
-    Traceback (most recent call last):
-      ...
-    ImportError: No module named my_module
+        >>> import my_module
+        Traceback (most recent call last):
+          ...
+        ImportError: No module named my_module
+
+        Ideally, you should use ``installed_module()`` to make it available
+        to import. However, if you still need the old behavior from
+        ``create_module()``, use the ``create_module_installs_module`` toggle::
+
+        >>> with create_module_installs_module:
+        ...     m = create_module('deprecated_installed_module')
+        ...     import deprecated_installed_module
+        ...     m == deprecated_installed_module
+        True
+
 
     Executing code
     --------------
@@ -338,17 +349,17 @@ def available_resource(module, name=None, where=None, path=None, content=''):
     ...         pkgutil.get_data('m', 'a/test.txt')
     'test'
 
-    **Note:** Up to inelegant 0.1.0, the ``path`` argument used to be prefixed
-    to the ``name`` argument to generate the path, and there was no ``where``
-    argument. If you are dependent on this behavior, it can be enabled via the
-    ``available_resource_uses_path_as_where`` toggle:
+        **Note:** Up to inelegant 0.1.0, the ``path`` argument used to be
+        prefixed to the ``name`` argument to generate the path, and there was
+        no ``where`` argument. If you are dependent on this behavior, it can be
+        enabled via the ``available_resource_uses_path_as_where`` toggle:
 
-    >>> with available_resource_uses_path_as_where:
-    ...     with available_module('m'):
-    ...         with available_resource(
-    ...                 'm', 'test.txt', path='a', content='test'):
-    ...             pkgutil.get_data('m', 'a/test.txt')
-    'test'
+        >>> with available_resource_uses_path_as_where:
+        ...     with available_module('m'):
+        ...         with available_resource(
+        ...                 'm', 'test.txt', path='a', content='test'):
+        ...             pkgutil.get_data('m', 'a/test.txt')
+        'test'
     """
     if available_resource_uses_path_as_where.enabled:
         sys.stderr.write(
