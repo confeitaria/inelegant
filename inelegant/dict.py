@@ -34,6 +34,12 @@ def temp_key(d, key, value):
 
     >>> d
     {}
+
+    The context manager yields the dict itself::
+    >>> d = {}
+    >>> with temp_key(d, key='a', value=1) as d1:
+    ...     d is d1
+    True
     """
     key_existed, previous_value = False, None
 
