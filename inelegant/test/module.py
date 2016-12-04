@@ -472,10 +472,10 @@ class TestAvailableResource(unittest.TestCase):
                 content = pkgutil.get_data('example', 'a/b/test.txt')
                 self.assertEquals('test', content)
 
-    def test_availabe_resource_uses_path(self):
+    def test_availabe_resource_uses_path_as_where_with_toggle(self):
         """
-        We can give a path to ``available_resource()`` so it creates the file
-        in this path.
+        We can use the ``path`` argument as a prefix to the ``name`` argument
+        if we enable the available_resource_uses_path_as_where toggle.
         """
         with available_resource_uses_path_as_where:
             with available_module('example'):

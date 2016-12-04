@@ -317,12 +317,37 @@ def available_resource(module, name=None, where=None, path=None, content=''):
       ...
     IOError: ...
 
-    If needed, once can define the directory where the resource will be. One
-    just needs to use the ``path`` argument::
+    The ``where`` and ``path`` arguments
+    ====================================
+
+    If needed, one can define the directory where the resource will be. One
+    just needs to use the ``where`` argument::
 
     >>> with available_module('m'):
-    ...     with available_resource('m', 'test.txt', content='test', path='a'):
+    ...     with available_resource(
+    ...             'm', 'test.txt', where='a', content='test'):
     ...         pkgutil.get_data('m', 'a/test.txt')
+    'test'
+
+    If one has the path of the resource, one can give it directly to the
+    context manager via the ``path`` argument::
+
+    >>> with available_module('m'):
+    ...     with available_resource(
+    ...             'm', path='a/test.txt', content='test'):
+    ...         pkgutil.get_data('m', 'a/test.txt')
+    'test'
+
+    **Note:** Up to inelegant 0.1.0, the ``path`` argument used to be prefixed
+    to the ``name`` argument to generate the path, and there was no ``where``
+    argument. If you are dependent on this behavior, it can be enabled via the
+    ``available_resource_uses_path_as_where`` toggle:
+
+    >>> with available_resource_uses_path_as_where:
+    ...     with available_module('m'):
+    ...         with available_resource(
+    ...                 'm', 'test.txt', path='a', content='test'):
+    ...             pkgutil.get_data('m', 'a/test.txt')
     'test'
     """
     if available_resource_uses_path_as_where.enabled:
