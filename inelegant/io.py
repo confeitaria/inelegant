@@ -27,6 +27,38 @@ except:
 
 @contextlib.contextmanager
 def redirect_stdout(output=None):
+    """
+    ``redirect_stdout()`` replaces the current standward output for the
+    file-like object given as an argument::
+
+    >>> output = StringIO()
+    >>> with redirect_stdout(output):
+    ...     print 'ok'
+    >>> output.getvalue()
+    'ok\\n'
+
+    Once the context is finished, the previous stdout is restored::
+
+    >>> print 'back'
+    back
+    >>> output.getvalue()
+    'ok\\n'
+
+    The context yields the file-like object::
+
+    >>> with redirect_stdout(StringIO()) as o:
+    ...     print 'drop var'
+    >>> o.getvalue()
+    'drop var\\n'
+
+    If no argument is given, it will create and yield a ``StringIO`` object to
+    redirect the content to::
+
+    >>> with redirect_stdout() as o:
+    ...     print 'create it for me'
+    >>> o.getvalue()
+    'create it for me\\n'
+    """
     if output is None:
         output = StringIO()
 
@@ -40,6 +72,37 @@ def redirect_stdout(output=None):
 
 @contextlib.contextmanager
 def redirect_stderr(output=None):
+    """
+    ``redirect_stderr()`` replaces the current standard error for the file-like
+    object given as an argument::
+
+    >>> output = StringIO()
+    >>> with redirect_stderr(output):
+    ...     sys.stderr.write('ok\\n')
+    >>> output.getvalue()
+    'ok\\n'
+
+    Once the context is finished, the previous stdout is restored::
+
+    >>> sys.stderr.write('back\\n')
+    >>> output.getvalue()
+    'ok\\n'
+
+    The context yields the file-like object::
+
+    >>> with redirect_stderr(StringIO()) as o:
+    ...     sys.stderr.write('drop var\\n')
+    >>> o.getvalue()
+    'drop var\\n'
+
+    If no argument is given, it will create and yield a ``StringIO`` object to
+    redirect the content to::
+
+    >>> with redirect_stderr() as o:
+    ...     sys.stderr.write('create it for me\\n')
+    >>> o.getvalue()
+    'create it for me\\n'
+    """
     if output is None:
         output = StringIO()
 

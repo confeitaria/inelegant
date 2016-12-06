@@ -14,7 +14,7 @@ Inelegant groups a series of tools that are very useful for automating tests.
 Most of them are unreliable or costly "in the wild" but can be useful enough on
 tests.
 
-Right now there are seven modules in this project.
+Right now there are eight modules in this project.
 
 "Inelegant Process" - running and communicating with a simple processes
 =======================================================================
@@ -918,8 +918,8 @@ Once the toggle is enabled, however, the old behavior will emerge::
     >>> div(6, 0)
     nan
 
-Disabling a togge
------------------
+Disabling a toggle
+------------------
 
 You can disable a toggle as well::
 
@@ -997,6 +997,88 @@ Once the context finishes, the key is gone::
 
     >>> d
     {}
+
+"Inelegant I/O" - dealing with standard input/output
+====================================================
+
+The module ``inelegant.io`` has two context managers, ``redirect_stdout`` and
+``redirect_stderr``.
+
+Redirecting standard output
+---------------------------
+
+``redirect_stdout()`` will redirect the standard output to a file object given
+to it::
+
+    >>> from StringIO import StringIO
+    >>> from inelegant.io import redirect_stdout
+    >>> output = StringIO()
+    >>> with redirect_stdout(output):
+    ...     print 'this will be redirected'
+
+Everything that would get into the standard output will be written to this
+file::
+
+    >>> output.getvalue()
+    'this will be redirected\n'
+
+Once the context is exited, the previous standard output is restored::
+
+    >>> print 'this will not be redirected'
+    this will not be redirected
+
+The context manager returns the object to which it will write the redirected
+content::
+
+    >>> with redirect_stdout(StringIO()) as o:
+    ...     print 'new file-like object'
+    >>> o.getvalue()
+    'new file-like object\n'
+
+If no argument is given to the context manager, it will create and return a
+``StringIO`` object::
+
+    >>> with redirect_stdout() as o:
+    ...     print 'automatically created file-like object'
+    >>> o.getvalue()
+    'automatically created file-like object\n'
+
+Redirecting standard error
+--------------------------
+
+``redirect_stderr()`` will redirect the standard error to a file object given
+to it::
+
+    >>> from inelegant.io import redirect_stderr
+    >>> output = StringIO()
+    >>> with redirect_stderr(output):
+    ...     sys.stderr.write('this will be redirected\n')
+
+Everything that would get into the standard output will be written to this
+file::
+
+    >>> output.getvalue()
+    'this will be redirected\n'
+
+Once the context is exited, the previous standard output is restored::
+
+    >>> sys.stderr.write('this will not be redirected')
+
+The context manager returns the object to which it will write the redirected
+content::
+
+    >>> with redirect_stderr(StringIO()) as o:
+    ...     sys.stderr.write('new file-like object\n')
+    >>> o.getvalue()
+    'new file-like object\n'
+
+If no argument is given to the context manager, it will create and return a
+``StringIO`` object::
+
+    >>> with redirect_stderr() as o:
+    ...     sys.stderr.write('automatically created file-like object\n')
+    >>> o.getvalue()
+    'automatically created file-like object\n'
 
 Licensing
 ==============

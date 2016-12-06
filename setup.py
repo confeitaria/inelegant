@@ -27,7 +27,7 @@ setup(
     description='Inelegant, a directory of weird helpers for tests.',
     long_description="""
     "Inelegant" is a set of not very elegant tools to help testing. So far
-    there are seven packages:
+    there are eight packages:
 
     inelegant.net: the most important tools are the waiter functions.
     inelegant.net.wait_server_down() will block until a port in a host is not
@@ -61,6 +61,11 @@ setup(
     inelegant.toggle: it provides the Toggle class. It is used to create
     flags to enable global behaviors. A toggle is, indeed, something you would
     rather avoid but may need.
+
+    inelegant.io: tools to process standard input/output/error. Right now it
+    has two context managers, redirect_stdout() and redirect_stderr(), that
+    redirect the standard output and the standard error, respectively, to a
+    file.
 
     For more info, check the project page.
     """,
