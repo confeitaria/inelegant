@@ -26,6 +26,7 @@ from inelegant.module import create_module, installed_module, \
     available_module, available_resource, adopt, AdoptException, \
     create_module_installs_module, available_resource_uses_path_as_where
 
+from inelegant.io import redirect_stderr
 from inelegant.finder import TestFinder
 
 
@@ -105,6 +106,19 @@ class TestCreateModule(unittest.TestCase):
 
             del sys.modules['example']
 
+    def test_create_module_installs_module_with_toggle_give_warning(self):
+        """
+        If your code relies in the old behavior of ``create_module()`` where it
+        installs the module for importing, then you can enable this behavior
+        back using the ``inelegant.module.create_module_installs_module``
+        toggle. Yet, you should be warned this behavior is deprecated
+        """
+        with create_module_installs_module, redirect_stderr() as err:
+            m = create_module('example')
+            self.assertTrue(err.getvalue())
+
+            del sys.modules['example']
+
     def test_create_module_does_not_adopt_scope_entities(self):
         """
         All classes and functions from the scope should not be adopted by the
@@ -164,6 +178,19 @@ class TestCreateModule(unittest.TestCase):
         self.assertEquals(m.__name__, Class.__module__)
         self.assertEquals(m.__name__, Class.method.__module__)
         self.assertEquals(m.__name__, function.__module__)
+
+    def test_create_module_defs_argument_print_warning(self):
+        """
+        The use of the ``create_module()``'s ``defs`` argument should result in
+        a warning.
+        """
+        def function(a):
+            pass
+
+        with redirect_stderr() as err:
+            m = create_module('example', defs=(function,))
+
+            self.assertTrue(err.getvalue())
 
     def test_create_module_set_def_entities_in_module(self):
         """
@@ -401,7 +428,6 @@ class TestAdopt(unittest.TestCase):
             class Class():
                 pass
         """
-
         with installed_module('m', code=code) as m:
             self.assertEquals('m', m.function.__module__)
             self.assertEquals('m', m.Class.__module__)
@@ -483,6 +509,17 @@ class TestAvailableResource(unittest.TestCase):
                         'example', 'test.txt', path='a/b', content='test'):
                     content = pkgutil.get_data('example', 'a/b/test.txt')
                     self.assertEquals('test', content)
+
+    def test_availabe_resource_path_as_where_prints_warning(self):
+        """
+        The user should be warned about using ``path`` argument as a prefix to
+        the ``name`` argument.
+        """
+        with redirect_stderr() as err, available_resource_uses_path_as_where:
+            with available_module('example'):
+                with available_resource(
+                        'example', 'test.txt', path='a/b', content='test'):
+                    self.assertTrue(err.getvalue())
 
     def test_availabe_resource_work_without_path_with_toggle(self):
         """

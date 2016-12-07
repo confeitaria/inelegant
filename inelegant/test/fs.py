@@ -23,6 +23,7 @@ import os
 
 from inelegant.fs import change_dir as cd, temp_file, temp_dir, existing_dir
 
+from inelegant.io import redirect_stderr
 from inelegant.finder import TestFinder
 
 
@@ -121,10 +122,13 @@ class TestTemporaryFile(unittest.TestCase):
         ``inelegant.fs.temp_file()`` can use an arbitrary directory given
         by the user via the deprecated ``dir`` argument.
         """
-        with temp_file(dir=tempfile.gettempdir()) as p:
-            self.assertEquals(tempfile.gettempdir(), os.path.dirname(p))
-            self.assertTrue(os.path.exists(p))
-            self.assertTrue(os.path.isfile(p))
+        with redirect_stderr() as err:
+            with temp_file(dir=tempfile.gettempdir()) as p:
+                self.assertEquals(tempfile.gettempdir(), os.path.dirname(p))
+                self.assertTrue(os.path.exists(p))
+                self.assertTrue(os.path.isfile(p))
+
+        self.assertTrue(err.getvalue())
 
         self.assertFalse(os.path.exists(p))
         self.assertFalse(os.path.isfile(p))
