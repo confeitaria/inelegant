@@ -59,10 +59,19 @@ class redirect_stdout(object):
     'create it for me\\n'
     """
 
-    def __init__(self, output=None):
+    def __init__(self, arg=None):
+        function = None
+        output = None
+
+        if callable(arg):
+            function = arg
+        elif arg is not None:
+            output = arg
+
         if output is None:
             output = StringIO()
 
+        self.function = function
         self.output = output
         self.temp = None
 
