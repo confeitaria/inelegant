@@ -97,8 +97,7 @@ class redirect_stdout(object):
             return g
 
 
-@contextlib.contextmanager
-def redirect_stderr(output=None):
+class redirect_stderr(object):
     """
     ``redirect_stderr()`` replaces the current standard error for the file-like
     object given as an argument::
@@ -130,12 +129,40 @@ def redirect_stderr(output=None):
     >>> o.getvalue()
     'create it for me\\n'
     """
-    if output is None:
-        output = StringIO()
 
-    temp, sys.stderr = sys.stderr, output
+    def __init__(self, arg=None):
+        function = None
+        output = None
 
-    try:
-        yield output
-    finally:
-        sys.stderr = temp
+        if callable(arg):
+            function = arg
+        elif arg is not None:
+            output = arg
+
+        if output is None:
+            output = StringIO()
+
+        self.function = function
+        self.output = output
+        self.temp = None
+
+    def __enter__(self):
+        self.temp, sys.stderr = sys.stderr, self.output
+
+        return self.output
+
+    def __exit__(self, type, value, traceback):
+        sys.stderr = self.temp
+
+    def __call__(self, *args, **kwargs):
+        if self.function is not None:
+            with self:
+                return self.function(*args, **kwargs)
+        else:
+            f = args[0]
+
+            def g(*args, **kwargs):
+                with self:
+                    return f(*args, **kwargs)
+
+            return g
