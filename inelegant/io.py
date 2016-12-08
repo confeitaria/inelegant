@@ -28,7 +28,12 @@ except:
 def redirect_stdout(arg=None):
     """
     ``redirect_stdout()`` replaces the current standward output for the
-    file-like object given as an argument::
+    file-like object given as an argument.
+
+    As a context manager
+    ====================
+
+    ``redirect_stdout()`` can be used as a context manager::
 
     >>> output = StringIO()
     >>> with redirect_stdout(output):
@@ -57,6 +62,32 @@ def redirect_stdout(arg=None):
     ...     print 'create it for me'
     >>> o.getvalue()
     'create it for me\\n'
+
+    As a decorator
+    ==============
+
+    ``redirect_stdout()`` also behaves as a decorator. In this case, it will
+    redirect any output during the function execution::
+
+    >>> output = StringIO()
+    >>> @redirect_stdout(output)
+    ... def f(a, b):
+    ...     print 'the args are', a, b
+    ...     return a+b
+    >>> f(1,2)
+    3
+    >>> output.getvalue()
+    'the args are 1 2\\n'
+
+    If you just want to suppress the output, you can use ``redirect_stdout()``
+    directly, without giving an argument::
+
+    >>> @redirect_stdout
+    ... def g(a, b):
+    ...     print 'the args are', a, b
+    ...     return a*b
+    >>> g(2,3)
+    6
     """
     if callable(arg):
         decorator = RedirectContextManager(sys, 'stdout', StringIO())
@@ -69,7 +100,12 @@ def redirect_stdout(arg=None):
 def redirect_stderr(arg=None):
     """
     ``redirect_stderr()`` replaces the current standard error for the file-like
-    object given as an argument::
+    object given as an argument
+
+    As a context manager
+    ====================
+
+    ``redirect_stderr()`` can be used as a context manager::
 
     >>> output = StringIO()
     >>> with redirect_stderr(output):
@@ -97,6 +133,32 @@ def redirect_stderr(arg=None):
     ...     sys.stderr.write('create it for me\\n')
     >>> o.getvalue()
     'create it for me\\n'
+
+    As a decorator
+    ==============
+
+    ``redirect_stderr()`` also behaves as a decorator. In this case, it will
+    redirect any output during the function execution::
+
+    >>> output = StringIO()
+    >>> @redirect_stderr(output)
+    ... def f(a, b):
+    ...     sys.stderr.write('the args are {0} {1}\\n'.format(a, b))
+    ...     return a+b
+    >>> f(1,2)
+    3
+    >>> output.getvalue()
+    'the args are 1 2\\n'
+
+    If you just want to suppress the output, you can use ``redirect_stderr()``
+    directly, without giving an argument::
+
+    >>> @redirect_stderr
+    ... def g(a, b):
+    ...     sys.stderr.write('the args are {0} {1}\\n'.format(a, b))
+    ...     return a*b
+    >>> g(2,3)
+    6
     """
     if callable(arg):
         decorator = RedirectContextManager(sys, 'stderr', StringIO())
