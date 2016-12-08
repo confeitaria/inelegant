@@ -136,6 +136,44 @@ class TestRedirectStdout(unittest.TestCase):
 
         self.assertEquals(3, value)
 
+    def test_redirect_stdout_is_well_behaved_decorator_with_bound_method(self):
+        """
+        ``inelegant.io.redirect_stdout()``, when acting as a decorator, should
+        return an adequate wrapper to bound methods.
+        """
+        output = StringIO()
+
+        class Test(object):
+
+            def __init__(self, a):
+                self.a = a
+
+            @redirect_stdout(output)
+            def f(self, b):
+                return self.a+b
+
+        value = Test(1).f(2)
+
+        self.assertEquals(3, value)
+
+    def test_redirect_stdout_without_arg_is_well_behaved_decorator_bound(self):
+        """
+        ``inelegant.io.redirect_stdout()``, when acting as a decorator, should
+        return an adequate wrapper to bound methods.
+        """
+        class Test(object):
+
+            def __init__(self, a):
+                self.a = a
+
+            @redirect_stdout
+            def f(self, b):
+                return self.a+b
+
+        value = Test(1).f(2)
+
+        self.assertEquals(3, value)
+
 
 class TestRedirectStderr(unittest.TestCase):
 
@@ -254,6 +292,44 @@ class TestRedirectStderr(unittest.TestCase):
             return 3
 
         value = f('te', b='st')
+
+        self.assertEquals(3, value)
+
+    def test_redirect_stderr_is_well_behaved_decorator_with_bound_method(self):
+        """
+        ``inelegant.io.redirect_stderr()``, when acting as a decorator, should
+        return an adequate wrapper to bound methods.
+        """
+        output = StringIO()
+
+        class Test(object):
+
+            def __init__(self, a):
+                self.a = a
+
+            @redirect_stderr(output)
+            def f(self, b):
+                return self.a+b
+
+        value = Test(1).f(2)
+
+        self.assertEquals(3, value)
+
+    def test_redirect_stderr_without_arg_is_well_behaved_decorator_bound(self):
+        """
+        ``inelegant.io.redirect_stderr()``, when acting as a decorator, should
+        return an adequate wrapper to bound methods.
+        """
+        class Test(object):
+
+            def __init__(self, a):
+                self.a = a
+
+            @redirect_stderr
+            def f(self, b):
+                return self.a+b
+
+        value = Test(1).f(2)
 
         self.assertEquals(3, value)
 
