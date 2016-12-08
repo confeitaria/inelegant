@@ -83,12 +83,18 @@ class redirect_stdout(object):
     def __exit__(self, type, value, traceback):
         sys.stdout = self.temp
 
-    def __call__(self, f):
-        def g(*args, **kwargs):
+    def __call__(self, *args, **kwargs):
+        if self.function is not None:
             with self:
-                return f(*args, **kwargs)
+                return self.function(*args, **kwargs)
+        else:
+            f = args[0]
 
-        return g
+            def g(*args, **kwargs):
+                with self:
+                    return f(*args, **kwargs)
+
+            return g
 
 
 @contextlib.contextmanager
