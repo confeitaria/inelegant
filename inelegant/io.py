@@ -25,7 +25,7 @@ except:
     from StringIO import StringIO
 
 
-class redirect_stdout(object):
+def redirect_stdout(arg=None):
     """
     ``redirect_stdout()`` replaces the current standward output for the
     file-like object given as an argument::
@@ -58,20 +58,20 @@ class redirect_stdout(object):
     >>> o.getvalue()
     'create it for me\\n'
     """
+    if callable(arg):
+        decorator = redirect_stdout_decorator(StringIO())
 
-    def __init__(self, arg=None):
-        function = None
-        output = None
+        return decorator(arg)
+    else:
+        return RedirectStdoutContextManager(arg)
 
-        if callable(arg):
-            function = arg
-        elif arg is not None:
-            output = arg
 
+class RedirectStdoutContextManager(object):
+
+    def __init__(self, output=None):
         if output is None:
             output = StringIO()
 
-        self.function = function
         self.output = output
         self.temp = None
 
@@ -83,18 +83,23 @@ class redirect_stdout(object):
     def __exit__(self, type, value, traceback):
         sys.stdout = self.temp
 
-    def __call__(self, *args, **kwargs):
-        if self.function is not None:
-            with self:
-                return self.function(*args, **kwargs)
-        else:
-            f = args[0]
+    def __call__(self, f):
+        decorator = redirect_stdout_decorator(self.output)
 
-            def g(*args, **kwargs):
-                with self:
-                    return f(*args, **kwargs)
+        return decorator(f)
 
-            return g
+
+def redirect_stdout_decorator(output):
+
+    def decorator(f):
+
+        def g(*args, **kwargs):
+            with RedirectStdoutContextManager(output):
+                return f(*args, **kwargs)
+
+        return g
+
+    return decorator
 
 
 class redirect_stderr(object):
