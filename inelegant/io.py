@@ -59,7 +59,7 @@ def redirect_stdout(arg=None):
     'create it for me\\n'
     """
     if callable(arg):
-        decorator = redirect_decorator(sys, 'stdout', StringIO())
+        decorator = RedirectContextManager(sys, 'stdout', StringIO())
 
         return decorator(arg)
     else:
@@ -99,7 +99,7 @@ def redirect_stderr(arg=None):
     'create it for me\\n'
     """
     if callable(arg):
-        decorator = redirect_decorator(sys, 'stderr', StringIO())
+        decorator = RedirectContextManager(sys, 'stderr', StringIO())
 
         return decorator(arg)
     else:
@@ -127,19 +127,12 @@ class RedirectContextManager(object):
         setattr(self.module, self.variable, self.temp)
 
     def __call__(self, f):
-        decorator = redirect_decorator(self.module, self.variable, self.output)
+        def decorator(f):
+
+            def g(*args, **kwargs):
+                with self:
+                    return f(*args, **kwargs)
+
+            return g
 
         return decorator(f)
-
-
-def redirect_decorator(module, variable, output):
-
-    def decorator(f):
-
-        def g(*args, **kwargs):
-            with RedirectContextManager(module, variable, output):
-                return f(*args, **kwargs)
-
-        return g
-
-    return decorator
