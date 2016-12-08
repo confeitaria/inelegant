@@ -59,47 +59,11 @@ def redirect_stdout(arg=None):
     'create it for me\\n'
     """
     if callable(arg):
-        decorator = redirect_stdout_decorator(StringIO())
+        decorator = redirect_decorator(sys, 'stdout', StringIO())
 
         return decorator(arg)
     else:
-        return RedirectStdoutContextManager(arg)
-
-
-class RedirectStdoutContextManager(object):
-
-    def __init__(self, output=None):
-        if output is None:
-            output = StringIO()
-
-        self.output = output
-        self.temp = None
-
-    def __enter__(self):
-        self.temp, sys.stdout = sys.stdout, self.output
-
-        return self.output
-
-    def __exit__(self, type, value, traceback):
-        sys.stdout = self.temp
-
-    def __call__(self, f):
-        decorator = redirect_stdout_decorator(self.output)
-
-        return decorator(f)
-
-
-def redirect_stdout_decorator(output):
-
-    def decorator(f):
-
-        def g(*args, **kwargs):
-            with RedirectStdoutContextManager(output):
-                return f(*args, **kwargs)
-
-        return g
-
-    return decorator
+        return RedirectContextManager(sys, 'stdout', arg)
 
 
 def redirect_stderr(arg=None):
@@ -135,42 +99,45 @@ def redirect_stderr(arg=None):
     'create it for me\\n'
     """
     if callable(arg):
-        decorator = redirect_stderr_decorator(StringIO())
+        decorator = redirect_decorator(sys, 'stderr', StringIO())
 
         return decorator(arg)
     else:
-        return RedirectStderrContextManager(arg)
+        return RedirectContextManager(sys, 'stderr', arg)
 
 
-class RedirectStderrContextManager(object):
+class RedirectContextManager(object):
 
-    def __init__(self, output=None):
+    def __init__(self, module, variable, output=None):
         if output is None:
             output = StringIO()
 
+        self.module = module
+        self.variable = variable
         self.output = output
         self.temp = None
 
     def __enter__(self):
-        self.temp, sys.stderr = sys.stderr, self.output
+        self.temp = getattr(self.module, self.variable)
+        setattr(self.module, self.variable, self.output)
 
         return self.output
 
     def __exit__(self, type, value, traceback):
-        sys.stderr = self.temp
+        setattr(self.module, self.variable, self.temp)
 
     def __call__(self, f):
-        decorator = redirect_stderr_decorator(self.output)
+        decorator = redirect_decorator(self.module, self.variable, self.output)
 
         return decorator(f)
 
 
-def redirect_stderr_decorator(output):
+def redirect_decorator(module, variable, output):
 
     def decorator(f):
 
         def g(*args, **kwargs):
-            with RedirectStderrContextManager(output):
+            with RedirectContextManager(module, variable, output):
                 return f(*args, **kwargs)
 
         return g
