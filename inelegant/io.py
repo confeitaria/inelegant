@@ -25,8 +25,7 @@ except:
     from StringIO import StringIO
 
 
-@contextlib.contextmanager
-def redirect_stdout(output=None):
+class redirect_stdout(object):
     """
     ``redirect_stdout()`` replaces the current standward output for the
     file-like object given as an argument::
@@ -59,15 +58,21 @@ def redirect_stdout(output=None):
     >>> o.getvalue()
     'create it for me\\n'
     """
-    if output is None:
-        output = StringIO()
 
-    temp, sys.stdout = sys.stdout, output
+    def __init__(self, output=None):
+        if output is None:
+            output = StringIO()
 
-    try:
-        yield output
-    finally:
-        sys.stdout = temp
+        self.output = output
+        self.temp = None
+
+    def __enter__(self):
+        self.temp, sys.stdout = sys.stdout, self.output
+
+        return self.output
+
+    def __exit__(self, type, value, traceback):
+        sys.stdout = self.temp
 
 
 @contextlib.contextmanager
