@@ -197,6 +197,66 @@ class TestRedirectStderr(unittest.TestCase):
 
         self.assertEquals('', output.getvalue())
 
+    def test_redirect_stderr_as_decorator(self):
+        """
+        ``inelegant.io.redirect_stderr()`` should also behave as a decorator.
+        """
+        output = StringIO()
+
+        @redirect_stderr(output)
+        def f():
+            print('test', file=sys.stderr)
+
+        f()
+
+        self.assertEquals('test\n', output.getvalue())
+
+    def test_redirect_stderr_without_arg_as_decorator(self):
+        """
+        ``inelegant.io.redirect_stderr()`` should also behave as a decorator
+        even if it is not given an argument. In this case, the output will be
+        discarded.
+        """
+        @redirect_stderr
+        def f():
+            print('test', file=sys.stderr)
+
+        with redirect_stderr() as output:
+            print('caught', file=sys.stderr)
+            f()
+
+        self.assertEquals('caught\n', output.getvalue())
+
+    def test_redirect_stderr_is_well_behaved_decorator(self):
+        """
+        ``inelegant.io.redirect_stderr()``, when acting as a decorator, should
+        return a function that receives all arguments the decorated function
+        would expect, and the function should return the expected value.
+        """
+        output = StringIO()
+
+        @redirect_stderr(output)
+        def f(a, b):
+            return 3
+
+        value = f('te', b='st')
+
+        self.assertEquals(3, value)
+
+    def test_redirect_stderr_without_arg_is_well_behaved_decorator(self):
+        """
+        ``inelegant.io.redirect_stderr()``, when acting as a decorator, should
+        return a function that receives all arguments the decorated function
+        would expect, and the function should return the expected value.
+        """
+        @redirect_stderr
+        def f(a, b):
+            return 3
+
+        value = f('te', b='st')
+
+        self.assertEquals(3, value)
+
 
 load_tests = TestFinder(__name__, 'inelegant.io').load_tests
 
