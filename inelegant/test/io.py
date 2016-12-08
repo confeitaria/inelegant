@@ -90,6 +90,22 @@ class TestRedirectStdout(unittest.TestCase):
 
         self.assertEquals('test\n', output.getvalue())
 
+    def test_redirect_stdout_without_arg_as_decorator(self):
+        """
+        ``inelegant.io.redirect_stdout()`` should also behave as a decorator
+        even if it is not given an argument. In this case, the output will be
+        discarded.
+        """
+        @redirect_stdout
+        def f():
+            print('test')
+
+        with redirect_stdout() as output:
+            print('caught')
+            f()
+
+        self.assertEquals('caught\n', output.getvalue())
+
 
 class TestRedirectStderr(unittest.TestCase):
 
