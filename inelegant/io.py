@@ -102,7 +102,7 @@ def redirect_stdout_decorator(output):
     return decorator
 
 
-class redirect_stderr(object):
+def redirect_stderr(arg=None):
     """
     ``redirect_stderr()`` replaces the current standard error for the file-like
     object given as an argument::
@@ -134,20 +134,20 @@ class redirect_stderr(object):
     >>> o.getvalue()
     'create it for me\\n'
     """
+    if callable(arg):
+        decorator = redirect_stderr_decorator(StringIO())
 
-    def __init__(self, arg=None):
-        function = None
-        output = None
+        return decorator(arg)
+    else:
+        return RedirectStderrContextManager(arg)
 
-        if callable(arg):
-            function = arg
-        elif arg is not None:
-            output = arg
 
+class RedirectStderrContextManager(object):
+
+    def __init__(self, output=None):
         if output is None:
             output = StringIO()
 
-        self.function = function
         self.output = output
         self.temp = None
 
@@ -159,15 +159,20 @@ class redirect_stderr(object):
     def __exit__(self, type, value, traceback):
         sys.stderr = self.temp
 
-    def __call__(self, *args, **kwargs):
-        if self.function is not None:
-            with self:
-                return self.function(*args, **kwargs)
-        else:
-            f = args[0]
+    def __call__(self, f):
+        decorator = redirect_stderr_decorator(self.output)
 
-            def g(*args, **kwargs):
-                with self:
-                    return f(*args, **kwargs)
+        return decorator(f)
 
-            return g
+
+def redirect_stderr_decorator(output):
+
+    def decorator(f):
+
+        def g(*args, **kwargs):
+            with RedirectStderrContextManager(output):
+                return f(*args, **kwargs)
+
+        return g
+
+    return decorator
