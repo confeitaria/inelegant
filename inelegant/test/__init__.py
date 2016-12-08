@@ -36,6 +36,7 @@ load_tests = TestFinder(
     'inelegant.test.dict',
     'inelegant.test.finder',
     'inelegant.test.fs',
+    'inelegant.test.io',
     'inelegant.test.module',
     'inelegant.test.net',
     'inelegant.test.process',
