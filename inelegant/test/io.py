@@ -106,6 +106,36 @@ class TestRedirectStdout(unittest.TestCase):
 
         self.assertEquals('caught\n', output.getvalue())
 
+    def test_redirect_stdout_is_well_behaved_decorator(self):
+        """
+        ``inelegant.io.redirect_stdout()``, when acting as a decorator, should
+        return a function that receives all arguments the decorated function
+        would expect, and the function should return the expected value.
+        """
+        output = StringIO()
+
+        @redirect_stdout(output)
+        def f(a, b):
+            return 3
+
+        value = f('te', b='st')
+
+        self.assertEquals(3, value)
+
+    def test_redirect_stdout_without_arg_is_well_behaved_decorator(self):
+        """
+        ``inelegant.io.redirect_stdout()``, when acting as a decorator, should
+        return a function that receives all arguments the decorated function
+        would expect, and the function should return the expected value.
+        """
+        @redirect_stdout
+        def f(a, b):
+            return 3
+
+        value = f('te', b='st')
+
+        self.assertEquals(3, value)
+
 
 class TestRedirectStderr(unittest.TestCase):
 
