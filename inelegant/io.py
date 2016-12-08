@@ -74,6 +74,13 @@ class redirect_stdout(object):
     def __exit__(self, type, value, traceback):
         sys.stdout = self.temp
 
+    def __call__(self, f):
+        def g(*args, **kwargs):
+            with self:
+                return f(*args, **kwargs)
+
+        return g
+
 
 @contextlib.contextmanager
 def redirect_stderr(output=None):
