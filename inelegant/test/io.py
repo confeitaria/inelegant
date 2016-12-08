@@ -35,6 +35,7 @@ from inelegant.finder import TestFinder
 
 class TestRedirectStdout(unittest.TestCase):
 
+    @redirect_stdout
     def test_redirect_stdout(self):
         """
         ``inelegant.io.redirect_stdout()`` is a context manager that redirects
@@ -59,6 +60,7 @@ class TestRedirectStdout(unittest.TestCase):
 
         self.assertEquals('test\n', output.getvalue())
 
+    @redirect_stdout
     def test_do_not_redirect_stdout_after_exception_in_context(self):
         """
         ``inelegant.io.redirect_stdout()`` should restore stdout after the
@@ -177,6 +179,7 @@ class TestRedirectStdout(unittest.TestCase):
 
 class TestRedirectStderr(unittest.TestCase):
 
+    @redirect_stderr
     def test_redirect_stderr(self):
         """
         ``inelegant.io.redirect_stderr()`` is a context manager that redirects
@@ -191,6 +194,7 @@ class TestRedirectStderr(unittest.TestCase):
 
         self.assertEquals('test\n', output.getvalue())
 
+    @redirect_stderr
     def test_do_not_redirect_stderr_after_exception_in_context(self):
         """
         ``inelegant.io.redirect_stderr()`` should restore stdout after the
@@ -218,6 +222,7 @@ class TestRedirectStderr(unittest.TestCase):
 
         self.assertEquals('test\n', output.getvalue())
 
+    @redirect_stderr
     def test_do_not_redirect_stderr_after_exception_in_context(self):
         """
         ``inelegant.io.redirect_stdout()`` should restore stdout after the
