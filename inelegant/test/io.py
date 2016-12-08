@@ -76,6 +76,20 @@ class TestRedirectStdout(unittest.TestCase):
 
         self.assertEquals('', output.getvalue())
 
+    def test_redirect_stdout_as_decorator(self):
+        """
+        ``inelegant.io.redirect_stdout()`` should also behave as a decorator.
+        """
+        output = StringIO()
+
+        @redirect_stdout(output)
+        def f():
+            print('test')
+
+        f()
+
+        self.assertEquals('test\n', output.getvalue())
+
 
 class TestRedirectStderr(unittest.TestCase):
 
