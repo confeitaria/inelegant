@@ -90,11 +90,14 @@ def redirect_stdout(arg=None):
     6
     """
     if callable(arg):
-        decorator = RedirectContextManager(sys, 'stdout', StringIO())
+        decorator = TemporaryAttributeReplacer(sys, 'stdout', StringIO())
 
         return decorator(arg)
     else:
-        return RedirectContextManager(sys, 'stdout', arg)
+        if arg is None:
+            arg = StringIO()
+
+        return TemporaryAttributeReplacer(sys, 'stdout', arg)
 
 
 def redirect_stderr(arg=None):
@@ -161,32 +164,32 @@ def redirect_stderr(arg=None):
     6
     """
     if callable(arg):
-        decorator = RedirectContextManager(sys, 'stderr', StringIO())
+        decorator = TemporaryAttributeReplacer(sys, 'stderr', StringIO())
 
         return decorator(arg)
     else:
-        return RedirectContextManager(sys, 'stderr', arg)
+        if arg is None:
+            arg = StringIO()
+
+        return TemporaryAttributeReplacer(sys, 'stderr', arg)
 
 
-class RedirectContextManager(object):
+class TemporaryAttributeReplacer(object):
 
-    def __init__(self, module, variable, output=None):
-        if output is None:
-            output = StringIO()
-
-        self.module = module
-        self.variable = variable
-        self.output = output
+    def __init__(self, obj, attribute, value):
+        self.obj = obj
+        self.attribute = attribute
+        self.value = value
         self.temp = None
 
     def __enter__(self):
-        self.temp = getattr(self.module, self.variable)
-        setattr(self.module, self.variable, self.output)
+        self.temp = getattr(self.obj, self.attribute)
+        setattr(self.obj, self.attribute, self.value)
 
-        return self.output
+        return self.value
 
     def __exit__(self, type, value, traceback):
-        setattr(self.module, self.variable, self.temp)
+        setattr(self.obj, self.attribute, self.temp)
 
     def __call__(self, f):
         def decorator(f):
