@@ -175,6 +175,52 @@ def redirect_stderr(arg=None):
 
 
 class TemporaryAttributeReplacer(object):
+    """
+    ``TemporaryAttributeReplacer`` replaces the attribute of an object
+    temporarily.
+
+    Context manager
+    ===============
+
+    As a context manager, it will replace the attribute during
+    the context. For example, consider the object ``a`` below::
+
+    >>> class A(object):
+    ...     def __init__(self, b):
+    ...         self.b = b
+    >>> a = A(3)
+    >>> a.b
+    3
+
+    We can use ``TemporaryAttributeReplacer`` to replace its value for a brief
+    moment::
+
+    >>> with TemporaryAttributeReplacer(a, attribute='b', value='ok'):
+    ...     a.b
+    'ok'
+
+    Once the context is gone, the previous value is back::
+
+    >>> a.b
+    3
+
+    Decorator
+    =========
+
+    ``TemporaryAttributeReplacer`` instances also behave as decorators. In
+    this case, the value will be replaced during the function execution::
+
+    >>> @TemporaryAttributeReplacer(a, attribute='b', value='ok')
+    ... def f():
+    ...     global a
+    ...     print('The value of "a.b" is {0}.'.format(a.b))
+    >>> a.b
+    3
+    >>> f()
+    The value of "a.b" is ok.
+    >>> a.b
+    3
+    """
 
     def __init__(self, obj, attribute, value):
         self.obj = obj
