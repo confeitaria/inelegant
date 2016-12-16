@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Inelegant.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import contextlib
 import sys
 
@@ -98,6 +99,26 @@ def redirect_stdout(arg=None):
             arg = StringIO()
 
         return TemporaryAttributeReplacer(sys, 'stdout', arg)
+
+
+def suppress_stdout(f=None):
+    output = open(os.devnull, 'w')
+    replacer = redirect_stdout(output)
+
+    if f is not None:
+        return replacer(f)
+    else:
+        return replacer
+
+
+def suppress_stderr(f=None):
+    output = open(os.devnull, 'w')
+    replacer = redirect_stderr(output)
+
+    if f is not None:
+        return replacer(f)
+    else:
+        return replacer
 
 
 def redirect_stderr(arg=None):
