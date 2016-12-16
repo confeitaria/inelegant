@@ -28,7 +28,8 @@ try:
 except:
     from StringIO import StringIO
 
-from inelegant.io import redirect_stdout, redirect_stderr
+from inelegant.io import redirect_stdout, redirect_stderr, suppress_stdout,\
+    suppress_stderr
 
 from inelegant.finder import TestFinder
 
@@ -92,22 +93,6 @@ class TestRedirectStdout(unittest.TestCase):
 
         self.assertEquals('test\n', output.getvalue())
 
-    def test_redirect_stdout_without_arg_as_decorator(self):
-        """
-        ``inelegant.io.redirect_stdout()`` should also behave as a decorator
-        even if it is not given an argument. In this case, the output will be
-        discarded.
-        """
-        @redirect_stdout
-        def f():
-            print('test')
-
-        with redirect_stdout() as output:
-            print('caught')
-            f()
-
-        self.assertEquals('caught\n', output.getvalue())
-
     def test_redirect_stdout_is_well_behaved_decorator(self):
         """
         ``inelegant.io.redirect_stdout()``, when acting as a decorator, should
@@ -117,20 +102,6 @@ class TestRedirectStdout(unittest.TestCase):
         output = StringIO()
 
         @redirect_stdout(output)
-        def f(a, b):
-            return 3
-
-        value = f('te', b='st')
-
-        self.assertEquals(3, value)
-
-    def test_redirect_stdout_without_arg_is_well_behaved_decorator(self):
-        """
-        ``inelegant.io.redirect_stdout()``, when acting as a decorator, should
-        return a function that receives all arguments the decorated function
-        would expect, and the function should return the expected value.
-        """
-        @redirect_stdout
         def f(a, b):
             return 3
 
@@ -158,21 +129,71 @@ class TestRedirectStdout(unittest.TestCase):
 
         self.assertEquals(3, value)
 
-    def test_redirect_stdout_without_arg_is_well_behaved_decorator_bound(self):
+
+class TestSuppressStdout(unittest.TestCase):
+
+    def test_suppress_stdout(self):
         """
-        ``inelegant.io.redirect_stdout()``, when acting as a decorator, should
-        return an adequate wrapper to bound methods.
+        ``inelegant.io.suppress_stdout()`` is a context manager that discards
+        any value written to the standard output..
         """
-        class Test(object):
+        with redirect_stdout() as output:
+            print('redirected')
 
-            def __init__(self, a):
-                self.a = a
+            with suppress_stdout():
+                print('discarded')
 
-            @redirect_stdout
-            def f(self, b):
-                return self.a+b
+            print('redirected again')
 
-        value = Test(1).f(2)
+        self.assertEquals('redirected\nredirected again\n', output.getvalue())
+
+    def test_do_not_suppress_stdout_after_exception_in_context(self):
+        """
+        ``inelegant.io.suppress_stdout()`` should restore stdout after the
+        context even if an exception was raised.
+        """
+        with redirect_stdout() as output:
+            print('redirected')
+
+            try:
+                with redirect_stdout(output):
+                    raise Exception()
+            except:
+                pass
+
+            print('redirected again')
+
+        self.assertEquals('redirected\nredirected again\n', output.getvalue())
+
+    def test_suppress_stdout_as_decorator(self):
+        """
+        ``inelegant.io.suppress_stdout()`` should also behave as a decorator.
+        """
+        @suppress_stdout
+        def f():
+            print('test')
+
+        with redirect_stdout() as output:
+            print('redirected')
+
+            with suppress_stdout():
+                f()
+
+            print('redirected again')
+
+        self.assertEquals('redirected\nredirected again\n', output.getvalue())
+
+    def test_suppress_stdout_is_well_behaved_decorator(self):
+        """
+        ``inelegant.io.suppress_stdout()``, when acting as a decorator, should
+        return a function that receives all arguments the decorated function
+        would expect, and the function should return the expected value.
+        """
+        @suppress_stdout
+        def f(a, b):
+            return 3
+
+        value = f('te', b='st')
 
         self.assertEquals(3, value)
 
@@ -335,6 +356,74 @@ class TestRedirectStderr(unittest.TestCase):
                 return self.a+b
 
         value = Test(1).f(2)
+
+        self.assertEquals(3, value)
+
+
+class TestSuppressStderr(unittest.TestCase):
+
+    def test_suppress_stderr(self):
+        """
+        ``inelegant.io.suppress_stderr()`` is a context manager that discards
+        any value written to the standard output..
+        """
+        with redirect_stderr() as output:
+            print('redirected', file=sys.stderr)
+
+            with suppress_stderr():
+                print('discarded', file=sys.stderr)
+
+            print('redirected again', file=sys.stderr)
+
+        self.assertEquals('redirected\nredirected again\n', output.getvalue())
+
+    def test_do_not_suppress_stderr_after_exception_in_context(self):
+        """
+        ``inelegant.io.suppress_stderr()`` should restore stderr after the
+        context even if an exception was raised.
+        """
+        with redirect_stderr() as output:
+            print('redirected', file=sys.stderr)
+
+            try:
+                with redirect_stderr(output):
+                    raise Exception()
+            except:
+                pass
+
+            print('redirected again', file=sys.stderr)
+
+        self.assertEquals('redirected\nredirected again\n', output.getvalue())
+
+    def test_suppress_stderr_as_decorator(self):
+        """
+        ``inelegant.io.suppress_stderr()`` should also behave as a decorator.
+        """
+        @suppress_stderr
+        def f():
+            print('test')
+
+        with redirect_stderr() as output:
+            print('redirected', file=sys.stderr)
+
+            with suppress_stderr():
+                f()
+
+            print('redirected again', file=sys.stderr)
+
+        self.assertEquals('redirected\nredirected again\n', output.getvalue())
+
+    def test_suppress_stderr_is_well_behaved_decorator(self):
+        """
+        ``inelegant.io.suppress_stderr()``, when acting as a decorator, should
+        return a function that receives all arguments the decorated function
+        would expect, and the function should return the expected value.
+        """
+        @suppress_stderr
+        def f(a, b):
+            return 3
+
+        value = f('te', b='st')
 
         self.assertEquals(3, value)
 
