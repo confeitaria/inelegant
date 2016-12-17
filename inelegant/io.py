@@ -102,6 +102,45 @@ def redirect_stdout(arg=None):
 
 
 def suppress_stdout(f=None):
+    """
+    ``suppress_stdout()`` ensures that no content is written in the standard
+    output. It is done by replacing the standard output with a file-like object
+    that saves nothing.
+
+    Any content written to standard output while ``suppress_stdout()`` is
+    effective will be lost. If you need to access this content, use
+    ``redirect_stdout()``.
+
+    ``suppress_stdout()`` can be used either as a context manager or as a
+    decorator.
+
+    As a context manager
+    ====================
+
+    As a context manager, ``suppress_stdout()`` receives no argument. Anything
+    written to stdandard output during its context will be discarded. Once the
+    context is finished, the previous standard output is restored::
+
+    >>> print('redirected')
+    redirected
+    >>> with suppress_stdout():
+    ...     print('discarded')
+    >>> print('redirected, too')
+    redirected, too
+
+    As a decorator
+    ==============
+
+    ``suppress_stdout()`` also behaves as a decorator. In this case, it will
+    suppress any output during the function execution::
+
+    >>> @suppress_stdout
+    ... def f(a, b):
+    ...     print 'the args are', a, b
+    ...     return a+b
+    >>> f(1,2)
+    3
+    """
     output = open(os.devnull, 'w')
     replacer = redirect_stdout(output)
 
@@ -112,6 +151,49 @@ def suppress_stdout(f=None):
 
 
 def suppress_stderr(f=None):
+    """
+    ``suppress_stderr()`` ensures that no content is written in the standard
+    error. It is done by replacing the standard output with a file-like object
+    that saves nothing.
+
+    Any content written to standard output while ``suppress_stderr()`` is
+    effective will be lost. If you need to access this content, use
+    ``redirect_stderr()``.
+
+    ``suppress_stderr()`` can be used either as a context manager or as a
+    decorator.
+
+    As a context manager
+    ====================
+
+    As a context manager, ``suppress_stderr()`` receives no argument. Anything
+    written to stdandard output during its context will be discarded. Once the
+    context is finished, the previous standard output is restored::
+
+    >>> with redirect_stderr() as output:
+    ...     sys.stderr.write('redirected\\n')
+    ...     with suppress_stderr():
+    ...         sys.stderr.write('discarded\\n')
+    ...     sys.stderr.write('redirected, too\\n')
+    >>> output.getvalue()
+    'redirected\\nredirected, too\\n'
+
+    As a decorator
+    ==============
+
+    ``suppress_stderr()`` also behaves as a decorator. In this case, it will
+    suppress any output during the function execution::
+
+    >>> @suppress_stderr
+    ... def f(a, b):
+    ...     sys.stderr.write('the args are {0} {1}'.format(a, b))
+    ...     return a+b
+    >>> with redirect_stderr() as output:
+    ...     f(1,2)
+    3
+    >>> output.getvalue()
+    ''
+    """
     output = open(os.devnull, 'w')
     replacer = redirect_stderr(output)
 
