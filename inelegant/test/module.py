@@ -26,7 +26,7 @@ from inelegant.module import create_module, installed_module, \
     available_module, available_resource, adopt, AdoptException, \
     create_module_installs_module, available_resource_uses_path_as_where
 
-from inelegant.io import redirect_stderr
+from inelegant.io import redirect_stderr, suppress_stderr
 from inelegant.finder import TestFinder
 
 
@@ -92,7 +92,7 @@ class TestCreateModule(unittest.TestCase):
             import m
             self.assertEquals(1, m.x)
 
-    @redirect_stderr
+    @suppress_stderr
     def test_create_module_installs_module_with_toggle(self):
         """
         If your code relies in the old behavior of ``create_module()`` where it
@@ -161,7 +161,7 @@ class TestCreateModule(unittest.TestCase):
         self.assertEquals(m.__name__, Class.method.__module__)
         self.assertEquals(m.__name__, function.__module__)
 
-    @redirect_stderr
+    @suppress_stderr
     def test_create_module_adopts_entities_with_defs_arguments(self):
         """
         ``create_module()`` should accept the deprected ``defs`` argument.
@@ -210,7 +210,7 @@ class TestCreateModule(unittest.TestCase):
             self.assertEquals(m.Class, Class)
             self.assertEquals(m.function, function)
 
-    @redirect_stderr
+    @suppress_stderr
     def test_create_module_set_adoptee_entities_in_module_with_def(self):
         """
         The ``defs`` argument, although deprecated, should add entities to the
@@ -398,7 +398,7 @@ class TestAdopt(unittest.TestCase):
             self.assertEquals(m1.__name__, Class1.Class2.__module__)
             self.assertNotEquals(m1.__name__, Class1.UnadoptedClass.__module__)
 
-    @redirect_stderr
+    @suppress_stderr
     def test_adopts_internal_class_with_defs(self):
         """
         When ``inelegant.module.adopt()`` is called on a class, it adopts any
@@ -502,7 +502,7 @@ class TestAvailableResource(unittest.TestCase):
                 content = pkgutil.get_data('example', 'a/b/test.txt')
                 self.assertEquals('test', content)
 
-    @redirect_stderr
+    @suppress_stderr
     def test_availabe_resource_uses_path_as_where_with_toggle(self):
         """
         We can use the ``path`` argument as a prefix to the ``name`` argument
