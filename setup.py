@@ -63,9 +63,10 @@ setup(
     rather avoid but may need.
 
     inelegant.io: tools to process standard input/output/error. Right now it
-    has two context managers, redirect_stdout() and redirect_stderr(), that
+    has four context managers: redirect_stdout() and redirect_stderr(), that
     redirect the standard output and the standard error, respectively, to a
-    file.
+    file, and suppress_stdout() and suppress_stderr(), that only discard
+    content written to these files.
 
     For more info, check the project page.
     """,
