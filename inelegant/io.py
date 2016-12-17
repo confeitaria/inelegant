@@ -90,15 +90,10 @@ def redirect_stdout(arg=None):
     >>> g(2,3)
     6
     """
-    if callable(arg):
-        decorator = TemporaryAttributeReplacer(sys, 'stdout', StringIO())
+    if arg is None:
+        arg = StringIO()
 
-        return decorator(arg)
-    else:
-        if arg is None:
-            arg = StringIO()
-
-        return TemporaryAttributeReplacer(sys, 'stdout', arg)
+    return TemporaryAttributeReplacer(sys, 'stdout', arg)
 
 
 def suppress_stdout(f=None):
@@ -266,15 +261,10 @@ def redirect_stderr(arg=None):
     >>> g(2,3)
     6
     """
-    if callable(arg):
-        decorator = TemporaryAttributeReplacer(sys, 'stderr', StringIO())
+    if arg is None:
+        arg = StringIO()
 
-        return decorator(arg)
-    else:
-        if arg is None:
-            arg = StringIO()
-
-        return TemporaryAttributeReplacer(sys, 'stderr', arg)
+    return TemporaryAttributeReplacer(sys, 'stderr', arg)
 
 
 class TemporaryAttributeReplacer(object):
