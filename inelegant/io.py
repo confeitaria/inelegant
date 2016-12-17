@@ -79,16 +79,6 @@ def redirect_stdout(arg=None):
     3
     >>> output.getvalue()
     'the args are 1 2\\n'
-
-    If you just want to suppress the output, you can use ``redirect_stdout()``
-    directly, without giving an argument::
-
-    >>> @redirect_stdout
-    ... def g(a, b):
-    ...     print 'the args are', a, b
-    ...     return a*b
-    >>> g(2,3)
-    6
     """
     if arg is None:
         arg = StringIO()
@@ -250,16 +240,6 @@ def redirect_stderr(arg=None):
     3
     >>> output.getvalue()
     'the args are 1 2\\n'
-
-    If you just want to suppress the output, you can use ``redirect_stderr()``
-    directly, without giving an argument::
-
-    >>> @redirect_stderr
-    ... def g(a, b):
-    ...     sys.stderr.write('the args are {0} {1}\\n'.format(a, b))
-    ...     return a*b
-    >>> g(2,3)
-    6
     """
     if arg is None:
         arg = StringIO()
