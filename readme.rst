@@ -1001,8 +1001,14 @@ Once the context finishes, the key is gone::
 "Inelegant I/O" - dealing with standard input/output
 ====================================================
 
-The module ``inelegant.io`` has two context managers, ``redirect_stdout`` and
-``redirect_stderr``.
+The module ``inelegant.io`` provides tools to control the standard output and
+standard error. (It is a bit of a funny name because it does not handle
+standard input, right?)
+
+This module has has four utilities. ``redirect_stdout`` and ``redirect_stderr``
+are two context managers/decorators that capture output and allow the developer
+to see it. ``suppress_stdout`` and ``suppress_stderr`` are similar but only
+suppress the output.
 
 Redirecting standard output
 ---------------------------
@@ -1079,6 +1085,55 @@ If no argument is given to the context manager, it will create and return a
     ...     sys.stderr.write('automatically created file-like object\n')
     >>> o.getvalue()
     'automatically created file-like object\n'
+
+Discarding output
+-----------------
+
+If you only need to suppress the output of anything that got written into the
+standard output, you can use the ``suppress_stdout()`` context manager::
+
+    >>> from inelegant.io import suppress_stdout
+    >>> with suppress_stdout():
+    ...     print 'this will not appear anywhere.'
+
+It also behaves as a decorator if you need. In the example below, the message
+written to the standard output is lost::
+
+    >>> @suppress_stdout
+    ... def f(a, b):
+    ...     print 'values of args are', a, b
+    ...     return a+b
+    >>> f(1, 2)
+    3
+
+``suppress_stderr()`` is very much like ``suppress_stdout()``, with the
+difference that it will discard anything written to the standard error
+instead::
+
+    >>> from inelegant.io import suppress_stderr
+    >>> with redirect_stderr() as output:
+    ...     sys.stderr.write('redirected\n')
+    ...     with suppress_stderr():
+    ...         sys.stderr.write('this will not appear anywhere.')
+    ...     sys.stderr.write('redirected, too\n')
+    >>> output.getvalue()
+    'redirected\nredirected, too\n'
+
+Unsurprisingly, ``suppress_stderr()`` is also a decorator::
+
+    >>> @suppress_stderr
+    ... def f(a, b):
+    ...     sys.stderr.write('values of args are {0} {1}'.format(a, b))
+    ...     return a+b
+    >>> with redirect_stderr() as output:
+    ...     sys.stderr.write('redirected\n')
+    ...     with suppress_stderr():
+    ...         f(1, 2)
+    ...     sys.stderr.write('redirected, too\n')
+    3
+    >>> output.getvalue()
+    'redirected\nredirected, too\n'
+
 
 Licensing
 ==============
