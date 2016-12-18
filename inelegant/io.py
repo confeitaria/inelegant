@@ -26,7 +26,7 @@ except:
     from StringIO import StringIO
 
 
-def redirect_stdout(arg=None):
+def redirect_stdout(to=None):
     """
     ``redirect_stdout()`` replaces the current standward output for the
     file-like object given as an argument.
@@ -51,7 +51,7 @@ def redirect_stdout(arg=None):
 
     The context yields the file-like object::
 
-    >>> with redirect_stdout(StringIO()) as o:
+    >>> with redirect_stdout(to=StringIO()) as o:
     ...     print 'drop var'
     >>> o.getvalue()
     'drop var\\n'
@@ -80,13 +80,13 @@ def redirect_stdout(arg=None):
     >>> output.getvalue()
     'the args are 1 2\\n'
     """
-    if arg is None:
-        arg = StringIO()
+    if to is None:
+        to = StringIO()
 
-    return TemporaryAttributeReplacer(sys, 'stdout', arg)
+    return TemporaryAttributeReplacer(sys, 'stdout', to)
 
 
-def redirect_stderr(arg=None):
+def redirect_stderr(to=None):
     """
     ``redirect_stderr()`` replaces the current standard error for the file-like
     object given as an argument
@@ -97,7 +97,7 @@ def redirect_stderr(arg=None):
     ``redirect_stderr()`` can be used as a context manager::
 
     >>> output = StringIO()
-    >>> with redirect_stderr(output):
+    >>> with redirect_stderr(to=output):
     ...     sys.stderr.write('ok\\n')
     >>> output.getvalue()
     'ok\\n'
@@ -139,10 +139,10 @@ def redirect_stderr(arg=None):
     >>> output.getvalue()
     'the args are 1 2\\n'
     """
-    if arg is None:
-        arg = StringIO()
+    if to is None:
+        to = StringIO()
 
-    return TemporaryAttributeReplacer(sys, 'stderr', arg)
+    return TemporaryAttributeReplacer(sys, 'stderr', to)
 
 
 class TemporaryAttributeReplacer(object):
