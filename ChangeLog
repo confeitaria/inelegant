@@ -1,3 +1,36 @@
+2016-12-17  Adam Victor Nazareth Brandizzi <adam@brandizzi.com.br>
+
+    * VERSION 0.1.1
+
+    * [DEPRECATED] #83 inelegant.module: available_module() now expects the
+      path argument to point directly to the resource to be created. If you
+      used the path argument as a prefix to be appended to the name argument,
+      this behavior can be enabled by the available_resource_uses_path_as_where
+      toggle.
+
+    * #85 inelegant.io: now we have context managers to redirect standard
+      output and standard error. Check out redirect_stdout() and
+      redirect_stderr() from the new inelegant.io module.
+
+    * #86 inelegant.io: redirect_stdout() and redirect_stderr() are decorators,
+      too.
+
+    * #88 inelegant.io: now we can discard output sent to the standard output
+      and standard error with the context managers/decorators suppress_stdout()
+      and suppress_stderr(). Useful to make tests less annoying. Use only when
+      you know a test will print an irrelevant message.
+
+    * #80 inelegant.module: we added an explanation about the
+      create_module_installs_module toggle to the documentation.
+
+    * #84 inelegant.dict: temp_key() yields the dict it received. If you used
+      to depend on the None value yielded by it, you may have to change it.
+      Yet, we never supported, tested or documented the yielded value from this
+      context manager, so it is unlikely it will break.
+
+    * #72 inelegant.fs, inelegant.module: tests are ensuring that there are
+      warnings printed to the standard error when a deprecated feature is used.
+
 2016-12-02  Adam Victor Nazareth Brandizzi <adam@brandizzi.com.br>
 
     * VERSION 0.1.0
