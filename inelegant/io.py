@@ -312,6 +312,190 @@ def suppress_stderr(f=None):
     3
     >>> output.getvalue()
     ''
+
+    An important note
+    =================
+
+    ``suppress_stderr()`` was created to silence some expected warnings. Yet,
+    most of the time it is not a good policy to suppress warnings. In our case,
+    it was useful because we were testing code that were expected to print
+    warnings, but it is rarely the case.
+
+    An example can help us understand.
+
+    A successful function
+    ---------------------
+
+    Suppose we have the function below::
+
+    >>> def div(a, b):
+    ...     return a/b
+
+    Also, we have a test case for that::
+
+    >>> from unittest import TestCase, TestLoader, TextTestRunner
+    >>> class TestDiv(TestCase):
+    ...     def test_div(self):
+    ...         self.assertEquals(2, div(6, 3))
+    >>> loader = TestLoader()
+    >>> suite = loader.loadTestsFromTestCase(TestDiv)
+    >>> stdoutRunner = TextTestRunner(stream=sys.stdout)
+    >>> _ = stdoutRunner.run(suite)
+    .
+    ----------------------------------------------------------------------
+    Ran 1 test in 0.000s
+    <BLANKLINE>
+    OK
+
+    We publish this function in a module and it is a huge success. Good!
+
+    Refactoring argument names
+    --------------------------
+
+    Yet, ``a`` and ``b`` are not good names for the function, so we would
+    rather replace it by, let us say ``num`` (from "numerator") and ``den``
+    ("denominator")::
+
+    >>> def div(num, den):
+    ...     return num/den
+
+    The problem is, the function is already used in the wild. Merely changing
+    the argument names would break many code bases. So, we leave the old ones
+    as optional ones to rarely be used::
+
+    >>> def div(num=None, den=None, a=None, b=None):
+    ...     if num is None and a is not None:
+    ...         num = a
+    ...     if den is None and b is not None:
+    ...         den = b
+    ...     return num/den
+
+    Now, we do not want users to use the old arguments (that we are going to
+    ditch eventually anyway) so we add warnings to the code::
+
+    >>> def div(num=None, den=None, a=None, b=None):
+    ...     if num is None and a is not None:
+    ...         sys.stderr.write('"a" arg is deprecated, use "num."\\n')
+    ...         num = a
+    ...     if den is None and b is not None:
+    ...         sys.stderr.write('"b" arg is deprecated, use "den."\\n')
+    ...         den = b
+    ...     return num/den
+
+    That should be enough::
+
+    >>> div(6, 3)
+    2
+    >>> with redirect_stderr(sys.stdout):
+    ...     div(a=6, b=3)
+    "a" arg is deprecated, use "num."
+    "b" arg is deprecated, use "den."
+    2
+
+    Polluted test output
+    --------------------
+
+    Now we are going to update the tests. We should ensure the old arguments
+    are available::
+
+    >>> class TestDiv(TestCase):
+    ...     def test_div(self):
+    ...         self.assertEquals(2, div(6, 3))
+    ...     def test_div_deprecated_args(self):
+    ...         self.assertEquals(2, div(a=6, b=3))
+
+    Now we run it again... but we will get a bit more than desired in the
+    results::
+
+    >>> suite = loader.loadTestsFromTestCase(TestDiv)
+    >>> with redirect_stderr(sys.stdout):
+    ...     _ = stdoutRunner.run(suite)
+    ."a" arg is deprecated, use "num."
+    "b" arg is deprecated, use "den."
+    .
+    ----------------------------------------------------------------------
+    Ran 2 tests in 0.000s
+    <BLANKLINE>
+    OK
+
+    The warning messages are being printed during the test! This is not really
+    useful: we know we will have them - in our real-world use, we even have
+    tests to ensure they are printed out!
+
+    When to suppress standard error
+    -------------------------------
+
+    In this case, it is a great thing to discard them. This is when
+    ``suppress_stderr()`` comes in handy::
+
+
+    >>> class TestDiv(TestCase):
+    ...     def test_div(self):
+    ...         self.assertEquals(2, div(6, 3))
+    ...     @suppress_stderr
+    ...     def test_div_deprecated_args(self):
+    ...         self.assertEquals(2, div(a=6, b=3))
+
+    The output is way cleaner now::
+
+    >>> suite = loader.loadTestsFromTestCase(TestDiv)
+    >>> with redirect_stderr(sys.stdout):
+    ...     _ = stdoutRunner.run(suite)
+    ..
+    ----------------------------------------------------------------------
+    Ran 2 tests in 0.000s
+    <BLANKLINE>
+    OK
+
+    When **not** to suppress standard error
+    ---------------------------------------
+
+    Now, suppose we have another module with a function to work out the area of
+    a triangle::
+
+    >>> def triangle_area(height, base):
+    ...     return div(a=height*base, b=2)
+    >>> class TestTriangleArea(TestCase):
+    ...     def test_triange_area(self):
+    ...         self.assertEquals(6, triangle_area(3, 4))
+
+    It clearly was written using the first version of ``div()`` but thanks to
+    our backwards-compatibility efforts, it will still work with the newer
+    version. However, the test output will not be that great::
+
+    >>> suite = loader.loadTestsFromTestCase(TestTriangleArea)
+    >>> with redirect_stderr(sys.stdout):
+    ...     _ = stdoutRunner.run(suite)
+    "a" arg is deprecated, use "num."
+    "b" arg is deprecated, use "den."
+    .
+    ----------------------------------------------------------------------
+    Ran 1 test in 0.000s
+    <BLANKLINE>
+    OK
+
+    This is a case where we probably should *not* use ``redirect_stderr()``.
+    Our code is depending on deprecated features, not supporting them. In this
+    case, the ideal approach would be to update the code base to discard the
+    deprecated uses::
+
+    >>> def triangle_area(height, base):
+    ...     return div(num=height*base, den=2)
+
+    Once it is done, the test output is clean again::
+
+    >>> with redirect_stderr(sys.stdout):
+    ...     _ = stdoutRunner.run(suite)
+    .
+    ----------------------------------------------------------------------
+    Ran 1 test in 0.000s
+    <BLANKLINE>
+    OK
+
+    It is not possible to update all instances of deprecated features uses, and
+    that is why it is important to offer backwards compatibility. Yet, we
+    believe it is better to have these uses quite visible. So, in mosts cases,
+    ``redirect_stderr()`` is probably the right tool to clean up results.
     """
     output = open(os.devnull, 'w')
     replacer = redirect_stderr(output)
