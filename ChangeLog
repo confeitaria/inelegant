@@ -1,6 +1,9 @@
 2016-12-17  Adam Victor Nazareth Brandizzi <adam@brandizzi.com.br>
 
-    * VERSION 0.1.1
+    * VERSION 0.2.0
+
+    * (It is just another release of 0.1.1. It should have been 0.2.0 from the
+      begining, since the release has new functions.)
 
     * [DEPRECATED] #83 inelegant.module: available_module() now expects the
       path argument to point directly to the resource to be created. If you
