@@ -207,9 +207,6 @@ class TestTestFinder(unittest.TestCase):
         """
 
         with tempfile(content=content) as path:
-            with open(path, 'w') as f:
-                f.write(content)
-
             with open(path) as f:
                 result = unittest.TestResult()
                 finder = TestFinder(f)
@@ -232,9 +229,6 @@ class TestTestFinder(unittest.TestCase):
         """
 
         with tempfile(content=content) as path:
-            with open(path, 'w') as f:
-                f.write(content)
-
             result = unittest.TestResult()
             finder = TestFinder(path)
             finder.run(result)
