@@ -23,6 +23,7 @@ import inspect
 import itertools
 import sys
 import os
+import io
 
 from inelegant.module import get_caller_module
 
@@ -45,11 +46,11 @@ class TestFinder(unittest.TestSuite):
 
     >>> class SomeTestCase(unittest.TestCase):
     ...     def test1(self):
-    ...         self.assertEquals(1, 1)
+    ...         self.assertEqual(1, 1)
     ...     def testFail(self):
-    ...         self.assertEquals(1, 0)
+    ...         self.assertEqual(1, 0)
     ...     def testError(self):
-    ...         self.assertEquals(1, 1/0)
+    ...         self.assertEqual(1, 1/0)
 
     ...in a module, and the module is given to the finder, then all of these
     tests will be available in the finder::
@@ -79,10 +80,10 @@ class TestFinder(unittest.TestSuite):
 
     >>> class TestCase1(unittest.TestCase):
     ...     def testFail(self):
-    ...         self.assertEquals(1, 0)
+    ...         self.assertEqual(1, 0)
     >>> class TestCase2(unittest.TestCase):
     ...     def testError(self):
-    ...         self.assertEquals(1, 1/0)
+    ...         self.assertEqual(1, 1/0)
     >>> with installed_module('t1', to_adopt=[TestCase1, TestCase2]) as t1:
     ...     finder = TestFinder(t1)
     ...     finder.countTestCases()
@@ -105,7 +106,7 @@ class TestFinder(unittest.TestSuite):
     >>> class TestMultiplier(unittest.TestCase):
     ...        def test_add(self):
     ...            m = self.get_multiplier()
-    ...            self.assertEquals(4, m(2, 2))
+    ...            self.assertEqual(4, m(2, 2))
 
     This way, it can test different implementations::
 
@@ -305,7 +306,7 @@ def get_module(testable):
 
     if inspect.ismodule(testable):
         module = testable
-    elif isinstance(testable, basestring):
+    elif isinstance(testable, str):
         try:
             module = importlib.import_module(testable)
         except ImportError:
@@ -399,9 +400,9 @@ def get_doctestable(testable):
 
     if inspect.ismodule(testable):
         doctestable = testable
-    elif isinstance(testable, file):
+    elif isinstance(testable, io.IOBase):
         doctestable = testable.name
-    elif isinstance(testable, basestring):
+    elif isinstance(testable, str):
         doctestable = get_module(testable)
         if doctestable is None:
             doctestable = testable
@@ -513,10 +514,10 @@ def add_module(suite, module, skip=None):
 
     >>> class TestCase1(unittest.TestCase):
     ...     def test1(self):
-    ...         self.assertEquals(1, 1)
+    ...         self.assertEqual(1, 1)
     >>> class TestCase2(unittest.TestCase):
     ...     def testFail(self):
-    ...         self.assertEquals(1, 0)
+    ...         self.assertEqual(1, 0)
 
     If they are in a module, and we call ``add_module()`` with this module and
     a suite, the tests will be found in the suite::
@@ -556,11 +557,11 @@ def to_set(value):
     * If the value is ``None``, then returns the empty set::
 
         >>> to_set(None)
-        set([])
+        set()
 
     * If the value is an iterable, creates a set with all values from it::
 
-        >>> to_set(xrange(3)) == set([0, 1, 2])
+        >>> to_set(range(3)) == set([0, 1, 2])
         True
 
     (Pay attention to never pass a huge or infinite iterator to ``to_set()``.)
@@ -568,7 +569,7 @@ def to_set(value):
     * Otherwise, returns a tuple containing the given value::
 
         >>> to_set(3)
-        set([3])
+        {3}
     """
     if value is None:
         result = set()
@@ -585,7 +586,7 @@ def flatten(value, ids=None, depth=None):
     """
     Flattens an iterator::
 
-        >>> a = [1, [[2, 3, (4, 5, xrange(6, 10)), 10], (11, 12)], [13], 14]
+        >>> a = [1, [[2, 3, (4, 5, range(6, 10)), 10], (11, 12)], [13], 14]
         >>> list(flatten(a))
         [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
 

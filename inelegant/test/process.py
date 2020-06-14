@@ -58,7 +58,7 @@ class TestProcess(unittest.TestCase):
         with Process(target=serve):
             client = multiprocessing.connection.Client(('localhost', 9001))
             with contextlib.closing(client) as client:
-                self.assertEquals('example', client.recv())
+                self.assertEqual('example', client.recv())
 
     def test_terminate_after_exception(self):
         """
@@ -88,7 +88,7 @@ class TestProcess(unittest.TestCase):
             pass
 
         self.assertIsInstance(p.exception, AssertionError)
-        self.assertEquals('Actually, it is expected', p.exception.args[0])
+        self.assertEqual('Actually, it is expected', p.exception.args[0])
 
     def test_send_receive_data(self):
         """
@@ -102,11 +102,11 @@ class TestProcess(unittest.TestCase):
 
         with Process(target=serve, args=(1,)) as p:
             value = p.get()
-            self.assertEquals(1, value)
+            self.assertEqual(1, value)
 
             value = p.send(2)
             value = p.get()
-            self.assertEquals(2, value)
+            self.assertEqual(2, value)
 
             p.go()
 
@@ -121,7 +121,7 @@ class TestProcess(unittest.TestCase):
         with Process(target=serve) as p:
             pass
 
-        self.assertEquals(1, p.result)
+        self.assertEqual(1, p.result)
 
     def test_terminate(self):
         """
@@ -151,7 +151,7 @@ class TestProcess(unittest.TestCase):
             with Process(target=serve, reraise=True) as p:
                 pass
 
-            self.assertEquals('Actually, it is expected', e.args[0])
+            self.assertEqual('Actually, it is expected', e.args[0])
 
     def test_send_receive_data_fails_on_non_generator_function(self):
         """
@@ -187,7 +187,7 @@ class TestProcess(unittest.TestCase):
 
         p.join()
 
-        self.assertEquals(1, p.result)
+        self.assertEqual(1, p.result)
 
     def test_reraise_on_join(self):
         """

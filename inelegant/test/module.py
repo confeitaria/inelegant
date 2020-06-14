@@ -49,7 +49,7 @@ class TestCreateModule(unittest.TestCase):
         """
         m = create_module('example', scope={'x': 3})
 
-        self.assertEquals(3, m.x)
+        self.assertEqual(3, m.x)
 
     def test_create_module_code(self):
         """
@@ -58,7 +58,7 @@ class TestCreateModule(unittest.TestCase):
         """
         m = create_module('example', code='x = 3')
 
-        self.assertEquals(3, m.x)
+        self.assertEqual(3, m.x)
 
     def test_create_module_scope_code(self):
         """
@@ -68,7 +68,7 @@ class TestCreateModule(unittest.TestCase):
         """
         m = create_module('example', scope={'x': 3}, code='x += 1')
 
-        self.assertEquals(4, m.x)
+        self.assertEqual(4, m.x)
 
     def test_create_module_does_not_install_module(self):
         """
@@ -87,10 +87,10 @@ class TestCreateModule(unittest.TestCase):
         """
         with installed_module('m', code='x = 1'):
             m1 = create_module('m', code='x = 2')
-            self.assertEquals(2, m1.x)
+            self.assertEqual(2, m1.x)
 
             import m
-            self.assertEquals(1, m.x)
+            self.assertEqual(1, m.x)
 
     @suppress_stderr
     def test_create_module_installs_module_with_toggle(self):
@@ -103,7 +103,7 @@ class TestCreateModule(unittest.TestCase):
         with create_module_installs_module:
             m = create_module('example')
             import example
-            self.assertEquals(m, example)
+            self.assertEqual(m, example)
 
             del sys.modules['example']
 
@@ -137,9 +137,9 @@ class TestCreateModule(unittest.TestCase):
             'example', scope={'Class': Class, 'function': function}
         )
 
-        self.assertNotEquals(m.__name__, Class.__module__)
-        self.assertNotEquals(m.__name__, Class.method.__module__)
-        self.assertNotEquals(m.__name__, function.__module__)
+        self.assertNotEqual(m.__name__, Class.__module__)
+        self.assertNotEqual(m.__name__, Class.method.__module__)
+        self.assertNotEqual(m.__name__, function.__module__)
 
     def test_create_module_adopts_entities(self):
         """
@@ -157,9 +157,9 @@ class TestCreateModule(unittest.TestCase):
 
         m = create_module('example', to_adopt=(Class, function))
 
-        self.assertEquals(m.__name__, Class.__module__)
-        self.assertEquals(m.__name__, Class.method.__module__)
-        self.assertEquals(m.__name__, function.__module__)
+        self.assertEqual(m.__name__, Class.__module__)
+        self.assertEqual(m.__name__, Class.method.__module__)
+        self.assertEqual(m.__name__, function.__module__)
 
     @suppress_stderr
     def test_create_module_adopts_entities_with_defs_arguments(self):
@@ -177,9 +177,9 @@ class TestCreateModule(unittest.TestCase):
 
         m = create_module('example', defs=(Class, function))
 
-        self.assertEquals(m.__name__, Class.__module__)
-        self.assertEquals(m.__name__, Class.method.__module__)
-        self.assertEquals(m.__name__, function.__module__)
+        self.assertEqual(m.__name__, Class.__module__)
+        self.assertEqual(m.__name__, Class.method.__module__)
+        self.assertEqual(m.__name__, function.__module__)
 
     def test_create_module_defs_argument_print_warning(self):
         """
@@ -207,8 +207,8 @@ class TestCreateModule(unittest.TestCase):
             pass
 
         with installed_module('example', to_adopt=(Class, function)) as m:
-            self.assertEquals(m.Class, Class)
-            self.assertEquals(m.function, function)
+            self.assertEqual(m.Class, Class)
+            self.assertEqual(m.function, function)
 
     @suppress_stderr
     def test_create_module_set_adoptee_entities_in_module_with_def(self):
@@ -224,8 +224,8 @@ class TestCreateModule(unittest.TestCase):
             pass
 
         with installed_module('example', defs=(Class, function)) as m:
-            self.assertEquals(m.Class, Class)
-            self.assertEquals(m.function, function)
+            self.assertEqual(m.Class, Class)
+            self.assertEqual(m.function, function)
 
     def test_create_module_defines_module_name_in_code(self):
         """
@@ -234,7 +234,7 @@ class TestCreateModule(unittest.TestCase):
         """
         m = create_module('m', code='value = __name__')
 
-        self.assertEquals('m', m.value)
+        self.assertEqual('m', m.value)
 
     def test_create_module_ignores_code_arg_indentation(self):
         """
@@ -253,8 +253,8 @@ class TestCreateModule(unittest.TestCase):
 
         m = create_module('m', code=code)
 
-        self.assertEquals(3, m.three())
-        self.assertEquals('a', m.a())
+        self.assertEqual(3, m.three())
+        self.assertEqual('a', m.a())
 
     def test_create_module_does_not_register_failed_module(self):
         """
@@ -279,7 +279,7 @@ class TestInstalledModule(unittest.TestCase):
         ``create_module()``.
         """
         with installed_module('example', scope={'x': 3}, code='x += 1') as m:
-            self.assertEquals(4, m.x)
+            self.assertEqual(4, m.x)
 
     def test_installed_module_uninstalls_module(self):
         """
@@ -325,7 +325,7 @@ class TestInstalledModule(unittest.TestCase):
             pass
 
         with installed_module('m', to_adopt=[f], code='v = f.__module__') as m:
-            self.assertEquals('m', m.v)
+            self.assertEqual('m', m.v)
 
     def test_installed_module_restore_previous_module(self):
         """
@@ -336,10 +336,10 @@ class TestInstalledModule(unittest.TestCase):
 
             with installed_module('m', code='x = 2'):
                 import m
-                self.assertEquals(2, m.x)
+                self.assertEqual(2, m.x)
 
             import m
-            self.assertEquals(1, m.x)
+            self.assertEqual(1, m.x)
 
 
 class TestAdopt(unittest.TestCase):
@@ -364,9 +364,9 @@ class TestAdopt(unittest.TestCase):
             adopt(m, Class)
             adopt(m, function)
 
-            self.assertEquals(m.__name__, Class.__module__)
-            self.assertEquals(m.__name__, Class.method.__module__)
-            self.assertEquals(m.__name__, function.__module__)
+            self.assertEqual(m.__name__, Class.__module__)
+            self.assertEqual(m.__name__, Class.method.__module__)
+            self.assertEqual(m.__name__, function.__module__)
 
     def test_adopt_fails_on_read_only_module(self):
         """
@@ -394,9 +394,9 @@ class TestAdopt(unittest.TestCase):
                 installed_module('m2', to_adopt=[OuterClass]) as m2:
             adopt(m1, Class1)
 
-            self.assertEquals(m1.__name__, Class1.__module__)
-            self.assertEquals(m1.__name__, Class1.Class2.__module__)
-            self.assertNotEquals(m1.__name__, Class1.UnadoptedClass.__module__)
+            self.assertEqual(m1.__name__, Class1.__module__)
+            self.assertEqual(m1.__name__, Class1.Class2.__module__)
+            self.assertNotEqual(m1.__name__, Class1.UnadoptedClass.__module__)
 
     @suppress_stderr
     def test_adopts_internal_class_with_defs(self):
@@ -417,9 +417,9 @@ class TestAdopt(unittest.TestCase):
                 installed_module('m2', defs=[OuterClass]) as m2:
             adopt(m1, Class1)
 
-            self.assertEquals(m1.__name__, Class1.__module__)
-            self.assertEquals(m1.__name__, Class1.Class2.__module__)
-            self.assertNotEquals(m1.__name__, Class1.UnadoptedClass.__module__)
+            self.assertEqual(m1.__name__, Class1.__module__)
+            self.assertEqual(m1.__name__, Class1.Class2.__module__)
+            self.assertNotEqual(m1.__name__, Class1.UnadoptedClass.__module__)
 
     def test_adopt_code_defs(self):
         """
@@ -433,8 +433,8 @@ class TestAdopt(unittest.TestCase):
                 pass
         """
         with installed_module('m', code=code) as m:
-            self.assertEquals('m', m.function.__module__)
-            self.assertEquals('m', m.Class.__module__)
+            self.assertEqual('m', m.function.__module__)
+            self.assertEqual('m', m.Class.__module__)
 
 
 class TestAvailableModule(unittest.TestCase):
@@ -446,10 +446,10 @@ class TestAvailableModule(unittest.TestCase):
         its behavior is undefined.
         """
         with available_module('example', code='x = 3') as p:
-            self.assertEquals(None, p)
+            self.assertEqual(None, p)
 
             import example
-            self.assertEquals(3, example.x)
+            self.assertEqual(3, example.x)
 
         with self.assertRaises(ImportError):
             import example
@@ -490,7 +490,7 @@ class TestAvailableResource(unittest.TestCase):
         with available_module('example'):
             with available_resource('example', 'test.txt', content='test'):
                 content = pkgutil.get_data('example', 'test.txt')
-                self.assertEquals('test', content)
+                self.assertEqual(b'test', content)
 
     def test_availabe_resource_in_subdir(self):
         """
@@ -500,7 +500,7 @@ class TestAvailableResource(unittest.TestCase):
         with available_module('example'):
             with available_resource('example', 'a/b/test.txt', content='test'):
                 content = pkgutil.get_data('example', 'a/b/test.txt')
-                self.assertEquals('test', content)
+                self.assertEqual(b'test', content)
 
     @suppress_stderr
     def test_availabe_resource_uses_path_as_where_with_toggle(self):
@@ -513,7 +513,7 @@ class TestAvailableResource(unittest.TestCase):
                 with available_resource(
                         'example', 'test.txt', path='a/b', content='test'):
                     content = pkgutil.get_data('example', 'a/b/test.txt')
-                    self.assertEquals('test', content)
+                    self.assertEqual(b'test', content)
 
     def test_availabe_resource_path_as_where_prints_warning(self):
         """
@@ -535,7 +535,7 @@ class TestAvailableResource(unittest.TestCase):
             with available_module('example'):
                 with available_resource('example', 'test.txt', content='test'):
                     content = pkgutil.get_data('example', 'test.txt')
-                    self.assertEquals('test', content)
+                    self.assertEqual(b'test', content)
 
     def test_availabe_resource_uses_path_to_entire_file(self):
         """
@@ -546,7 +546,7 @@ class TestAvailableResource(unittest.TestCase):
             with available_resource(
                     'example', path='a/b/test.txt', content='test'):
                 content = pkgutil.get_data('example', 'a/b/test.txt')
-                self.assertEquals('test', content)
+                self.assertEqual(b'test', content)
 
     def test_availabe_resource_accepts_where_plus_name(self):
         """
@@ -559,7 +559,7 @@ class TestAvailableResource(unittest.TestCase):
             with available_resource(
                     'example', 'test.txt', where='a/b/', content='test'):
                 content = pkgutil.get_data('example', 'a/b/test.txt')
-                self.assertEquals('test', content)
+                self.assertEqual(b'test', content)
 
 
 load_tests = TestFinder(__name__, 'inelegant.module').load_tests

@@ -21,9 +21,9 @@ import contextlib
 import sys
 
 try:
-    from cStringIO import StringIO
+    from io import StringIO
 except:
-    from StringIO import StringIO
+    from io import StringIO
 
 
 def redirect_stdout(to=None):
@@ -38,13 +38,13 @@ def redirect_stdout(to=None):
 
     >>> output = StringIO()
     >>> with redirect_stdout(output):
-    ...     print 'ok'
+    ...     print('ok')
     >>> output.getvalue()
     'ok\\n'
 
     Once the context is finished, the previous stdout is restored::
 
-    >>> print 'back'
+    >>> print('back')
     back
     >>> output.getvalue()
     'ok\\n'
@@ -52,7 +52,7 @@ def redirect_stdout(to=None):
     The context yields the file-like object::
 
     >>> with redirect_stdout(to=StringIO()) as o:
-    ...     print 'drop var'
+    ...     print('drop var')
     >>> o.getvalue()
     'drop var\\n'
 
@@ -60,7 +60,7 @@ def redirect_stdout(to=None):
     redirect the content to::
 
     >>> with redirect_stdout() as o:
-    ...     print 'create it for me'
+    ...     print('create it for me')
     >>> o.getvalue()
     'create it for me\\n'
 
@@ -73,7 +73,7 @@ def redirect_stdout(to=None):
     >>> output = StringIO()
     >>> @redirect_stdout(output)
     ... def f(a, b):
-    ...     print 'the args are', a, b
+    ...     print('the args are', a, b)
     ...     return a+b
     >>> f(1,2)
     3
@@ -98,20 +98,20 @@ def redirect_stderr(to=None):
 
     >>> output = StringIO()
     >>> with redirect_stderr(to=output):
-    ...     sys.stderr.write('ok\\n')
+    ...     _ = sys.stderr.write('ok\\n')
     >>> output.getvalue()
     'ok\\n'
 
     Once the context is finished, the previous stdout is restored::
 
-    >>> sys.stderr.write('back\\n')
+    >>> _ = sys.stderr.write('back\\n')
     >>> output.getvalue()
     'ok\\n'
 
     The context yields the file-like object::
 
     >>> with redirect_stderr(StringIO()) as o:
-    ...     sys.stderr.write('drop var\\n')
+    ...     _ = sys.stderr.write('drop var\\n')
     >>> o.getvalue()
     'drop var\\n'
 
@@ -119,7 +119,7 @@ def redirect_stderr(to=None):
     redirect the content to::
 
     >>> with redirect_stderr() as o:
-    ...     sys.stderr.write('create it for me\\n')
+    ...     _ = sys.stderr.write('create it for me\\n')
     >>> o.getvalue()
     'create it for me\\n'
 
@@ -132,7 +132,7 @@ def redirect_stderr(to=None):
     >>> output = StringIO()
     >>> @redirect_stderr(output)
     ... def f(a, b):
-    ...     sys.stderr.write('the args are {0} {1}\\n'.format(a, b))
+    ...     _ = sys.stderr.write('the args are {0} {1}\\n'.format(a, b))
     ...     return a+b
     >>> f(1,2)
     3
@@ -255,7 +255,7 @@ def suppress_stdout(f=None):
 
     >>> @suppress_stdout
     ... def f(a, b):
-    ...     print 'the args are', a, b
+    ...     print('the args are', a, b)
     ...     return a+b
     >>> f(1,2)
     3
@@ -290,10 +290,10 @@ def suppress_stderr(f=None):
     context is finished, the previous standard output is restored::
 
     >>> with redirect_stderr() as output:
-    ...     sys.stderr.write('redirected\\n')
+    ...     _ = sys.stderr.write('redirected\\n')
     ...     with suppress_stderr():
-    ...         sys.stderr.write('discarded\\n')
-    ...     sys.stderr.write('redirected, too\\n')
+    ...         _ = sys.stderr.write('discarded\\n')
+    ...     _ = sys.stderr.write('redirected, too\\n')
     >>> output.getvalue()
     'redirected\\nredirected, too\\n'
 
@@ -305,7 +305,7 @@ def suppress_stderr(f=None):
 
     >>> @suppress_stderr
     ... def f(a, b):
-    ...     sys.stderr.write('the args are {0} {1}'.format(a, b))
+    ...     _ = sys.stderr.write('the args are {0} {1}'.format(a, b))
     ...     return a+b
     >>> with redirect_stderr() as output:
     ...     f(1,2)
@@ -336,7 +336,7 @@ def suppress_stderr(f=None):
     >>> from unittest import TestCase, TestLoader, TextTestRunner
     >>> class TestDiv(TestCase):
     ...     def test_div(self):
-    ...         self.assertEquals(2, div(6, 3))
+    ...         self.assertEqual(2, div(6, 3))
     >>> loader = TestLoader()
     >>> suite = loader.loadTestsFromTestCase(TestDiv)
     >>> stdoutRunner = TextTestRunner(stream=sys.stdout)
@@ -375,22 +375,22 @@ def suppress_stderr(f=None):
 
     >>> def div(num=None, den=None, a=None, b=None):
     ...     if num is None and a is not None:
-    ...         sys.stderr.write('"a" arg is deprecated, use "num."\\n')
+    ...         _ = sys.stderr.write('"a" arg is deprecated, use "num."\\n')
     ...         num = a
     ...     if den is None and b is not None:
-    ...         sys.stderr.write('"b" arg is deprecated, use "den."\\n')
+    ...         _ = sys.stderr.write('"b" arg is deprecated, use "den."\\n')
     ...         den = b
     ...     return num/den
 
     That should be enough::
 
     >>> div(6, 3)
-    2
+    2.0
     >>> with redirect_stderr(sys.stdout):
     ...     div(a=6, b=3)
     "a" arg is deprecated, use "num."
     "b" arg is deprecated, use "den."
-    2
+    2.0
 
     Polluted test output
     --------------------
@@ -400,9 +400,9 @@ def suppress_stderr(f=None):
 
     >>> class TestDiv(TestCase):
     ...     def test_div(self):
-    ...         self.assertEquals(2, div(6, 3))
+    ...         self.assertEqual(2, div(6, 3))
     ...     def test_div_deprecated_args(self):
-    ...         self.assertEquals(2, div(a=6, b=3))
+    ...         self.assertEqual(2, div(a=6, b=3))
 
     Now we run it again... but we will get a bit more than desired in the
     results::
@@ -431,10 +431,10 @@ def suppress_stderr(f=None):
 
     >>> class TestDiv(TestCase):
     ...     def test_div(self):
-    ...         self.assertEquals(2, div(6, 3))
+    ...         self.assertEqual(2, div(6, 3))
     ...     @suppress_stderr
     ...     def test_div_deprecated_args(self):
-    ...         self.assertEquals(2, div(a=6, b=3))
+    ...         self.assertEqual(2, div(a=6, b=3))
 
     The output is way cleaner now::
 
@@ -457,7 +457,7 @@ def suppress_stderr(f=None):
     ...     return div(a=height*base, b=2)
     >>> class TestTriangleArea(TestCase):
     ...     def test_triange_area(self):
-    ...         self.assertEquals(6, triangle_area(3, 4))
+    ...         self.assertEqual(6, triangle_area(3, 4))
 
     It clearly was written using the first version of ``div()`` but thanks to
     our backwards-compatibility efforts, it will still work with the newer

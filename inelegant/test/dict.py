@@ -43,9 +43,9 @@ class TestTempKey(unittest.TestCase):
         d = {}
 
         with temp_key(d, key='a', value=1):
-            self.assertEquals({'a': 1}, d)
+            self.assertEqual({'a': 1}, d)
 
-        self.assertEquals({}, d)
+        self.assertEqual({}, d)
 
     def test_restore_key(self):
         """
@@ -55,9 +55,9 @@ class TestTempKey(unittest.TestCase):
         d = {'a': 'b'}
 
         with temp_key(d, key='a', value=1):
-            self.assertEquals({'a': 1}, d)
+            self.assertEqual({'a': 1}, d)
 
-        self.assertEquals({'a': 'b'}, d)
+        self.assertEqual({'a': 'b'}, d)
 
     def test_remove_key_after_exception_in_context(self):
         """
@@ -68,12 +68,12 @@ class TestTempKey(unittest.TestCase):
 
         try:
             with temp_key(d, key='a', value=1):
-                self.assertEquals({'a': 1}, d)
+                self.assertEqual({'a': 1}, d)
                 raise Exception()
         except:
             pass
 
-        self.assertEquals({}, d)
+        self.assertEqual({}, d)
 
     def test_restore_key_after_exception_in_context(self):
         """
@@ -84,12 +84,12 @@ class TestTempKey(unittest.TestCase):
 
         try:
             with temp_key(d, key='a', value=1):
-                self.assertEquals({'a': 1}, d)
+                self.assertEqual({'a': 1}, d)
                 raise Exception()
         except:
             pass
 
-        self.assertEquals({'a': 'b'}, d)
+        self.assertEqual({'a': 'b'}, d)
 
 
 load_tests = TestFinder(__name__, 'inelegant.dict').load_tests

@@ -38,12 +38,12 @@ class TestChangeDir(unittest.TestCase):
         tempdir = tempfile.mkdtemp()
 
         with cd(tempdir) as p:
-            self.assertEquals(tempdir, os.getcwd())
-            self.assertNotEquals(prevdir, tempdir)
+            self.assertEqual(tempdir, os.getcwd())
+            self.assertNotEqual(prevdir, tempdir)
 
-            self.assertEquals(p, tempdir)
+            self.assertEqual(p, tempdir)
 
-        self.assertEquals(prevdir, os.getcwd())
+        self.assertEqual(prevdir, os.getcwd())
 
         os.rmdir(tempdir)
 
@@ -59,7 +59,7 @@ class TestChangeDir(unittest.TestCase):
             with cd(tempdir) as p:
                 raise Exception()
 
-        self.assertEquals(prevdir, os.getcwd())
+        self.assertEqual(prevdir, os.getcwd())
 
 
 class TestTemporaryFile(unittest.TestCase):
@@ -84,7 +84,7 @@ class TestTemporaryFile(unittest.TestCase):
         path = os.path.join(tempfile.gettempdir(), 'myfile')
 
         with temp_file(path) as p:
-            self.assertEquals(path, p)
+            self.assertEqual(path, p)
             self.assertTrue(os.path.exists(path))
             self.assertTrue(os.path.isfile(path))
 
@@ -97,7 +97,7 @@ class TestTemporaryFile(unittest.TestCase):
         user.
         """
         with temp_file(name='test') as p:
-            self.assertEquals('test', os.path.basename(p))
+            self.assertEqual('test', os.path.basename(p))
             self.assertTrue(os.path.exists(p))
             self.assertTrue(os.path.isfile(p))
 
@@ -110,7 +110,7 @@ class TestTemporaryFile(unittest.TestCase):
         by the user.
         """
         with temp_file(where=tempfile.gettempdir()) as p:
-            self.assertEquals(tempfile.gettempdir(), os.path.dirname(p))
+            self.assertEqual(tempfile.gettempdir(), os.path.dirname(p))
             self.assertTrue(os.path.exists(p))
             self.assertTrue(os.path.isfile(p))
 
@@ -124,7 +124,7 @@ class TestTemporaryFile(unittest.TestCase):
         """
         with redirect_stderr() as err:
             with temp_file(dir=tempfile.gettempdir()) as p:
-                self.assertEquals(tempfile.gettempdir(), os.path.dirname(p))
+                self.assertEqual(tempfile.gettempdir(), os.path.dirname(p))
                 self.assertTrue(os.path.exists(p))
                 self.assertTrue(os.path.isfile(p))
 
@@ -140,7 +140,7 @@ class TestTemporaryFile(unittest.TestCase):
         """
         with temp_dir() as tmpdir:
             with temp_file(name='test', where=tmpdir) as p:
-                self.assertEquals(os.path.join(tmpdir, 'test'), p)
+                self.assertEqual(os.path.join(tmpdir, 'test'), p)
                 self.assertTrue(os.path.exists(p))
                 self.assertTrue(os.path.isfile(p))
 
@@ -156,7 +156,7 @@ class TestTemporaryFile(unittest.TestCase):
 
         with temp_file(content='Test') as p:
             with open(p) as f:
-                self.assertEquals('Test', f.read())
+                self.assertEqual('Test', f.read())
 
         self.assertFalse(os.path.exists(p))
         self.assertFalse(os.path.isfile(p))
@@ -201,10 +201,10 @@ class TestTemporaryDirectory(unittest.TestCase):
         origin = os.getcwd()
 
         with temp_dir(cd=True) as p:
-            self.assertNotEquals(origin, os.getcwd())
-            self.assertEquals(p, os.getcwd())
+            self.assertNotEqual(origin, os.getcwd())
+            self.assertEqual(p, os.getcwd())
 
-        self.assertEquals(origin, os.getcwd())
+        self.assertEqual(origin, os.getcwd())
         self.assertFalse(os.path.exists(p))
 
     def test_tempdir_no_auto_cd(self):
@@ -215,14 +215,14 @@ class TestTemporaryDirectory(unittest.TestCase):
         origin = os.getcwd()
 
         with temp_dir(cd=False) as p:
-            self.assertEquals(origin, os.getcwd())
-            self.assertNotEquals(origin, p)
+            self.assertEqual(origin, os.getcwd())
+            self.assertNotEqual(origin, p)
 
         with temp_dir() as p:
-            self.assertEquals(origin, os.getcwd())
-            self.assertNotEquals(origin, p)
+            self.assertEqual(origin, os.getcwd())
+            self.assertNotEqual(origin, p)
 
-        self.assertEquals(origin, os.getcwd())
+        self.assertEqual(origin, os.getcwd())
 
     def test_tempdir_accepts_directory(self):
         """
@@ -233,7 +233,7 @@ class TestTemporaryDirectory(unittest.TestCase):
 
             with temp_dir(where=p1) as p2:
                 self.assertTrue(os.path.isdir(p2))
-                self.assertEquals(p1, os.path.dirname(p2))
+                self.assertEqual(p1, os.path.dirname(p2))
 
             self.assertFalse(os.path.exists(p2))
             self.assertTrue(os.path.exists(p1))
@@ -247,7 +247,7 @@ class TestTemporaryDirectory(unittest.TestCase):
         """
         with temp_dir(name='example') as p:
             self.assertTrue(os.path.isdir(p))
-            self.assertEquals('example', os.path.basename(p))
+            self.assertEqual('example', os.path.basename(p))
 
         self.assertFalse(os.path.exists(p))
 
@@ -260,8 +260,8 @@ class TestTemporaryDirectory(unittest.TestCase):
 
             with temp_dir(where=p1, name='example') as p2:
                 self.assertTrue(os.path.isdir(p2))
-                self.assertEquals(p1, os.path.dirname(p2))
-                self.assertEquals('example', os.path.basename(p2))
+                self.assertEqual(p1, os.path.dirname(p2))
+                self.assertEqual('example', os.path.basename(p2))
 
             self.assertFalse(os.path.exists(p2))
             self.assertTrue(os.path.exists(p1))
@@ -276,13 +276,13 @@ class TestTemporaryDirectory(unittest.TestCase):
         with temp_dir(name='a/b/c') as p:
             self.assertTrue(os.path.isdir(p))
 
-            self.assertEquals('c', os.path.basename(p))
+            self.assertEqual('c', os.path.basename(p))
 
             parent_dir = os.path.dirname(p)
-            self.assertEquals('b', os.path.basename(parent_dir))
+            self.assertEqual('b', os.path.basename(parent_dir))
 
             grandparent_dir = os.path.dirname(parent_dir)
-            self.assertEquals('a', os.path.basename(grandparent_dir))
+            self.assertEqual('a', os.path.basename(grandparent_dir))
 
         self.assertFalse(os.path.exists(p))
 
@@ -300,7 +300,7 @@ class TestExistingDirectory(unittest.TestCase):
             self.assertFalse(os.path.exists(p))
 
             with existing_dir(path=p) as p1:
-                self.assertEquals(p1, p)
+                self.assertEqual(p1, p)
                 self.assertTrue(os.path.exists(p))
                 self.assertTrue(os.path.isdir(p))
 
@@ -315,7 +315,7 @@ class TestExistingDirectory(unittest.TestCase):
             self.assertTrue(os.path.exists(p))
 
             with existing_dir(path=p) as p1:
-                self.assertEquals(p1, p)
+                self.assertEqual(p1, p)
                 self.assertTrue(os.path.exists(p))
                 self.assertTrue(os.path.isdir(p))
 
@@ -330,7 +330,7 @@ class TestExistingDirectory(unittest.TestCase):
             self.assertTrue(os.path.exists(p))
 
             with existing_dir(path=p) as p1:
-                self.assertEquals(p1, p)
+                self.assertEqual(p1, p)
                 self.assertTrue(os.path.exists(p))
                 self.assertTrue(os.path.isdir(p))
 
@@ -345,10 +345,10 @@ class TestExistingDirectory(unittest.TestCase):
 
         with temp_dir() as where:
             with existing_dir(where=where, name='example', cd=True) as p:
-                self.assertNotEquals(origin, os.getcwd())
-                self.assertEquals(p, os.getcwd())
+                self.assertNotEqual(origin, os.getcwd())
+                self.assertEqual(p, os.getcwd())
 
-            self.assertEquals(origin, os.getcwd())
+            self.assertEqual(origin, os.getcwd())
             self.assertFalse(os.path.exists(p))
 
     def test_existing_dir_no_auto_cd(self):
@@ -360,15 +360,15 @@ class TestExistingDirectory(unittest.TestCase):
 
         with temp_dir() as where:
             with existing_dir(where=where, name='example', cd=False) as p:
-                self.assertEquals(origin, os.getcwd())
-                self.assertNotEquals(origin, p)
+                self.assertEqual(origin, os.getcwd())
+                self.assertNotEqual(origin, p)
 
         with temp_dir() as where:
             with existing_dir(where=where, name='example', ) as p:
-                self.assertEquals(origin, os.getcwd())
-                self.assertNotEquals(origin, p)
+                self.assertEqual(origin, os.getcwd())
+                self.assertNotEqual(origin, p)
 
-        self.assertEquals(origin, os.getcwd())
+        self.assertEqual(origin, os.getcwd())
 
     def test_existing_dir_accepts_directory(self):
         """
@@ -392,10 +392,10 @@ class TestExistingDirectory(unittest.TestCase):
 
             with temp_dir(where=where, name='a') as a:
 
-                self.assertEquals(os.path.join(where, 'a'), a)
+                self.assertEqual(os.path.join(where, 'a'), a)
 
                 with existing_dir(where=where, name='a/b/example') as p:
-                    self.assertEquals(
+                    self.assertEqual(
                         os.path.join(where, 'a', 'b', 'example'), p)
 
                     self.assertTrue(os.path.exists(p))
@@ -417,7 +417,7 @@ class TestExistingDirectory(unittest.TestCase):
             with existing_dir(where=where, name='a/b/c/example') as p:
                 result = os.path.join(where, 'a', 'b', 'c', 'example')
 
-                self.assertEquals(result, p)
+                self.assertEqual(result, p)
                 self.assertTrue(os.path.exists(p))
                 self.assertTrue(os.path.exists(os.path.join(where, 'a')))
 
@@ -434,10 +434,10 @@ class TestExistingDirectory(unittest.TestCase):
 
             with temp_dir(where=where, name='a') as a:
 
-                self.assertEquals(os.path.join(where, 'a'), a)
+                self.assertEqual(os.path.join(where, 'a'), a)
 
                 with existing_dir(where=a, name='b/example') as p:
-                    self.assertEquals(
+                    self.assertEqual(
                         os.path.join(where, 'a', 'b', 'example'), p)
 
                     self.assertTrue(os.path.exists(p))

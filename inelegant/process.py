@@ -403,7 +403,7 @@ class Conversation(object):
         self.parent_to_child.put(value)
 
     def converse(self, generator):
-        to_parent = generator.next()
+        to_parent = next(generator)
         while True:
             try:
                 self.child_to_parent.put(to_parent)

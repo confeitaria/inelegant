@@ -20,7 +20,7 @@ import socket
 import errno
 import time
 import contextlib
-import SocketServer
+import socketserver
 import threading
 
 
@@ -67,7 +67,7 @@ def wait_server_up(host, port, timeout=1, tries=100):
     ...     s.recv(10)
     Traceback (most recent call last):
      ...
-    error: [Errno 111] Connection refused
+    ConnectionRefusedError: [Errno 111] Connection refused
     >>> process.terminate()
 
     Now, if we use ``wait_server_up()``, the port will be surely available::
@@ -78,7 +78,7 @@ def wait_server_up(host, port, timeout=1, tries=100):
     ...     wait_server_up('localhost', 9000)
     ...     s.connect(('localhost', 9000))
     ...     s.recv(10)
-    'my message'
+    b'my message'
     >>> process.terminate()
 
     And the best thing is, it will take only a minimum amount of time::
@@ -117,7 +117,7 @@ def wait_server_up(host, port, timeout=1, tries=100):
     if socket_timeout < 0.0001:
         socket_timeout = 0.0001
 
-    for i in xrange(tries):
+    for i in range(tries):
         s = socket.socket()
         s.settimeout(socket_timeout)
         with contextlib.closing(s):
@@ -176,7 +176,7 @@ def wait_server_down(host, port, timeout=1, tries=100):
     ...     s.bind(('localhost', 9000))
     Traceback (most recent call last):
      ...
-    error: [Errno 98] Address already in use
+    OSError: [Errno 98] Address already in use
     >>> thread.join()
 
     Now, if we use ``wait_server_down()``, the port will be surely available::
@@ -217,7 +217,7 @@ ng from a process outside the tests?
     if socket_timeout < 0.0001:
         socket_timeout = 0.0001
 
-    for i in xrange(tries):
+    for i in range(tries):
         s = socket.socket()
         with contextlib.closing(s):
             try:
@@ -240,7 +240,7 @@ ng from a process outside the tests?
         )
 
 
-class Server(SocketServer.TCPServer):
+class Server(socketserver.TCPServer):
     """
     ``inelegant.net.Server`` is a very simple TCP server that only responds
     with the same message, given to its constructor::
@@ -272,7 +272,7 @@ class Server(SocketServer.TCPServer):
     >>> with contextlib.closing(socket.socket()) as s:
     ...     s.connect(('localhost', 9000))
     ...     s.recv(10)
-    'My message'
+    b'My message'
     >>> process.join()
 
     You may prefer, however, to use it with an ``with`` statement. In this
@@ -282,13 +282,13 @@ class Server(SocketServer.TCPServer):
     ...     with contextlib.closing(socket.socket()) as s:
     ...         s.connect(('localhost', 9000))
     ...         s.recv(10)
-    'My message'
+    b'My message'
     >>> with contextlib.closing(socket.socket()) as s:
     ...     s.connect(('localhost', 9000))
     ...     s.recv(10)
     Traceback (most recent call last):
      ...
-    error: [Errno 111] Connection refused
+    ConnectionRefusedError: [Errno 111] Connection refused
     """
 
     def __init__(
@@ -304,20 +304,20 @@ class Server(SocketServer.TCPServer):
     def handle_request(self):
         self._lazy_init()
 
-        return SocketServer.TCPServer.handle_request(self)
+        return socketserver.TCPServer.handle_request(self)
 
     def serve_forever(self, poll_interval=0.001):
         self._lazy_init()
 
-        SocketServer.TCPServer.serve_forever(self, poll_interval)
+        socketserver.TCPServer.serve_forever(self, poll_interval)
 
     def server_close(self):
         if self._is_initialized():
-            SocketServer.TCPServer.server_close(self)
+            socketserver.TCPServer.server_close(self)
 
     def shutdown(self):
         if self._is_initialized():
-            SocketServer.TCPServer.shutdown(self)
+            socketserver.TCPServer.shutdown(self)
 
     def __enter__(self):
         self.thread = threading.Thread(target=self.serve_forever)
@@ -340,17 +340,17 @@ class Server(SocketServer.TCPServer):
     def _lazy_init(self):
         with self.init_lock:
             if not self._is_initialized():
-                SocketServer.TCPServer.__init__(
+                socketserver.TCPServer.__init__(
                     self, (self.host, self.port), ServerHandler)
 
     def _is_initialized(self):
         return hasattr(self, 'socket')
 
 
-class ServerHandler(SocketServer.BaseRequestHandler):
+class ServerHandler(socketserver.BaseRequestHandler):
 
     def handle(self):
-        self.request.sendall(self.server.message+'\0')
+        self.request.sendall((self.server.message+'\0').encode())
 
 
 def get_socket(timeout=None):

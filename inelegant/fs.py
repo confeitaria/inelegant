@@ -80,7 +80,7 @@ def temp_file(path=None, content=None, name=None, where=None, dir=None):
 
     >>> with temp_file() as p:
     ...     with open(p, 'w') as f:
-    ...         f.write('test')
+    ...         _ = f.write('test')
     ...     with open(p, 'r') as f:
     ...         f.read()
     'test'
@@ -90,7 +90,7 @@ def temp_file(path=None, content=None, name=None, where=None, dir=None):
     >>> open(p, 'r')  # doctest: +ELLIPSIS
     Traceback (most recent call last):
       ...
-    IOError: ...
+    FileNotFoundError: ...
 
     Giving a path
     =============
@@ -114,7 +114,7 @@ def temp_file(path=None, content=None, name=None, where=None, dir=None):
     ...         pass  # doctest: +ELLIPSIS
     Traceback (most recent call last):
       ...
-    IOError: File "..." already exists.
+    OSError: File "..." already exists.
 
     Choosing directory and name
     ===========================

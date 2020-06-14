@@ -52,9 +52,9 @@ class TestServer(unittest.TestCase):
             time.sleep(0.01)
             with contextlib.closing(get_socket()) as s:
                 s.connect(('localhost', 9000))
-                msg = s.recv(len('Server is up'))
+                msg = s.recv(len(b'Server is up'))
 
-                self.assertEquals('Server is up', msg)
+                self.assertEqual(b'Server is up', msg)
 
     def test_with(self):
         """
@@ -66,14 +66,14 @@ class TestServer(unittest.TestCase):
         with Server(message='Server is up') as server:
             with contextlib.closing(get_socket()) as s:
                 s.connect(('localhost', 9000))
-                msg = s.recv(len('Server is up'))
+                msg = s.recv(len(b'Server is up'))
 
-                self.assertEquals('Server is up', msg)
+                self.assertEqual(b'Server is up', msg)
 
         with contextlib.closing(get_socket(timeout=0.00001)) as s:
             with self.assertRaises(socket.error) as a:
                 s.connect(('localhost', 9000))
-                msg = s.recv(len('Server is up'))
+                msg = s.recv(len(b'Server is up'))
 
 
 class TestWaiters(unittest.TestCase):
@@ -128,9 +128,9 @@ class TestWaiters(unittest.TestCase):
 
             with contextlib.closing(get_socket()) as s:
                 s.connect(('localhost', 9000))
-                msg = s.recv(len('Server is up'))
+                msg = s.recv(len(b'Server is up'))
 
-                self.assertEquals('Server is up', msg)
+                self.assertEqual(b'Server is up', msg)
 
             pc.go()  # Once asserts are tested, we can shut the server down.
 

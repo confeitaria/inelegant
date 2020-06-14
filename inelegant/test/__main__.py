@@ -18,7 +18,7 @@
 # along with Inelegant.  If not, see <http://www.gnu.org/licenses/>.
 import unittest
 
-from __init__ import load_tests
+from .__init__ import load_tests
 
 if __name__ == "__main__":
     unittest.main()

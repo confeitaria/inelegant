@@ -67,9 +67,9 @@ class TestTestFinder(unittest.TestCase):
             finder = TestFinder(m1, m2)
             finder.run(result)
 
-            self.assertEquals(4, result.testsRun)
-            self.assertEquals(1, len(result.failures))
-            self.assertEquals(1, len(result.errors))
+            self.assertEqual(4, result.testsRun)
+            self.assertEqual(1, len(result.failures))
+            self.assertEqual(1, len(result.errors))
 
     def test_load_doctests(self):
         """
@@ -101,9 +101,9 @@ class TestTestFinder(unittest.TestCase):
             finder = TestFinder(m)
             finder.run(result)
 
-            self.assertEquals(3, result.testsRun)
-            self.assertEquals(2, len(result.failures))
-            self.assertEquals(0, len(result.errors))
+            self.assertEqual(3, result.testsRun)
+            self.assertEqual(2, len(result.failures))
+            self.assertEqual(0, len(result.errors))
 
     def test_implement_load_tests(self):
         """
@@ -141,9 +141,9 @@ class TestTestFinder(unittest.TestCase):
             suite = unittest.defaultTestLoader.loadTestsFromModule(m3)
             suite.run(result)
 
-            self.assertEquals(4, result.testsRun)
-            self.assertEquals(1, len(result.failures))
-            self.assertEquals(1, len(result.errors))
+            self.assertEqual(4, result.testsRun)
+            self.assertEqual(1, len(result.failures))
+            self.assertEqual(1, len(result.errors))
 
     def test_accept_module_names(self):
         """
@@ -182,9 +182,9 @@ class TestTestFinder(unittest.TestCase):
             finder = TestFinder('m1', 'm2')
             finder.run(result)
 
-            self.assertEquals(5, result.testsRun)
-            self.assertEquals(2, len(result.failures))
-            self.assertEquals(1, len(result.errors))
+            self.assertEqual(5, result.testsRun)
+            self.assertEqual(2, len(result.failures))
+            self.assertEqual(1, len(result.errors))
 
     def test_does_not_accept_period_module(self):
         """
@@ -215,9 +215,9 @@ class TestTestFinder(unittest.TestCase):
                 finder = TestFinder(f)
                 finder.run(result)
 
-                self.assertEquals(1, result.testsRun)
-                self.assertEquals(1, len(result.failures))
-                self.assertEquals(0, len(result.errors))
+                self.assertEqual(1, result.testsRun)
+                self.assertEqual(1, len(result.failures))
+                self.assertEqual(0, len(result.errors))
 
     def test_accept_file_path(self):
         """
@@ -239,9 +239,9 @@ class TestTestFinder(unittest.TestCase):
             finder = TestFinder(path)
             finder.run(result)
 
-            self.assertEquals(1, result.testsRun)
-            self.assertEquals(1, len(result.failures))
-            self.assertEquals(0, len(result.errors))
+            self.assertEqual(1, result.testsRun)
+            self.assertEqual(1, len(result.failures))
+            self.assertEqual(0, len(result.errors))
 
     def test_empty_file_no_error(self):
         """
@@ -253,9 +253,9 @@ class TestTestFinder(unittest.TestCase):
             finder = TestFinder(path)
             finder.run(result)
 
-            self.assertEquals(1, result.testsRun)
-            self.assertEquals(0, len(result.failures))
-            self.assertEquals(0, len(result.errors))
+            self.assertEqual(1, result.testsRun)
+            self.assertEqual(0, len(result.failures))
+            self.assertEqual(0, len(result.errors))
 
     def test_file_relative_to_module(self):
         """
@@ -287,9 +287,9 @@ class TestTestFinder(unittest.TestCase):
             finder = TestFinder(os.path.join(os.pardir, name))
             finder.run(result)
 
-            self.assertEquals(1, result.testsRun)
-            self.assertEquals(1, len(result.failures))
-            self.assertEquals(0, len(result.errors))
+            self.assertEqual(1, result.testsRun)
+            self.assertEqual(1, len(result.failures))
+            self.assertEqual(0, len(result.errors))
 
     def test_get_test_loader(self):
         """
@@ -336,9 +336,9 @@ class TestTestFinder(unittest.TestCase):
 
                 test_cases = {t[0] for t in result.failures}
 
-                self.assertEquals(3, result.testsRun)
-                self.assertEquals(3, len(result.failures))
-                self.assertEquals(0, len(result.errors))
+                self.assertEqual(3, result.testsRun)
+                self.assertEqual(3, len(result.failures))
+                self.assertEqual(0, len(result.errors))
 
                 method_names = {tc._testMethodName for tc in test_cases}
 
@@ -379,9 +379,9 @@ class TestTestFinder(unittest.TestCase):
             finder = TestFinder(m1, m2, skip=TestCase2)
             finder.run(result)
 
-            self.assertEquals(2, result.testsRun)
-            self.assertEquals(1, len(result.failures))
-            self.assertEquals(0, len(result.errors))
+            self.assertEqual(2, result.testsRun)
+            self.assertEqual(1, len(result.failures))
+            self.assertEqual(0, len(result.errors))
 
     def test_skip_test_cases(self):
         """
@@ -410,9 +410,9 @@ class TestTestFinder(unittest.TestCase):
             finder = TestFinder(m1, m2, skip=[TestCase2])
             finder.run(result)
 
-            self.assertEquals(2, result.testsRun)
-            self.assertEquals(1, len(result.failures))
-            self.assertEquals(0, len(result.errors))
+            self.assertEqual(2, result.testsRun)
+            self.assertEqual(1, len(result.failures))
+            self.assertEqual(0, len(result.errors))
 
     def test_do_not_skip_subclass(self):
         """
@@ -439,9 +439,9 @@ class TestTestFinder(unittest.TestCase):
             finder = TestFinder(m1, m2, skip=BaseTestCase)
             finder.run(result)
 
-            self.assertEquals(3, result.testsRun)
-            self.assertEquals(1, len(result.failures))
-            self.assertEquals(1, len(result.errors))
+            self.assertEqual(3, result.testsRun)
+            self.assertEqual(1, len(result.failures))
+            self.assertEqual(1, len(result.errors))
 
     def test_fail_on_import_error_from_scanned_module(self):
         """

@@ -48,7 +48,7 @@ def create_module(name, code='', scope=None, to_adopt=(), defs=None):
         >>> import my_module
         Traceback (most recent call last):
           ...
-        ImportError: No module named my_module
+        ModuleNotFoundError: No module named 'my_module'
 
         Ideally, you should use ``installed_module()`` to make it available
         to import. However, if you still need the old behavior from
@@ -132,7 +132,7 @@ def create_module(name, code='', scope=None, to_adopt=(), defs=None):
     code = dedent(code)
 
     with temp_key(sys.modules, key=name, value=module):
-        exec code in module.__dict__
+        exec(code, module.__dict__)
 
     if create_module_installs_module.enabled:
         sys.stderr.write(
@@ -163,7 +163,7 @@ def installed_module(name, code='', to_adopt=(), scope=None, defs=None):
     >>> import a
     Traceback (most recent call last):
       ...
-    ImportError: No module named a
+    ModuleNotFoundError: No module named 'a'
     """
     if defs and not to_adopt:
         sys.stderr.write('Do not use defs argument, use to_adopt.')
@@ -194,7 +194,7 @@ def available_module(name, code='', extension='.py'):
     >>> import m
     Traceback (most recent call last):
       ...
-    ImportError: No module named m
+    ModuleNotFoundError: No module named 'm'
 
     Differences from ``inelegant.module.installed_module()``
     ========================================================
@@ -204,7 +204,7 @@ def available_module(name, code='', extension='.py'):
 
     >>> with installed_module('m') as m:
     ...     m                                           # doctest: +ELLIPSIS
-    <module 'm' ...>
+    <module 'm'>
     >>> with available_module('m') as m:
     ...     m is None
     True
@@ -309,14 +309,14 @@ def available_resource(module, name=None, where=None, path=None, content=''):
     >>> with available_module('m'):
     ...     with available_resource('m', 'test.txt'):
     ...         pkgutil.get_data('m', 'test.txt')
-    ''
+    b''
 
     You can also give the content of the resource::
 
     >>> with available_module('m'):
     ...     with available_resource('m', 'test.txt', content='example'):
     ...         pkgutil.get_data('m', 'test.txt')
-    'example'
+    b'example'
 
     Once the context is done, the resource is gone::
 
@@ -326,7 +326,7 @@ def available_resource(module, name=None, where=None, path=None, content=''):
     ...     pkgutil.get_data('m', 'test.txt') # doctest: +ELLIPSIS
     Traceback (most recent call last):
       ...
-    IOError: ...
+    FileNotFoundError: ...
 
     The ``where`` and ``path`` arguments
     ====================================
@@ -338,7 +338,7 @@ def available_resource(module, name=None, where=None, path=None, content=''):
     ...     with available_resource(
     ...             'm', 'test.txt', where='a', content='test'):
     ...         pkgutil.get_data('m', 'a/test.txt')
-    'test'
+    b'test'
 
     If one has the path of the resource, one can give it directly to the
     context manager via the ``path`` argument::
@@ -347,7 +347,7 @@ def available_resource(module, name=None, where=None, path=None, content=''):
     ...     with available_resource(
     ...             'm', path='a/test.txt', content='test'):
     ...         pkgutil.get_data('m', 'a/test.txt')
-    'test'
+    b'test'
 
         **Note:** Up to inelegant 0.1.0, the ``path`` argument used to be
         prefixed to the ``name`` argument to generate the path, and there was
@@ -359,7 +359,7 @@ def available_resource(module, name=None, where=None, path=None, content=''):
         ...         with available_resource(
         ...                 'm', 'test.txt', path='a', content='test'):
         ...             pkgutil.get_data('m', 'a/test.txt')
-        'test'
+        b'test'
     """
     if available_resource_uses_path_as_where.enabled:
         sys.stderr.write(
@@ -494,7 +494,7 @@ def get_adoptable_value(obj):
     <function m at ...>
     """
     if inspect.ismethod(obj):
-        return obj.im_func
+        return obj.__func__
     else:
         return obj
 
@@ -598,7 +598,7 @@ class AdoptException(ValueError):
     ...     adopt(m, 3)
     Traceback (most recent call last):
         ...
-    AdoptException: 3 has no __module__ attribute.
+    inelegant.module.AdoptException: 3 has no __module__ attribute.
 
     ...or a built-in function::
 
@@ -606,7 +606,7 @@ class AdoptException(ValueError):
     ...     adopt(m, dict)
     Traceback (most recent call last):
         ...
-    AdoptException: <type 'dict'> __module__ attribute is ready-only.
+    inelegant.module.AdoptException: <class 'dict'> __module__ attribute is ready-only.
 
     It can also receive more than one value::
 
@@ -614,7 +614,7 @@ class AdoptException(ValueError):
     ...     adopt(m, dict, 3)
     Traceback (most recent call last):
         ...
-    AdoptException: <type 'dict'> __module__ attribute is ready-only.
+    inelegant.module.AdoptException: <class 'dict'> __module__ attribute is ready-only.
         3 has no __module__ attribute.
     """
 
@@ -666,9 +666,9 @@ def get_caller_module(index=1):
     >>> scope_a = {'get_caller_module': get_caller_module}
     >>> code_a = '''
     ...     def f_a():
-    ...         print get_caller_module(0)
-    ...         print get_caller_module(1)
-    ...         print get_caller_module(2)
+    ...         print(get_caller_module(0))
+    ...         print(get_caller_module(1))
+    ...         print(get_caller_module(2))
     ...     '''
     >>> with installed_module('a', code=code_a, scope=scope_a):
     ...     code_b = '''
@@ -703,9 +703,9 @@ def get_caller_module(index=1):
     For example, we could have the following function::
 
     >>> def print_current_module():
-    ...     print get_caller_module()
+    ...     print(get_caller_module())
 
-    Were the default index 0, it would print the module where
+    Were the default index 0, it would print(the module where)
     ``get_current_module()`` was defined. However, we want the module where it
     was _called_ - and this is a level higher::
 
@@ -732,17 +732,17 @@ def dedent(code):
 
     >>> a = '''
     ...         for i in range(10):
-    ...             print i
+    ...             print(i)
     ... '''
     >>> a
-    '\\n        for i in range(10):\\n            print i\\n'
+    '\\n        for i in range(10):\\n            print(i)\\n'
 
     When dendented, it will look like this::
 
     >>> dedent(a)
-    'for i in range(10):\\n    print i\\n'
+    'for i in range(10):\\n    print(i)\\n'
     """
-    if isinstance(code, basestring) and code.startswith('\n'):
+    if isinstance(code, str) and code.startswith('\n'):
         code = code.replace('\n', '', 1)
 
     return textwrap.dedent(code)

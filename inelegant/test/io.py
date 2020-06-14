@@ -17,16 +17,16 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Inelegant.  If not, see <http://www.gnu.org/licenses/>.
 
-from __future__ import print_function
+
 
 import unittest
 
 import sys
 
 try:
-    from cStringIO import StringIO
+    from io import StringIO
 except:
-    from StringIO import StringIO
+    from io import StringIO
 
 from inelegant.io import redirect_stdout, redirect_stderr, suppress_stdout,\
     suppress_stderr
@@ -49,7 +49,7 @@ class TestRedirectStdout(unittest.TestCase):
 
         print('non-redirected')
 
-        self.assertEquals('test\n', output.getvalue())
+        self.assertEqual('test\n', output.getvalue())
 
     def test_redirect_stdout_yields_output(self):
         """
@@ -59,7 +59,7 @@ class TestRedirectStdout(unittest.TestCase):
         with redirect_stdout() as output:
             print('test')
 
-        self.assertEquals('test\n', output.getvalue())
+        self.assertEqual('test\n', output.getvalue())
 
     @suppress_stdout
     def test_do_not_redirect_stdout_after_exception_in_context(self):
@@ -77,7 +77,7 @@ class TestRedirectStdout(unittest.TestCase):
 
         print('non-redirected')
 
-        self.assertEquals('', output.getvalue())
+        self.assertEqual('', output.getvalue())
 
     def test_redirect_stdout_as_decorator(self):
         """
@@ -91,7 +91,7 @@ class TestRedirectStdout(unittest.TestCase):
 
         f()
 
-        self.assertEquals('test\n', output.getvalue())
+        self.assertEqual('test\n', output.getvalue())
 
     def test_redirect_stdout_is_well_behaved_decorator(self):
         """
@@ -107,7 +107,7 @@ class TestRedirectStdout(unittest.TestCase):
 
         value = f('te', b='st')
 
-        self.assertEquals(3, value)
+        self.assertEqual(3, value)
 
     def test_redirect_stdout_is_well_behaved_decorator_with_bound_method(self):
         """
@@ -127,7 +127,7 @@ class TestRedirectStdout(unittest.TestCase):
 
         value = Test(1).f(2)
 
-        self.assertEquals(3, value)
+        self.assertEqual(3, value)
 
 
 class TestSuppressStdout(unittest.TestCase):
@@ -145,7 +145,7 @@ class TestSuppressStdout(unittest.TestCase):
 
             print('redirected again')
 
-        self.assertEquals('redirected\nredirected again\n', output.getvalue())
+        self.assertEqual('redirected\nredirected again\n', output.getvalue())
 
     def test_do_not_suppress_stdout_after_exception_in_context(self):
         """
@@ -163,7 +163,7 @@ class TestSuppressStdout(unittest.TestCase):
 
             print('redirected again')
 
-        self.assertEquals('redirected\nredirected again\n', output.getvalue())
+        self.assertEqual('redirected\nredirected again\n', output.getvalue())
 
     def test_suppress_stdout_as_decorator(self):
         """
@@ -181,7 +181,7 @@ class TestSuppressStdout(unittest.TestCase):
 
             print('redirected again')
 
-        self.assertEquals('redirected\nredirected again\n', output.getvalue())
+        self.assertEqual('redirected\nredirected again\n', output.getvalue())
 
     def test_suppress_stdout_is_well_behaved_decorator(self):
         """
@@ -195,7 +195,7 @@ class TestSuppressStdout(unittest.TestCase):
 
         value = f('te', b='st')
 
-        self.assertEquals(3, value)
+        self.assertEqual(3, value)
 
 
 class TestRedirectStderr(unittest.TestCase):
@@ -213,7 +213,7 @@ class TestRedirectStderr(unittest.TestCase):
 
         print('non-redirected', file=sys.stderr)
 
-        self.assertEquals('test\n', output.getvalue())
+        self.assertEqual('test\n', output.getvalue())
 
     @suppress_stderr
     def test_do_not_redirect_stderr_after_exception_in_context(self):
@@ -231,7 +231,7 @@ class TestRedirectStderr(unittest.TestCase):
 
         print('non-redirected', file=sys.stderr)
 
-        self.assertEquals('', output.getvalue())
+        self.assertEqual('', output.getvalue())
 
     def test_redirect_stderr_yields_output(self):
         """
@@ -241,7 +241,7 @@ class TestRedirectStderr(unittest.TestCase):
         with redirect_stderr() as output:
             print('test', file=sys.stderr)
 
-        self.assertEquals('test\n', output.getvalue())
+        self.assertEqual('test\n', output.getvalue())
 
     @suppress_stderr
     def test_do_not_redirect_stderr_after_exception_in_context(self):
@@ -259,7 +259,7 @@ class TestRedirectStderr(unittest.TestCase):
 
         print('test', file=sys.stderr)
 
-        self.assertEquals('', output.getvalue())
+        self.assertEqual('', output.getvalue())
 
     def test_redirect_stderr_as_decorator(self):
         """
@@ -273,7 +273,7 @@ class TestRedirectStderr(unittest.TestCase):
 
         f()
 
-        self.assertEquals('test\n', output.getvalue())
+        self.assertEqual('test\n', output.getvalue())
 
     def test_redirect_stderr_is_well_behaved_decorator(self):
         """
@@ -289,7 +289,7 @@ class TestRedirectStderr(unittest.TestCase):
 
         value = f('te', b='st')
 
-        self.assertEquals(3, value)
+        self.assertEqual(3, value)
 
     def test_redirect_stderr_is_well_behaved_decorator_with_bound_method(self):
         """
@@ -309,7 +309,7 @@ class TestRedirectStderr(unittest.TestCase):
 
         value = Test(1).f(2)
 
-        self.assertEquals(3, value)
+        self.assertEqual(3, value)
 
 
 class TestSuppressStderr(unittest.TestCase):
@@ -327,7 +327,7 @@ class TestSuppressStderr(unittest.TestCase):
 
             print('redirected again', file=sys.stderr)
 
-        self.assertEquals('redirected\nredirected again\n', output.getvalue())
+        self.assertEqual('redirected\nredirected again\n', output.getvalue())
 
     def test_do_not_suppress_stderr_after_exception_in_context(self):
         """
@@ -345,7 +345,7 @@ class TestSuppressStderr(unittest.TestCase):
 
             print('redirected again', file=sys.stderr)
 
-        self.assertEquals('redirected\nredirected again\n', output.getvalue())
+        self.assertEqual('redirected\nredirected again\n', output.getvalue())
 
     def test_suppress_stderr_as_decorator(self):
         """
@@ -363,7 +363,7 @@ class TestSuppressStderr(unittest.TestCase):
 
             print('redirected again', file=sys.stderr)
 
-        self.assertEquals('redirected\nredirected again\n', output.getvalue())
+        self.assertEqual('redirected\nredirected again\n', output.getvalue())
 
     def test_suppress_stderr_is_well_behaved_decorator(self):
         """
@@ -377,7 +377,7 @@ class TestSuppressStderr(unittest.TestCase):
 
         value = f('te', b='st')
 
-        self.assertEquals(3, value)
+        self.assertEqual(3, value)
 
 
 load_tests = TestFinder(__name__, 'inelegant.io').load_tests

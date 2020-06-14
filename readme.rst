@@ -170,7 +170,7 @@ For example, it has the ``inelegant.Server``, a subclass of
     ...     with contextlib.closing(socket.socket()) as s:
     ...         s.connect(('localhost', 9000))
     ...         s.recv(10)
-    'my message'
+    b'my message'
 
 However, it is probably best used as a context manager. If given to a ``with``
 statement, the server will be started alone in the background and finished once
@@ -181,12 +181,12 @@ the block is exited::
     ...     with contextlib.closing(socket.socket()) as s:
     ...         s.connect(('localhost', 9000))
     ...         s.recv(10)
-    'my message'
+    b'my message'
     >>> with contextlib.closing(socket.socket()) as s:
     ...     s.connect(('localhost', 9000))
     Traceback (most recent call last):
       ...
-    error: [Errno 111] Connection refused
+    ConnectionRefusedError: [Errno 111] Connection refused
 
 Waiter functions
 ----------------
@@ -211,7 +211,7 @@ two of them:
         ...     with contextlib.closing(socket.socket()) as s:
         ...         s.connect(('localhost', 9000))
         ...         s.recv(10)
-        'my message'
+        b'my message'
 
     The problem is, these wait times are wasteful: to ensure the server is up,
     we wait way more time than it is necessary most of the times. It is
@@ -260,7 +260,7 @@ two of them:
         ...         s.bind(('localhost', 9000))
         Traceback (most recent call last):
          ...
-        error: [Errno 98] Address already in use
+        OSError: [Errno 98] Address already in use
 
     A common solution is to add some wait time::
 
@@ -308,7 +308,7 @@ has a mandatory argument, the module name::
 
     >>> from inelegant.module import create_module
     >>> create_module('m') # doctest: +ELLIPSIS
-    <module 'm' ...>
+    <module 'm'>
 
 Note, however, that creating a module does not make it available for
 importing::
@@ -316,7 +316,7 @@ importing::
     >>> import m
     Traceback (most recent call last):
       ...
-    ImportError: No module named m
+    ModuleNotFoundError: No module named 'm'
 
 Giving scope, definitions and code to the module
 ------------------------------------------------
@@ -385,7 +385,7 @@ statement, the module will be available for importing...
     >>> import some_module
     Traceback (most recent call last):
       ...
-    ImportError: No module named some_module
+    ModuleNotFoundError: No module named 'some_module'
 
 The ``available_module()`` context manager
 ------------------------------------------
@@ -407,14 +407,14 @@ anymore::
     >>> import m
     Traceback (most recent call last):
       ...
-    ImportError: No module named m
+    ModuleNotFoundError: No module named 'm'
 
 It is similar ``installed_module()`` but its context does not return the module
 itself::
 
     >>> with installed_module('m') as m:
     ...     m                                           # doctest: +ELLIPSIS
-    <module 'm' ...>
+    <module 'm'>
     >>> with available_module('m') as m:
     ...     m is None
     True
@@ -457,7 +457,7 @@ resource file::
     >>> with available_module('m'):
     ...     with available_resource('m', 'my-file.txt'):
     ...         pkgutil.get_data('m', 'my-file.txt')
-    ''
+    b''
 
 Since we want to put content on these resources, we can give it to the function
 with the ``content`` argument::
@@ -465,18 +465,18 @@ with the ``content`` argument::
     >>> with available_module('m'):
     ...     with available_resource('m', 'my-file.txt', content='example'):
     ...         pkgutil.get_data('m', 'my-file.txt')
-    'example'
+    b'example'
 
 Once the ``available_resource()`` context ends, the resource is not available
 anymore::
 
     >>> with available_module('m'):
     ...     with available_resource('m', 'my-file.txt', content='example 2'):
-    ...         assert pkgutil.get_data('m', 'my-file.txt') == 'example 2'
+    ...         assert pkgutil.get_data('m', 'my-file.txt') == b'example 2'
     ...     pkgutil.get_data('m', 'my-file.txt') # doctest: +ELLIPSIS
     Traceback (most recent call last):
       ...
-    IOError: ...
+    FileNotFoundError: ...
 
 The ``get_caller_module()`` function
 ------------------------------------
@@ -488,7 +488,7 @@ For example, suppose we have a module ``m1`` with a function ``f()``::
 
     >>> from inelegant.module import get_caller_module
     >>> def f():
-    ...     print get_caller_module()
+    ...     print(get_caller_module())
 
 ``m2`` imports ``m1`` and call it. What will it return? It will return ``m2``
 since it is the module calling ``f()``::
@@ -496,7 +496,7 @@ since it is the module calling ``f()``::
     >>> with installed_module('m1', to_adopt=[f]),\
     ...         installed_module('m2', code='import m1; m1.f()'):
     ...     pass # doctest: +ELLIPSIS
-    <module 'm2' ...>
+    <module 'm2'>
 
 As we like to put it, ``get_caller_module()`` doesn't tell you who you are - you
 already know that. I tell you who is calling you.
@@ -507,11 +507,11 @@ where ``get_caller_module()`` was called. Basically, it means the default value
 of the index is 1::
 
     >>> def f2():
-    ...     print get_caller_module(1)
+    ...     print(get_caller_module(1))
     >>> with installed_module('m1', to_adopt=[f2]),\
     ...         installed_module('m2', code='import m1; m1.f2()'):
     ...     pass # doctest: +ELLIPSIS
-    <module 'm2' ...>
+    <module 'm2'>
 
 "Inelegant Finder": straightforward way of finding test cases
 =============================================================
@@ -539,7 +539,7 @@ Consider the definitions below::
     ...     return a + b
     >>> class TestAdd(unittest.TestCase):
     ...     def test22(self):
-    ...         self.assertEquals(3, add(2, 2))
+    ...         self.assertEqual(3, add(2, 2))
 
 We can put them on modules and give the modules to test finder. Both the
 doctest and the unit test will be called when the finder suite be executed::
@@ -589,7 +589,7 @@ Another good example would be the file created below::
     >>> import tempfile
     >>> _, path = tempfile.mkstemp()
     >>> with open(path, 'w') as f:
-    ...     f.write('''
+    ...     _ = f.write('''
     ...         >>> 2+2
     ...         3
     ...     ''')
@@ -629,10 +629,10 @@ __ https://docs.python.org/2/library/unittest.html#load-tests-protocol
 
     >>> class TestCase1(unittest.TestCase):
     ...     def test1(self):
-    ...         self.assertEquals(1, 1)
+    ...         self.assertEqual(1, 1)
     >>> class TestCase2(unittest.TestCase):
     ...     def test2(self):
-    ...         self.assertEquals(2, 1)
+    ...         self.assertEqual(2, 1)
     >>> with installed_module('t', to_adopt=[TestCase1,TestCase2]) as t:
     ...     loader = unittest.TestLoader()
     ...     suite = loader.loadTestsFromModule(t)
@@ -683,7 +683,7 @@ So, consider the function and class defined below::
     ...     return a + b
     >>> class TestAdd(unittest.TestCase):
     ...     def test22(self):
-    ...         self.assertEquals(3, add(2, 2))
+    ...         self.assertEqual(3, add(2, 2))
 
 We can force a test module to return both the doctests and the unittest by
 using the ``load_tests()`` method::
@@ -744,7 +744,7 @@ files::
     >>> from inelegant.fs import temp_file
     >>> with temp_file() as p:
     ...     with open(p, 'w') as f:
-    ...         f.write('test')
+    ...         _ = f.write('test')
     ...     with open(p, 'r') as f:
     ...         f.read()
     'test'
@@ -754,7 +754,7 @@ Once the context is finished, the file is removed::
     >>> open(p, 'r')  # doctest: +ELLIPSIS
     Traceback (most recent call last):
       ...
-    IOError: ...
+    FileNotFoundError: ...
 
 One can also give the path to the file to be created::
 
@@ -792,7 +792,7 @@ file can result in errors if one already exists with this name::
     ...         pass
     Traceback (most recent call last):
       ...
-    IOError: ...
+    OSError: ...
 
 Creating temporary directories
 ------------------------------
@@ -843,7 +843,7 @@ errors if one already exists with this name::
     ...         pass
     Traceback (most recent call last):
       ...
-    OSError: ...
+    FileExistsError: ...
 
 "Inelegant Toggle" - enable and disable a global condition
 ==========================================================
@@ -865,7 +865,7 @@ numbers. If the divisor is zero, it returns ``float('NaN')``::
     ...     else:
     ...         return float('NaN')
     >>> div(6, 3)
-    2
+    2.0
     >>> div(6, 0)
     nan
 
@@ -876,11 +876,11 @@ an exception for zero divisors. We decide to change this behavor, then::
     >>> def div(dividend, divisor):
     ...     return dividend / divisor
     >>> div(6, 3)
-    2
+    2.0
     >>> div(6, 0)
     Traceback (most recent call last):
       ...
-    ZeroDivisionError: integer division or modulo by zero
+    ZeroDivisionError: division by zero
 
 The problem is, many programs are already using the function and relying on the
 old behavor. To rewrite all of them at once is not viable. We can then enable
@@ -910,7 +910,7 @@ state)::
     >>> div(6, 0)
     Traceback (most recent call last):
       ...
-    ZeroDivisionError: integer division or modulo by zero
+    ZeroDivisionError: division by zero
 
 Once the toggle is enabled, however, the old behavior will emerge::
 
@@ -927,7 +927,7 @@ You can disable a toggle as well::
     >>> div(6, 0)
     Traceback (most recent call last):
       ...
-    ZeroDivisionError: integer division or modulo by zero
+    ZeroDivisionError: division by zero
 
 This, however, is probably not a good idea most of the time. Currently, toggles
 are expected to only be enabled in the very beginning of the Python program and
@@ -948,7 +948,7 @@ disabled::
     >>> div(6, 0)
     Traceback (most recent call last):
       ...
-    ZeroDivisionError: integer division or modulo by zero
+    ZeroDivisionError: division by zero
 
 A warning for each toogle
 -------------------------
@@ -1016,11 +1016,11 @@ Redirecting standard output
 ``redirect_stdout()`` will redirect the standard output to a file object given
 to it::
 
-    >>> from StringIO import StringIO
+    >>> from io import StringIO
     >>> from inelegant.io import redirect_stdout
     >>> output = StringIO()
     >>> with redirect_stdout(output):
-    ...     print 'this will be redirected'
+    ...     print('this will be redirected')
 
 Everything that would get into the standard output will be written to this
 file::
@@ -1030,14 +1030,14 @@ file::
 
 Once the context is exited, the previous standard output is restored::
 
-    >>> print 'this will not be redirected'
+    >>> print('this will not be redirected')
     this will not be redirected
 
 The context manager returns the object to which it will write the redirected
 content::
 
     >>> with redirect_stdout(StringIO()) as o:
-    ...     print 'new file-like object'
+    ...     print('new file-like object')
     >>> o.getvalue()
     'new file-like object\n'
 
@@ -1045,7 +1045,7 @@ If no argument is given to the context manager, it will create and return a
 ``StringIO`` object::
 
     >>> with redirect_stdout() as o:
-    ...     print 'automatically created file-like object'
+    ...     print('automatically created file-like object')
     >>> o.getvalue()
     'automatically created file-like object\n'
 
@@ -1058,7 +1058,7 @@ to it::
     >>> from inelegant.io import redirect_stderr
     >>> output = StringIO()
     >>> with redirect_stderr(output):
-    ...     sys.stderr.write('this will be redirected\n')
+    ...     _ = sys.stderr.write('this will be redirected\n')
 
 Everything that would get into the standard output will be written to this
 file::
@@ -1068,13 +1068,13 @@ file::
 
 Once the context is exited, the previous standard output is restored::
 
-    >>> sys.stderr.write('this will not be redirected')
+    >>> _ = sys.stderr.write('this will not be redirected')
 
 The context manager returns the object to which it will write the redirected
 content::
 
     >>> with redirect_stderr(StringIO()) as o:
-    ...     sys.stderr.write('new file-like object\n')
+    ...     _ = sys.stderr.write('new file-like object\n')
     >>> o.getvalue()
     'new file-like object\n'
 
@@ -1082,7 +1082,7 @@ If no argument is given to the context manager, it will create and return a
 ``StringIO`` object::
 
     >>> with redirect_stderr() as o:
-    ...     sys.stderr.write('automatically created file-like object\n')
+    ...     _ = sys.stderr.write('automatically created file-like object\n')
     >>> o.getvalue()
     'automatically created file-like object\n'
 
@@ -1094,14 +1094,14 @@ standard output, you can use the ``suppress_stdout()`` context manager::
 
     >>> from inelegant.io import suppress_stdout
     >>> with suppress_stdout():
-    ...     print 'this will not appear anywhere.'
+    ...     print('this will not appear anywhere.')
 
 It also behaves as a decorator if you need. In the example below, the message
 written to the standard output is lost::
 
     >>> @suppress_stdout
     ... def f(a, b):
-    ...     print 'values of args are', a, b
+    ...     print('values of args are', a, b)
     ...     return a+b
     >>> f(1, 2)
     3
@@ -1112,10 +1112,10 @@ instead::
 
     >>> from inelegant.io import suppress_stderr
     >>> with redirect_stderr() as output:
-    ...     sys.stderr.write('redirected\n')
+    ...     _ = sys.stderr.write('redirected\n')
     ...     with suppress_stderr():
-    ...         sys.stderr.write('this will not appear anywhere.')
-    ...     sys.stderr.write('redirected, too\n')
+    ...         _ = sys.stderr.write('this will not appear anywhere.')
+    ...     _ = sys.stderr.write('redirected, too\n')
     >>> output.getvalue()
     'redirected\nredirected, too\n'
 
@@ -1126,10 +1126,10 @@ Unsurprisingly, ``suppress_stderr()`` is also a decorator::
     ...     sys.stderr.write('values of args are {0} {1}'.format(a, b))
     ...     return a+b
     >>> with redirect_stderr() as output:
-    ...     sys.stderr.write('redirected\n')
+    ...     _ = sys.stderr.write('redirected\n')
     ...     with suppress_stderr():
     ...         f(1, 2)
-    ...     sys.stderr.write('redirected, too\n')
+    ...     _ = sys.stderr.write('redirected, too\n')
     3
     >>> output.getvalue()
     'redirected\nredirected, too\n'
