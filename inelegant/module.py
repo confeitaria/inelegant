@@ -40,7 +40,7 @@ def create_module(name, code='', scope=None, to_adopt=(), defs=None):
     This function creates a module::
 
     >>> create_module('my_module')
-    <module 'my_module' (built-in)>
+    <module 'my_module'>
 
         **Note**: Up to inelegant 0.9.0, the function used to make the module
         importable. It is not the case anymore::
@@ -203,7 +203,7 @@ def available_module(name, code='', extension='.py'):
     not return the module itself::
 
     >>> with installed_module('m') as m:
-    ...     m                                           # doctest: +ELLIPSIS
+    ...     m
     <module 'm'>
     >>> with available_module('m') as m:
     ...     m is None
@@ -215,8 +215,8 @@ def available_module(name, code='', extension='.py'):
 
     >>> with installed_module('m'):
     ...     import m
-    ...     m                                             # doctest: +ELLIPSIS
-    <module 'm' ...>
+    ...     m
+    <module 'm'>
     >>> with available_module('m'):
     ...     import m
     ...     m                                             # doctest: +ELLIPSIS
@@ -684,9 +684,9 @@ def get_caller_module(index=1):
     ...         '''
     ...         with installed_module('c', code=code_c) as c:
     ...             c.f_c() # doctest: +ELLIPSIS
-    <module 'a' ...>
-    <module 'b' ...>
-    <module 'c' ...>
+    <module 'a'>
+    <module 'b'>
+    <module 'c'>
 
     The default index
     -----------------
@@ -712,7 +712,7 @@ def get_caller_module(index=1):
     >>> scope = {'print_current_module': print_current_module}
     >>> with installed_module('m', code='print_current_module()', scope=scope):
     ...     pass # doctest: +ELLIPSIS
-    <module 'm' ...>
+    <module 'm'>
 
     If ``get_caller_module()`` could explain its default index to its calling
     module itself, it would say:

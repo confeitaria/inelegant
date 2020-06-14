@@ -368,14 +368,14 @@ def get_doctestable(testable):
     >>> from inelegant.module import installed_module
     >>> with installed_module('m') as m:
     ...     get_doctestable(m) # doctest: +ELLIPSIS
-    <module 'm' ...>
+    <module 'm'>
 
     If it receives a string, it can be one of two things: a module name or a
     file path. If it is a module name, then the function returns the module::
 
     >>> with installed_module('m') as m:
     ...     get_doctestable('m') # doctest: +ELLIPSIS
-    <module 'm' ...>
+    <module 'm'>
 
     Retrieving files
     ----------------
