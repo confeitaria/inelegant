@@ -163,7 +163,7 @@ def temp_file(path=None, content=None, name=None, where=None, dir=None):
 
         f = open(path, 'w')
     else:
-        f = tempfile.NamedTemporaryFile(dir=where, delete=False)
+        f = tempfile.NamedTemporaryFile(dir=where, delete=False, mode='w')
         path = f.name
 
     if content is not None:
