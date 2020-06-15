@@ -309,46 +309,17 @@ def get_module(testable):
     elif isinstance(testable, str):
         try:
             module = importlib.import_module(testable)
-        except ImportError:
-            if len(get_exc_frames()) > 2:
+        except ModuleNotFoundError as mnfe:
+            module_not_found_message = "No module named '{0}'".format(
+                testable.split('.')[0]
+            )
+            if mnfe.msg != module_not_found_message:
                 raise
             module = None
         except TypeError:
             module = None
 
     return module
-
-
-def get_exc_frames():
-    """
-    Return the list of frames that were executed from the raised exception
-    until the current function::
-
-    >>> try:
-    ...     raise Exception()
-    ... except:
-    ...     get_exc_frames()  # doctest: +ELLIPSIS
-    [<frame object at ...>]
-
-    So, if the exception was raised from a function, its frame will be present
-    in the list::
-
-    >>> def raise_exception():
-    ...    raise Exception()
-    >>> try:
-    ...     raise_exception()
-    ... except:
-    ...     get_exc_frames()  # doctest: +ELLIPSIS
-    [<frame object at ...>, <frame object at ...>]
-    """
-    traceback = sys.exc_info()[2]
-    frame_list = []
-
-    while traceback:
-        frame_list.append(traceback.tb_frame)
-        traceback = traceback.tb_next
-
-    return frame_list
 
 
 def get_doctestable(testable):

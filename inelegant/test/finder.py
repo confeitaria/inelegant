@@ -446,6 +446,16 @@ class TestTestFinder(unittest.TestCase):
             with self.assertRaises(ImportError):
                 TestFinder('failed')
 
+    def test_fail_on_module_not_found_error_from_scanned_module(self):
+        """
+        If a scanned module raises ``ModuleNotFoundError``, it should fail the entire
+        search.
+        """
+        with available_module('failed', code='raise ModuleNotFoundError()'):
+            with self.assertRaises(ModuleNotFoundError):
+                TestFinder('failed')
+
+
 load_tests = TestFinder(__name__, 'inelegant.finder').load_tests
 
 if __name__ == "__main__":
