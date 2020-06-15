@@ -491,7 +491,7 @@ def get_adoptable_value(obj):
     If it is a method, however, it will return the function "enveloped" by it::
 
     >>> get_adoptable_value(Class.m) # doctest: +ELLIPSIS
-    <function m at ...>
+    <function Class.m at ...>
     """
     if inspect.ismethod(obj):
         return obj.__func__
