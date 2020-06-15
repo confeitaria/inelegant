@@ -573,8 +573,9 @@ names::
     ...         installed_module('ta', to_adopt=[TestAdd]):
     ...     finder = TestFinder('a', 'ta')
     ...     import os
-    ...     runner = unittest.TextTestRunner(stream=open(os.devnull, 'w'))
-    ...     runner.run(finder) # doctest: +ELLIPSIS
+    ...     with open(os.devnull, 'w') as devnull:
+    ...         runner = unittest.TextTestRunner(stream=devnull)
+    ...         runner.run(finder) # doctest: +ELLIPSIS
     <unittest.runner.TextTestResult run=2 errors=0 failures=2>
 
 Loading doctests in files
@@ -636,8 +637,9 @@ __ https://docs.python.org/2/library/unittest.html#load-tests-protocol
     >>> with installed_module('t', to_adopt=[TestCase1,TestCase2]) as t:
     ...     loader = unittest.TestLoader()
     ...     suite = loader.loadTestsFromModule(t)
-    ...     runner = unittest.TextTestRunner(stream=open(os.devnull, 'w'))
-    ...     runner.run(suite)
+    ...     with open(os.devnull, 'w') as devnull:
+    ...         runner = unittest.TextTestRunner(stream=devnull)
+    ...         runner.run(finder)
     <unittest.runner.TextTestResult run=2 errors=0 failures=1>
 
 We can change this default behavior by defining a function called
@@ -660,8 +662,9 @@ module::
     ...     ) as t:
     ...     loader = unittest.TestLoader()
     ...     suite = loader.loadTestsFromModule(t)
-    ...     runner = unittest.TextTestRunner(stream=open(os.devnull, 'w'))
-    ...     runner.run(suite)
+    ...     with open(os.devnull, 'w') as devnull:
+    ...         runner = unittest.TextTestRunner(stream=devnull)
+    ...         runner.run(finder)
     <unittest.runner.TextTestResult run=1 errors=0 failures=0>
 
 For its turn, ``TestFinder`` has a method called ``load_tests()`` that merely
@@ -699,8 +702,9 @@ using the ``load_tests()`` method::
     ...         ) as ta:
     ...     loader = unittest.TestLoader()
     ...     suite = loader.loadTestsFromModule(ta)
-    ...     runner = unittest.TextTestRunner(stream=open(os.devnull, 'w'))
-    ...     runner.run(suite)
+    ...     with open(os.devnull, 'w') as devnull:
+    ...         runner = unittest.TextTestRunner(stream=devnull)
+    ...         runner.run(finder)
     <unittest.runner.TextTestResult run=2 errors=0 failures=2>
 
 "Inelegant FS" - quick-and-dirty filesystem operations

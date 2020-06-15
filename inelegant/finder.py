@@ -357,8 +357,9 @@ def get_doctestable(testable):
     >>> from inelegant.fs import temp_file as tempfile
     >>> import os, os.path
     >>> with tempfile() as path:
-    ...     doctestable = get_doctestable(open(path))
-    ...     os.path.samefile(path, doctestable)
+    ...     with open(path) as file:
+    ...         doctestable = get_doctestable(file)
+    ...         os.path.samefile(path, doctestable)
     True
 
     If it receives a string, and the sting is not a module name, then it is

@@ -364,6 +364,7 @@ def get_socket(timeout=None):
     True
     >>> s.gettimeout()
     3.0
+    >>> s.close()
     """
     s = socket.socket()
     s.settimeout(timeout)

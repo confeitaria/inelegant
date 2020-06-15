@@ -375,10 +375,10 @@ def suppress_stderr(f=None):
 
     >>> def div(num=None, den=None, a=None, b=None):
     ...     if num is None and a is not None:
-    ...         _ = sys.stderr.write('"a" arg is deprecated, use "num."\\n')
+    ...         sys.stderr.write('"a" arg is deprecated, use "num."\\n')
     ...         num = a
     ...     if den is None and b is not None:
-    ...         _ = sys.stderr.write('"b" arg is deprecated, use "den."\\n')
+    ...         sys.stderr.write('"b" arg is deprecated, use "den."\\n')
     ...         den = b
     ...     return num/den
 
