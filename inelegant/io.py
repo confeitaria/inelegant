@@ -484,6 +484,7 @@ def suppress_stderr(f=None):
 
     Once it is done, the test output is clean again::
 
+    >>> suite = loader.loadTestsFromTestCase(TestTriangleArea)
     >>> with redirect_stderr(sys.stdout):
     ...     _ = stdoutRunner.run(suite)
     .

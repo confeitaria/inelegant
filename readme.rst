@@ -635,6 +635,7 @@ __ https://docs.python.org/2/library/unittest.html#load-tests-protocol
     ...     def test2(self):
     ...         self.assertEqual(2, 1)
     >>> with installed_module('t', to_adopt=[TestCase1,TestCase2]) as t:
+    ...     finder = TestFinder('t')
     ...     loader = unittest.TestLoader()
     ...     suite = loader.loadTestsFromModule(t)
     ...     with open(os.devnull, 'w') as devnull:
@@ -660,6 +661,7 @@ module::
     >>> with installed_module(
     ...         't', to_adopt=[TestCase1, TestCase2, load_tests]
     ...     ) as t:
+    ...     finder = TestFinder('t')
     ...     loader = unittest.TestLoader()
     ...     suite = loader.loadTestsFromModule(t)
     ...     with open(os.devnull, 'w') as devnull:
@@ -704,7 +706,7 @@ using the ``load_tests()`` method::
     ...     suite = loader.loadTestsFromModule(ta)
     ...     with open(os.devnull, 'w') as devnull:
     ...         runner = unittest.TextTestRunner(stream=devnull)
-    ...         runner.run(finder)
+    ...         runner.run(suite)
     <unittest.runner.TextTestResult run=2 errors=0 failures=2>
 
 "Inelegant FS" - quick-and-dirty filesystem operations
