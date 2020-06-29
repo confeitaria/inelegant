@@ -19,6 +19,7 @@
 import os
 import contextlib
 import sys
+import atexit
 
 try:
     from io import StringIO
@@ -219,6 +220,12 @@ class TemporaryAttributeReplacer(object):
 
         return decorator(f)
 
+DEVNULL_FILE = open(os.devnull, 'w')
+
+def close_devnull():
+    DEVNULL_FILE.close()
+
+atexit.register(close_devnull)
 
 def suppress_stdout(f=None):
     """
@@ -260,8 +267,7 @@ def suppress_stdout(f=None):
     >>> f(1,2)
     3
     """
-    output = open(os.devnull, 'w')
-    replacer = redirect_stdout(output)
+    replacer = redirect_stdout(DEVNULL_FILE)
 
     if f is not None:
         return replacer(f)
@@ -498,8 +504,7 @@ def suppress_stderr(f=None):
     believe it is better to have these uses quite visible. So, in mosts cases,
     ``redirect_stderr()`` is probably the right tool to clean up results.
     """
-    output = open(os.devnull, 'w')
-    replacer = redirect_stderr(output)
+    replacer = redirect_stderr(DEVNULL_FILE)
 
     if f is not None:
         return replacer(f)
