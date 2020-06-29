@@ -56,6 +56,7 @@ class TestProcess(unittest.TestCase):
                     connection.send('example')
 
         with Process(target=serve):
+            time.sleep(0.01)
             client = multiprocessing.connection.Client(('localhost', 9001))
             with contextlib.closing(client) as client:
                 self.assertEqual('example', client.recv())
