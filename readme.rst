@@ -14,7 +14,7 @@ Inelegant groups a series of tools that are very useful for automating tests.
 Most of them are unreliable or costly "in the wild" but can be useful enough on
 tests.
 
-Right now there are eight modules in this project.
+Right now there are nine modules in this project.
 
 "Inelegant Process" - running and communicating with a simple processes
 =======================================================================
@@ -1140,6 +1140,76 @@ Unsurprisingly, ``suppress_stderr()`` is also a decorator::
     >>> output.getvalue()
     'redirected\nredirected, too\n'
 
+"Inelegant Object" - idioms for objects in general
+==================================================
+
+Right now, ``inelegant.object`` contains only ``temp_attr``, a utility function
+that replaces the attribute of an object temporarily::
+
+    >>> from inelegant.object import temp_attr
+
+Context manager
+---------------
+
+As a context manager, it will replace the attribute during the context. For
+example, consider the object ``a`` below::
+
+    >>> class A(object):
+    ...     def __init__(self, b):
+    ...         self.b = b
+    >>> a = A(3)
+    >>> a.b
+    3
+
+We can use ``temp_attr`` to replace its value for a brief moment::
+
+    >>> with temp_attr(a, attribute='b', value='ok'):
+    ...     a.b
+    'ok'
+
+Once the context is gone, the previous value is back::
+
+    >>> a.b
+    3
+
+Decorator
+---------
+
+``temp_attr`` instances also behave as decorators. In this case, the value will
+be replaced during the function execution::
+
+    >>> @temp_attr(a, attribute='b', value='ok')
+    ... def f():
+    ...     global a
+    ...     print('The value of "a.b" is {0}.'.format(a.b))
+    >>> a.b
+    3
+    >>> f()
+    The value of "a.b" is ok.
+    >>> a.b
+    3
+
+What happens with non-existent attributes
+-----------------------------------------
+
+If there was no such attribute before, then it should not exist after::
+
+    >>> with temp_attr(a, attribute='c', value='ok'):
+    ...     a.c
+    'ok'
+    >>> a.c
+    Traceback (most recent call last):
+      ...
+    AttributeError: 'A' object has no attribute 'c'
+
+Also, this is not supposed to work with objects which do not accept new
+attributes to be created:
+
+    >>> with temp_attr(object(), attribute='c', value='fail'):
+    ...     pass
+    Traceback (most recent call last):
+      ...
+    AttributeError: 'object' object has no attribute 'c'
 
 Licensing
 ==============
