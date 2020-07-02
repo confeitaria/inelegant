@@ -20,11 +20,9 @@ import os
 import contextlib
 import sys
 import atexit
+from io import StringIO
 
-try:
-    from io import StringIO
-except:
-    from io import StringIO
+from inelegant.object import temp_attr
 
 
 def redirect_stdout(to=None):
@@ -84,7 +82,7 @@ def redirect_stdout(to=None):
     if to is None:
         to = StringIO()
 
-    return TemporaryAttributeReplacer(sys, 'stdout', to)
+    return temp_attr(sys, 'stdout', to)
 
 
 def redirect_stderr(to=None):
@@ -143,82 +141,8 @@ def redirect_stderr(to=None):
     if to is None:
         to = StringIO()
 
-    return TemporaryAttributeReplacer(sys, 'stderr', to)
+    return temp_attr(sys, 'stderr', to)
 
-
-class TemporaryAttributeReplacer(object):
-    """
-    ``TemporaryAttributeReplacer`` replaces the attribute of an object
-    temporarily.
-
-    Context manager
-    ===============
-
-    As a context manager, it will replace the attribute during
-    the context. For example, consider the object ``a`` below::
-
-    >>> class A(object):
-    ...     def __init__(self, b):
-    ...         self.b = b
-    >>> a = A(3)
-    >>> a.b
-    3
-
-    We can use ``TemporaryAttributeReplacer`` to replace its value for a brief
-    moment::
-
-    >>> with TemporaryAttributeReplacer(a, attribute='b', value='ok'):
-    ...     a.b
-    'ok'
-
-    Once the context is gone, the previous value is back::
-
-    >>> a.b
-    3
-
-    Decorator
-    =========
-
-    ``TemporaryAttributeReplacer`` instances also behave as decorators. In
-    this case, the value will be replaced during the function execution::
-
-    >>> @TemporaryAttributeReplacer(a, attribute='b', value='ok')
-    ... def f():
-    ...     global a
-    ...     print('The value of "a.b" is {0}.'.format(a.b))
-    >>> a.b
-    3
-    >>> f()
-    The value of "a.b" is ok.
-    >>> a.b
-    3
-    """
-
-    def __init__(self, obj, attribute, value):
-        self.obj = obj
-        self.attribute = attribute
-        self.value = value
-        self.temp = None
-
-    def __enter__(self):
-        self.temp = getattr(self.obj, self.attribute)
-        setattr(self.obj, self.attribute, self.value)
-
-        return self.value
-
-    def __exit__(self, type, value, traceback):
-        setattr(self.obj, self.attribute, self.temp)
-
-    def __call__(self, f):
-        def decorator(f):
-
-            def g(*args, **kwargs):
-                with self:
-                    return f(*args, **kwargs)
-
-            return g
-
-        return decorator(f)
 
 DEVNULL_FILE = open(os.devnull, 'w')
 
