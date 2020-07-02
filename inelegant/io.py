@@ -22,7 +22,7 @@ import sys
 import atexit
 from io import StringIO
 
-from inelegant.object import temp_attr
+from inelegant.module import temp_var
 
 
 def redirect_stdout(to=None):
@@ -82,7 +82,7 @@ def redirect_stdout(to=None):
     if to is None:
         to = StringIO()
 
-    return temp_attr(sys, 'stdout', to)
+    return temp_var(sys, 'stdout', to)
 
 
 def redirect_stderr(to=None):
@@ -141,7 +141,7 @@ def redirect_stderr(to=None):
     if to is None:
         to = StringIO()
 
-    return temp_attr(sys, 'stderr', to)
+    return temp_var(sys, 'stderr', to)
 
 
 DEVNULL_FILE = open(os.devnull, 'w')
