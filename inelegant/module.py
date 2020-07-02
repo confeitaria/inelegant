@@ -30,6 +30,7 @@ import tempfile
 from inelegant.dict import temp_key
 from inelegant.fs import existing_dir, temp_file, temp_dir
 from inelegant.toggle import Toggle
+from inelegant.object import temp_attr
 
 create_module_installs_module = Toggle()
 available_resource_uses_path_as_where = Toggle()
@@ -723,6 +724,70 @@ def get_caller_module(index=1):
     frame = sys._getframe(index+1)
 
     return importlib.import_module(frame.f_globals['__name__'])
+
+
+def temp_var(module, variable, value):
+    """
+    Temporarily sets a variable into a module.
+
+    Context manager
+    ===============
+
+    >>> a = create_module('a', scope={'var': 1})
+    >>> with temp_var(a, 'var', 2):
+    ...    a.var
+    2
+
+    Once the context manager is done, the variable should have the old value::
+
+    >>> a.var
+    1
+
+    If the variable does not exist before...
+
+    ::
+
+    >>> with temp_var(a, 'new', 10):
+    ...    a.new
+    10
+
+    ...it should not exist after::
+
+    >>> a.new
+    Traceback (most recent call last):
+      ...
+    AttributeError: module 'a' has no attribute 'new'
+
+    Passing the module name
+    =======================
+
+    You can also only pass the module name to ``temp_var()``::
+
+    >>> with available_module('b', code='var = 1'):
+    ...    with temp_var('b', 'var', 2):
+    ...        import b
+    ...        print('temporary var in b:', b.var)
+    ...    print('default var in b:', b.var)
+    temporary var in b: 2
+    default var in b: 1
+
+    Decorator
+    =========
+
+    This function also behaves like a decorator::
+
+    >>> with installed_module('c', scope={'var': 1}) as c:
+    ...    @temp_var(c, 'var', 2)
+    ...    def f():
+    ...        print(c.var)
+    ...    f()
+    ...    c.var
+    2
+    1
+    """
+    if isinstance(module, str):
+        module = importlib.import_module(module)
+    return temp_attr(module, variable, value)
 
 
 def dedent(code):
