@@ -17,6 +17,10 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Inelegant.  If not, see <http://www.gnu.org/licenses/>.
 
+import contextlib
+
+
+@contextlib.contextmanager
 def temp_attr(object, attribute, value):
     """
     ``temp_attr`` replaces the attribute of an object temporarily.
@@ -84,40 +88,14 @@ def temp_attr(object, attribute, value):
       ...
     AttributeError: 'object' object has no attribute 'c'
     """
-    return TemporaryAttributeReplacer(object, attribute, value)
+    exists = hasattr(object, attribute)
+    old_value = getattr(object, attribute, None)
 
-
-class TemporaryAttributeReplacer(object):
-
-    def __init__(self, obj, attribute, value):
-        self.obj = obj
-        self.attribute = attribute
-        self.value = value
-        self.existed = None
-        self.temp = None
-
-    def __enter__(self):
-        self.existed = hasattr(self.obj, self.attribute)
-        if self.existed:
-            self.temp = getattr(self.obj, self.attribute)
-        setattr(self.obj, self.attribute, self.value)
-
-        return self.value
-
-    def __exit__(self, type, value, traceback):
-        if self.existed:
-            setattr(self.obj, self.attribute, self.temp)
+    try:
+        setattr(object, attribute, value)
+        yield value
+    finally:
+        if exists:
+            setattr(object, attribute, old_value)
         else:
-            delattr(self.obj, self.attribute)
-
-    def __call__(self, f):
-        def decorator(f):
-
-            def g(*args, **kwargs):
-                with self:
-                    return f(*args, **kwargs)
-
-            return g
-
-        return decorator(f)
-
+            delattr(object, attribute)
