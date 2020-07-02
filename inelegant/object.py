@@ -76,13 +76,18 @@ class TemporaryAttributeReplacer(object):
         self.temp = None
 
     def __enter__(self):
-        self.temp = getattr(self.obj, self.attribute)
+        self.existed = hasattr(self.obj, self.attribute)
+        if self.existed:
+            self.temp = getattr(self.obj, self.attribute)
         setattr(self.obj, self.attribute, self.value)
 
         return self.value
 
     def __exit__(self, type, value, traceback):
-        setattr(self.obj, self.attribute, self.temp)
+        if self.existed:
+            setattr(self.obj, self.attribute, self.temp)
+        else:
+            delattr(self.obj, self.attribute)
 
     def __call__(self, f):
         def decorator(f):
