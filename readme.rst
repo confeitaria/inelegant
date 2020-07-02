@@ -513,6 +513,59 @@ of the index is 1::
     ...     pass # doctest: +ELLIPSIS
     <module 'm2'>
 
+The ``temp_var()`` context manager and decorator
+------------------------------------------------
+
+``inelegant.module.temp_var()`` returns a context manager that temporarily sets
+a variable into a module::
+
+    >>> from inelegant.module import temp_var
+    >>> a = create_module('a', scope={'var': 1})
+    >>> with temp_var(a, 'var', 2):
+    ...    a.var
+    2
+
+Once the context manager is done, the variable should have the old value::
+
+    >>> a.var
+    1
+
+If the variable does not exist before...
+
+    ::
+
+    >>> with temp_var(a, 'new', 10):
+    ...    a.new
+    10
+
+...it should not exist after::
+
+    >>> a.new
+    Traceback (most recent call last):
+      ...
+    AttributeError: module 'a' has no attribute 'new'
+
+You can also only pass the module name to ``temp_var()``::
+
+    >>> with available_module('b', code='var = 1'):
+    ...    with temp_var('b', 'var', 2):
+    ...        import b
+    ...        print('temporary var in b:', b.var)
+    ...    print('default var in b:', b.var)
+    temporary var in b: 2
+    default var in b: 1
+
+The context manager also behaves like a decorator::
+
+    >>> with installed_module('c', scope={'var': 1}) as c:
+    ...    @temp_var(c, 'var', 2)
+    ...    def f():
+    ...        print(c.var)
+    ...    f()
+    ...    c.var
+    2
+    1
+
 "Inelegant Finder": straightforward way of finding test cases
 =============================================================
 
