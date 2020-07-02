@@ -17,19 +17,15 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with Inelegant.  If not, see <http://www.gnu.org/licenses/>.
 
-def temp_attr(object, field_name, value):
-    return TemporaryAttributeReplacer(object, field_name, value)
-
-class TemporaryAttributeReplacer(object):
+def temp_attr(object, attribute, value):
     """
-    ``TemporaryAttributeReplacer`` replaces the attribute of an object
-    temporarily.
+    ``temp_attr`` replaces the attribute of an object temporarily.
 
     Context manager
     ===============
 
-    As a context manager, it will replace the attribute during
-    the context. For example, consider the object ``a`` below::
+    As a context manager, it will replace the attribute during the context. For
+    example, consider the object ``a`` below::
 
     >>> class A(object):
     ...     def __init__(self, b):
@@ -38,10 +34,9 @@ class TemporaryAttributeReplacer(object):
     >>> a.b
     3
 
-    We can use ``TemporaryAttributeReplacer`` to replace its value for a brief
-    moment::
+    We can use ``temp_attr`` to replace its value for a brief moment::
 
-    >>> with TemporaryAttributeReplacer(a, attribute='b', value='ok'):
+    >>> with temp_attr(a, attribute='b', value='ok'):
     ...     a.b
     'ok'
 
@@ -53,10 +48,10 @@ class TemporaryAttributeReplacer(object):
     Decorator
     =========
 
-    ``TemporaryAttributeReplacer`` instances also behave as decorators. In
-    this case, the value will be replaced during the function execution::
+    ``temp_attr`` instances also behave as decorators. In this case, the value
+    will be replaced during the function execution::
 
-    >>> @TemporaryAttributeReplacer(a, attribute='b', value='ok')
+    >>> @temp_attr(a, attribute='b', value='ok')
     ... def f():
     ...     global a
     ...     print('The value of "a.b" is {0}.'.format(a.b))
@@ -67,6 +62,10 @@ class TemporaryAttributeReplacer(object):
     >>> a.b
     3
     """
+    return TemporaryAttributeReplacer(object, attribute, value)
+
+
+class TemporaryAttributeReplacer(object):
 
     def __init__(self, obj, attribute, value):
         self.obj = obj
