@@ -61,6 +61,28 @@ def temp_attr(object, attribute, value):
     The value of "a.b" is ok.
     >>> a.b
     3
+
+    What happens with non-existent attributes
+    =========================================
+
+    If there was no such attribute before, then it should not exist after::
+
+    >>> with temp_attr(a, attribute='c', value='ok'):
+    ...     a.c
+    'ok'
+    >>> a.c
+    Traceback (most recent call last):
+      ...
+    AttributeError: 'A' object has no attribute 'c'
+
+    Also, this is not supposed to work with objects which do not accept new
+    attributes to be created:
+
+    >>> with temp_attr(object(), attribute='c', value='fail'):
+    ...     pass
+    Traceback (most recent call last):
+      ...
+    AttributeError: 'object' object has no attribute 'c'
     """
     return TemporaryAttributeReplacer(object, attribute, value)
 
