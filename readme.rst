@@ -534,9 +534,9 @@ If the variable does not exist before...
 
     ::
 
-    >>> with temp_var(a, 'new', 10):
-    ...    a.new
-    10
+        >>> with temp_var(a, 'new', 10):
+        ...    a.new
+         10
 
 ...it should not exist after::
 
